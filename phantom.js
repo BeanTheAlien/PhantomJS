@@ -20,7 +20,7 @@ phantom2d.scene = class {
   }
   render() {}
 }
-phantom2d.physics = class {
+phantom2d.physObj = class {
   constructor(settings) {
     if(!expect(settings, ["name", "shape", "strength", "collide"])) throw new Error("Missing key(s) in physics object settings.");
     this.name = settings.name;
@@ -32,11 +32,6 @@ phantom2d.physics = class {
     this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0, z: settings.rz ?? 0 };
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
-  }
-}
-phantom2d.physics.physObj = class extends phantom2d.physics {
-  constructor(settings) {
-    super(settings);
   }
 }
 
