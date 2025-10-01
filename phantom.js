@@ -14,12 +14,18 @@ phantom2d.scene = class {
     this.canvas.style.height = height;
   }
 }
-phantom2d.physics = class {}
-phantom2d.physics.physObj = class {
+phantom2d.physics = class {
   constructor(settings) {
-    if(!expect(settings, ["name", "shape"])) throw new Error("Missing key(s) in physics object settings.");
+    if(!expect(settings, ["name", "shape", "strength", "collision"])) throw new Error("Missing key(s) in physics object settings.");
     this.name = settings.name;
     this.shape = settings.shape;
+    this.strength = settings.strength;
+    this.collision = settings.collision ?? () => {};
+  }
+}
+phantom2d.physics.physObj = class extends phantom2d.physics {
+  constructor(settings) {
+    super(settings);
   }
 }
 
