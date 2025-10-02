@@ -45,6 +45,48 @@ class PhysicsObject extends SceneObject {
     this.pos.y += this.gravspd;
   }
 }
+class MovingObject extends SceneObject {
+  constructor(settings) {
+    super(["speed", "directionX", "directionY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
+    this.speed = settings.speed;
+    // 0 represents LEFT, 1 represents RIGHT
+    this.directionX = settings.directionX;
+    // 0 represents DOWN, 1 represents UP
+    this.directionY = settings.directionY;
+    // isBouncing defines whether:
+    // 1. when an extent is reached, should stop
+    // 2. when an extent is reached, move in the opposite direction
+    this.isBouncing = settings.isBouncing ?? true;
+    // extentLeft shows the furthest x position it can be in the left direction
+    this.extentLeft = settings.extentLeft;
+    // extentRight shows the furthest x position it can be in the right direction
+    this.extentRight = settings.extentRight;
+    // extentDown shows the furthest y position it can be in the down direction
+    this.extentDown = settings.extentDown;
+    // extentUp shows the furthest y position it can be in the up direction
+    this.extentUp = settings.extentUp;
+  }
+  update() {
+    if(this.extentLeft >= this.x && this.isBouncing) {
+      this.x += this.speed;
+    } else if(this.extentRight <= this.x && this.isBouncing) {
+      this.x -= this.speed;
+    } else if(this.extentLeft < this.x && !this.isBouncing) {
+      this.x -= this.speed;
+    } else if(this.extentRight > this.x && !this.isBouncing) {
+      this.x += this.speed;
+    }
+    if(this.extentDown >= this.y && this.isBouncing) {
+      this.y += this.speed;
+    } else if(this.extentDown <= this.y && this.isBouncing) {
+      this.y -= this.speed;
+    } else if(this.extentUp < this.y && !this.isBouncing) {
+      this.y -= this.speed;
+    } else if(this.extentUp > this.y && !this.isBouncing) {
+      this.y += this.speed;
+    }
+  }
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
