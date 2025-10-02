@@ -16,6 +16,21 @@ class Scene {
   }
   render() {}
 }
+class SceneObject {
+  constructor(expects, objname, settings) {
+    if(!expect(settings, ["name", "shape", "collide", ...expects])) throw new Error("Missing key(s) in " + objname + " settings.");
+    this.name = settings.name;
+    this.shape = settings.shape;
+    this.collide = settings.collide ?? (() => {});
+    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
+    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
+    this.width = settings.width ?? 0;
+    this.height = settings.height ?? 0;
+  }
+}
+class StaticObject {
+  if(!expect(settings, ))
+}
 class PhysicsObject {
   constructor(settings) {
     if(!expect(settings, ["name", "shape", "strength", "collide"])) throw new Error("Missing key(s) in physics object settings.");
@@ -28,5 +43,9 @@ class PhysicsObject {
     this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
+  }
+  update() {
+    this.gravspd += this.strength;
+    this.pos.y += this.gravspd;
   }
 }
