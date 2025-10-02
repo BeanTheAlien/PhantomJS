@@ -24,8 +24,8 @@ class PhysicsObject {
     this.strength = settings.strength;
     this.gravspd = 0;
     this.collide = settings.collide ?? () => {};
-    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0, z: settings.pz ?? 0 };
-    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0, z: settings.rz ?? 0 };
+    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
+    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
   }
