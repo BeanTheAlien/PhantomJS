@@ -67,22 +67,26 @@ class MovingObject extends SceneObject {
     this.extentUp = settings.extentUp;
   }
   update() {
-    if(this.extentLeft >= this.x && this.isBouncing) {
+    if(this.extentLeft >= this.x && this.isBouncing && this.directionX == 0) {
       this.x += this.speed;
-    } else if(this.extentRight <= this.x && this.isBouncing) {
+      this.directionX = 1;
+    } else if(this.extentRight <= this.x && this.isBouncing && this.directionX == 1) {
       this.x -= this.speed;
-    } else if(this.extentLeft < this.x && !this.isBouncing) {
+      this.directionX = 0;
+    } else if(this.extentLeft < this.x && !this.isBouncing && this.directionX == 0) {
       this.x -= this.speed;
-    } else if(this.extentRight > this.x && !this.isBouncing) {
+    } else if(this.extentRight > this.x && !this.isBouncing && this.directionX == 1) {
       this.x += this.speed;
     }
-    if(this.extentDown >= this.y && this.isBouncing) {
+    if(this.extentDown >= this.y && this.isBouncing && this.directionY == 0) {
       this.y += this.speed;
-    } else if(this.extentDown <= this.y && this.isBouncing) {
+      this.directionY = 1;
+    } else if(this.extentDown <= this.y && this.isBouncing && this.directionY == 1) {
       this.y -= this.speed;
-    } else if(this.extentUp < this.y && !this.isBouncing) {
+      this.directionY = 0;
+    } else if(this.extentUp < this.y && !this.isBouncing && this.directionY == 0) {
       this.y -= this.speed;
-    } else if(this.extentUp > this.y && !this.isBouncing) {
+    } else if(this.extentUp > this.y && !this.isBouncing && this.directionY == 1) {
       this.y += this.speed;
     }
   }
