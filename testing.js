@@ -43,5 +43,14 @@ const playerWithBinds = new phantom.ControllableCharacter({
     width: 5,
     height: 10,
     strength: 3,
-    binds: {}
+    binds: {
+        "w": playerWithBinds.moveY(-3),
+        "a": playerWithBinds.moveX(-3),
+        "s": playerWithBinds.moveY(3),
+        "d": playerWithBinds.move(3)
+    }
 });
+// you can change with setBind, get with getBind
+const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
+playerWithBinds.setBind("w", playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
+scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
