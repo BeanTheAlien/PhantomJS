@@ -70,12 +70,12 @@ class PhysicsObject extends SceneObject {
 }
 class MovingObject extends SceneObject {
   constructor(settings) {
-    super(["speed", "directionX", "directionY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
+    super(["speed", "dirX", "dirY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
     this.speed = settings.speed;
     // 0 represents LEFT, 1 represents RIGHT
-    this.directionX = settings.directionX;
+    this.directionX = settings.dirX;
     // 0 represents DOWN, 1 represents UP
-    this.directionY = settings.directionY;
+    this.directionY = settings.dirY;
     // isBouncing defines whether:
     // 1. when an extent is reached, should stop
     // 2. when an extent is reached, move in the opposite direction
@@ -90,27 +90,31 @@ class MovingObject extends SceneObject {
     this.extentUp = settings.extentUp;
   }
   update() {
-    if(this.extentLeft >= this.x && this.isBouncing && this.directionX == 0) {
-      this.x += this.speed;
-      this.directionX = 1;
-    } else if(this.extentRight <= this.x && this.isBouncing && this.directionX == 1) {
-      this.x -= this.speed;
-      this.directionX = 0;
-    } else if(this.extentLeft < this.x && !this.isBouncing && this.directionX == 0) {
-      this.x -= this.speed;
-    } else if(this.extentRight > this.x && !this.isBouncing && this.directionX == 1) {
-      this.x += this.speed;
+    if(this.extentLeft != null && this.extentRight != null) {
+      if(this.extentLeft >= this.x && this.isBouncing && this.directionX == 0) {
+        this.x += this.speed;
+        this.directionX = 1;
+      } else if(this.extentRight <= this.x && this.isBouncing && this.directionX == 1) {
+        this.x -= this.speed;
+        this.directionX = 0;
+      } else if(this.extentLeft < this.x && !this.isBouncing && this.directionX == 0) {
+        this.x -= this.speed;
+      } else if(this.extentRight > this.x && !this.isBouncing && this.directionX == 1) {
+        this.x += this.speed;
+      }
     }
-    if(this.extentDown >= this.y && this.isBouncing && this.directionY == 0) {
-      this.y += this.speed;
-      this.directionY = 1;
-    } else if(this.extentDown <= this.y && this.isBouncing && this.directionY == 1) {
-      this.y -= this.speed;
-      this.directionY = 0;
-    } else if(this.extentUp < this.y && !this.isBouncing && this.directionY == 0) {
-      this.y -= this.speed;
-    } else if(this.extentUp > this.y && !this.isBouncing && this.directionY == 1) {
-      this.y += this.speed;
+    if(this.extentDown != null && this.extentUp != null) {
+      if(this.extentDown >= this.y && this.isBouncing && this.directionY == 0) {
+        this.y += this.speed;
+        this.directionY = 1;
+      } else if(this.extentDown <= this.y && this.isBouncing && this.directionY == 1) {
+        this.y -= this.speed;
+        this.directionY = 0;
+      } else if(this.extentUp < this.y && !this.isBouncing && this.directionY == 0) {
+        this.y -= this.speed;
+      } else if(this.extentUp > this.y && !this.isBouncing && this.directionY == 1) {
+        this.y += this.speed;
+      }
     }
   }
 }

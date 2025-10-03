@@ -13,3 +13,12 @@ const statics = [
 scene.add(...statics);
 // note that MovingObject is experimental and I haven't done testing on it yet
 // Use with caution
+const mymo = new phantom.MovingObject({
+    id: "mymo",
+    shape: "rect",
+    dirX: 1, dirY: 0,
+    extentLeft: 10, extentRight: 50,
+    extentDown: null, extentUp: null,
+    isBouncing: true,
+    speed: 1
+});
