@@ -118,6 +118,16 @@ class MovingObject extends SceneObject {
     }
   }
 }
+class BouncyObject extends SceneObject {
+  constructor(settings) {
+    settings.collide = (col) => {
+      col.velocity.x *= -(this.strength);
+      col.velocity.y *= -(this.strength);
+    };
+    super(["strength"], "bouncy", settings);
+    this.strength = settings.strength;
+  }
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
