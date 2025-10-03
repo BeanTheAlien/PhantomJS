@@ -1,6 +1,6 @@
 import { expect } from "/phantom.js";
 
-/* Phantom2D v0.0.0 */
+/* Phantom2D v0.0.31 */
 class Scene {
   #components;
   constructor(canvas, width, height) {
