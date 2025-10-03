@@ -28,14 +28,16 @@ const playerWithGravity = new phantom.ControllableCharacter({
     id: "player1",
     width: 5,
     height: 10,
-    strength: 3
+    strength: 3,
+    color: "blue"
 });
 // ControllableCharacter (without gravity)
 const playerWithoutGravity = new phantom.ControllableCharacter({
     id: "player2",
     width: 5,
     height: 10,
-    strength: 0 // or leave out
+    strength: 0, // or leave out
+    color: "blue"
 });
 // ControllableCharacter (with preset binds)
 const playerWithBinds = new phantom.ControllableCharacter({
@@ -48,11 +50,29 @@ const playerWithBinds = new phantom.ControllableCharacter({
         "a": playerWithBinds.moveX(-3),
         "s": playerWithBinds.moveY(3),
         "d": playerWithBinds.moveX(3)
-    }
+    },
+    color: "blue"
 });
 // you can change with setBind, get with getBind
 const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
 playerWithBinds.setBind("w", playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
 scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
-// BouncyObject
-// const
+// BouncyObject (without ignore)
+const bouncyObjectWithoutIgnore = new phantom.BouncyObject({
+    id: "mybo1",
+    wwidth: 10,
+    height: 3,
+    strength: 3,
+    shape: "rect",
+    color: "green"
+});
+// BouncyObject (with ignore)
+const bouncyObjectWithIgnore = new phantom.BouncyObject({
+    id: "mybo2",
+    width: 10,
+    height: 3,
+    strength: 3,
+    shape: "rect",
+    color: "green",
+    ignore: [playerWithGravity, playerWithoutGravity, playerWithBinds] // everything else is still bouncy! (ignores players we generated earlier)
+});
