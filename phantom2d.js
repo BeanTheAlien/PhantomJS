@@ -14,7 +14,23 @@ class Scene {
   add(...comps) {
     this.#components.push(...comps);
   }
-  render() {}
+  rem(...comps) {
+    for(let i = this.#components.length - 1; i >= 0; i--) {
+      if(comps.includes(this.#components[i])) {
+        this.#components.splice(i, 1);
+      }
+    }
+  }
+  // ctx functions
+  rect(x, y, width, height, colour) {
+    this.ctx.fillStyle = colour;
+    this.ctx.fillRect(x, y, width, height);
+  }
+  render() {
+    for(const sceneobject of this.#components) {
+      if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot render non scene object.");
+    }
+  }
 }
 class SceneObject {
   constructor(expects, objname, settings) {
