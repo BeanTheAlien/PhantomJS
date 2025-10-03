@@ -34,11 +34,14 @@ class Scene {
       this.rect(component.pos.x, component.pos.y, component.width, component.height, component.color);
     });
   }
+  getById(id) {
+    return this.#components.find(component => component.name == id);
+  }
 }
 class SceneObject {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["name", "shape", "collide", "color", ...expects])) throw new Error("Missing key(s) in " + objname + " object settings.");
-    this.name = settings.name;
+    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error("Missing key(s) in " + objname + " object settings.");
+    this.id = settings.id;
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
