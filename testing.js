@@ -55,7 +55,7 @@ const playerWithBinds = new phantom.ControllableCharacter({
         "d": playerWithBinds.moveX(3)
     },
     color: "blue"
-});
+}); // what if i just wrap it internally () => { ... }
 // you can change with setBind, get with getBind
 const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
 playerWithBinds.setBind("w", playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
