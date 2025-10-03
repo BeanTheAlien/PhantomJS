@@ -130,6 +130,8 @@ class BouncyObject extends SceneObject {
     this.strength = settings.strength;
     this.ignore = settings.ignore ?? [];
     this.ignoreByType = settings.ignoreByType ?? [];
+    this.target = settings.target ?? [];
+    this.targetByType = settings.targetByType ?? [];
   }
 }
 class Vector {

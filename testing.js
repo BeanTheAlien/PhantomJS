@@ -76,3 +76,4 @@ const bouncyObjectWithIgnore = new phantom.BouncyObject({
     color: "green",
     ignore: [playerWithGravity, playerWithoutGravity, playerWithBinds] // everything else is still bouncy! (ignores players we generated earlier)
 });
+// BouncyObject (with ignore by type)
