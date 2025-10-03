@@ -15,6 +15,7 @@ class Scene {
     // for(const sceneobject of comps) {
     //   if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot add non scene object.");
     // }
+    // will need to accept all possible types later
     this.#components.push(...comps);
   }
   rem(...comps) {
@@ -33,6 +34,7 @@ class Scene {
     for(const sceneobject of this.#components) {
       if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot render non scene object.");
     }
+    // will need to accept all possible types later
     this.#components.forEach(component => {
       this.rect(component.pos.x, component.pos.y, component.width, component.height, component.color);
     });
