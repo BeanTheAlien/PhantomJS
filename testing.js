@@ -37,3 +37,11 @@ const playerWithoutGravity = new phantom.ControllableCharacter({
     height: 10,
     strength: 0 // or leave out
 });
+// ControllableCharacter (with preset binds)
+const playerWithBinds = new phantom.ControllableCharacter({
+    id: "player3",
+    width: 5,
+    height: 10,
+    strength: 3,
+    binds: {}
+});

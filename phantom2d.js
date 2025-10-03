@@ -128,11 +128,12 @@ class ControllableCharacter {
   #binds;
   #keys;
   constructor(settings) {
-    if(!expect(settings, ["id", "width", "height"])) throw new Error("Missing key(s) in controllable character.");
+    if(!expect(settings, ["id", "width", "height", "color"])) throw new Error("Missing key(s) in controllable character.");
     this.id = settings.id;
     this.pos = { x: settings.x ?? 0, y: settings.y ?? 0 };
     this.width = settings.width;
     this.height = settings.height;
+    this.color = settings.color;
     this.gravspd = 0;
     this.strength = settings.strength ?? 0;
     this.#binds = settings.binds ?? {};
