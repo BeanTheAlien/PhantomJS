@@ -30,6 +30,9 @@ class Scene {
     for(const sceneobject of this.#components) {
       if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot render non scene object.");
     }
+    this.#components.forEach(component => {
+      this.rect(component.pos.x, component.pos.y, component.width, component.height, component.color);
+    });
   }
 }
 class SceneObject {
