@@ -34,10 +34,11 @@ class Scene {
 }
 class SceneObject {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["name", "shape", "collide", ...expects])) throw new Error("Missing key(s) in " + objname + " object settings.");
+    if(!expect(settings, ["name", "shape", "collide", "color", ...expects])) throw new Error("Missing key(s) in " + objname + " object settings.");
     this.name = settings.name;
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
+    this.color = settings.color;
     this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
     this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
     this.width = settings.width ?? 0;
