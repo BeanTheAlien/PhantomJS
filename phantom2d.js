@@ -162,6 +162,13 @@ class ControllableCharacter {
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
+    // for(const { key, value } of Object.entries(this.#binds)) {
+    //   // if(this.#keys[key]) {
+    //   // }
+    // }
+    // TODO: figure out binds mapping
+    // assume they pass a func
+    // then how to exec func?
   }
 }
 

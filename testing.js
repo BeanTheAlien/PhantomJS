@@ -47,7 +47,7 @@ const playerWithBinds = new phantom.ControllableCharacter({
         "w": playerWithBinds.moveY(-3),
         "a": playerWithBinds.moveX(-3),
         "s": playerWithBinds.moveY(3),
-        "d": playerWithBinds.move(3)
+        "d": playerWithBinds.moveX(3)
     }
 });
 // you can change with setBind, get with getBind
