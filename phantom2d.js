@@ -123,6 +123,10 @@ class BouncyObject extends SceneObject {
     settings.collide = (col) => {
       // Exits prematurely if colliding object should be ignored
       if(this.ignore.includes(col) || this.ignoreByType.some(type => col instanceof type)) return;
+      // Checks for match within targeted entities and types
+      const matchesTarget = this.target.includes(col);
+      const matchesTargetByType = this.targetByType.some(type => col instanceof type);
+      if((this.target.length > 0 || this.targetByType.length > 0) && !(matchesTarget || matchesTargetByType)) return;
       col.velocity.x *= -(this.strength);
       col.velocity.y *= -(this.strength);
     };
