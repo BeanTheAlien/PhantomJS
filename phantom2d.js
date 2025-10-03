@@ -133,8 +133,8 @@ class ControllableCharacter {
     this.pos = { x: settings.x ?? 0, y: settings.y ?? 0 };
     this.width = settings.width;
     this.height = settings.height;
-    // this.gravspd = 0;
-    // this.strength = settings.strength ?? 0;
+    this.gravspd = 0;
+    this.strength = settings.strength ?? 0;
     this.#binds = settings.binds ?? {};
     this.#keys = {};
   }
@@ -152,6 +152,16 @@ class ControllableCharacter {
       this.pos.y += distance;
     }
   }
+  moveX(distance) {
+    this.pos.x += distance;
+  }
+  moveY(distance) {
+    this.pos.y += distance;
+  }
+  update() {
+    this.gravspd += this.strength;
+    this.pos.y += this.gravspd;
+  }
 }
 
-export { Scene, StaticObject, PhysicsObject, MovingObject, Vector };
+export { Scene, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter };

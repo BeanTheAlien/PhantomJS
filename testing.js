@@ -23,3 +23,17 @@ const mymo = new phantom.MovingObject({
     speed: 1
 });
 scene.add(mymo);
+// ControllableCharacter (with gravity)
+const playerWithGravity = new phantom.ControllableCharacter({
+    id: "player1",
+    width: 5,
+    height: 10,
+    strength: 3
+});
+// ControllableCharacter (without gravity)
+const playerWithoutGravity = new phantom.ControllableCharacter({
+    id: "player2",
+    width: 5,
+    height: 10,
+    strength: 0 // or leave out
+});
