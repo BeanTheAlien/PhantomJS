@@ -12,6 +12,9 @@ class Scene {
     this.#components = [];
   }
   add(...comps) {
+    // for(const sceneobject of comps) {
+    //   if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot add non scene object.");
+    // }
     this.#components.push(...comps);
   }
   rem(...comps) {
