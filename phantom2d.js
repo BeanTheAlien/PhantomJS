@@ -212,6 +212,19 @@ class NonPlayableCharacter {
     this.strength = settings.strength ?? 0;
     this.#states = settings.states;
   }
+  getState(name) {
+    return this.#states[name];
+  }
+  setState(name, check, action) {
+    this.#states[name] = { check, action };
+  }
+  applyState(name) {
+    this.#states[name]();
+  }
+  update() {
+    this.gravspd += this.strength;
+    this.pos.y += this.gravspd;
+  }
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter, NonPlayableCharacter };
