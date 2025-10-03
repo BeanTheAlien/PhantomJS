@@ -121,11 +121,14 @@ class MovingObject extends SceneObject {
 class BouncyObject extends SceneObject {
   constructor(settings) {
     settings.collide = (col) => {
+      // Exits prematurely if colliding object should be ignored
+      if(this.ignore.includes(col)) return;
       col.velocity.x *= -(this.strength);
       col.velocity.y *= -(this.strength);
     };
     super(["strength"], "bouncy", settings);
     this.strength = settings.strength;
+    this.ignore = settings.ignore ?? [];
   }
 }
 class Vector {
