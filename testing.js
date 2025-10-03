@@ -22,3 +22,4 @@ const mymo = new phantom.MovingObject({
     isBouncing: true,
     speed: 1
 });
+scene.add(mymo);
