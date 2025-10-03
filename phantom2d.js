@@ -97,3 +97,5 @@ class Vector {
     this.y = y;
   }
 }
+
+export { Scene, StaticObject, PhysicsObject, MovingObject, Vector };
