@@ -56,6 +56,13 @@ const playerWithBinds = new phantom.ControllableCharacter({
     },
     color: "blue"
 }); // what if i just wrap it internally () => { ... }
+/*
+for(...) key = key, value = () => { value }?
+i dunno if i can do that
+might need to make it [func, ...args]
+or consult the great gpt
+either way: i need it to not execute right away, it needs to be stored so i can use it as a keybind
+*/
 // you can change with setBind, get with getBind
 const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
 playerWithBinds.setBind("w", playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
