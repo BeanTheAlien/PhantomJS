@@ -119,6 +119,9 @@ class MovingObject extends SceneObject {
   }
 }
 class BouncyObject extends SceneObject {
+  // TODO:
+  // Add passthrough/stop logic with ignore/target returns
+  // Allow for existing colliding setting, mix with required colliding setting
   constructor(settings) {
     settings.collide = (col) => {
       // Exits prematurely if colliding object should be ignored
@@ -192,4 +195,4 @@ class ControllableCharacter {
   }
 }
 
-export { Scene, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter };

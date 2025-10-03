@@ -77,3 +77,33 @@ const bouncyObjectWithIgnore = new phantom.BouncyObject({
     ignore: [playerWithGravity, playerWithoutGravity, playerWithBinds] // everything else is still bouncy! (ignores players we generated earlier)
 });
 // BouncyObject (with ignore by type)
+const bouncyObjectWithIgnoreByType = new phantom.BouncyObject({
+    id: "mybo3",
+    width: 10,
+    height: 3,
+    strength: 3,
+    shape: "rect",
+    color: "green",
+    ignoreByType: [phantom.SceneObject]
+});
+// If any SceneObject instances hit this, they won't bounce (will implement passthrough/stop logic in later patch)
+// BouncyObject (with target)
+const bouncyTargetWithTarget = new phantom.BouncyObject({
+    id: "mybo4",
+    width: 10,
+    height: 3,
+    strength: 3,
+    shape: "rect",
+    color: "green",
+    target: [playerWithGravity, playerWithoutGravity, playerWithBinds] // only our players will bounce
+});
+// BouncyObject (with target by type)
+const bouncyObjectWithTargetByType = new phantom.BouncyObject({
+    id: "mybo5",
+    width: 10,
+    height: 3,
+    strength: 3,
+    shape: "rect",
+    color: "green",
+    targetByType: [phantom.ControllableCharacter]
+});
