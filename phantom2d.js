@@ -190,6 +190,9 @@ class ControllableCharacter {
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
+    for(const [name, action] of Object.entries(this.#binds)) {
+      if(this.#keys[name]) action();
+    }
     // for(const { key, value } of Object.entries(this.#binds)) {
     //   // if(this.#keys[key]) {
     //   // }
