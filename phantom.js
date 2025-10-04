@@ -9,6 +9,7 @@ function findMissing(input, expected) {
   for(const key of expected) {
     if(!Object.keys(input).includes(key)) missing.push(key);
   }
+  return missing;
 }
 
 export { expect, findMissing };

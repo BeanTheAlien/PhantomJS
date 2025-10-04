@@ -1,4 +1,4 @@
-import { expect } from "/phantom.js";
+import { expect, findMissing } from "/phantom.js";
 
 /* Phantom2D v0.0.1 */
 class Scene {
@@ -49,7 +49,7 @@ class Scene {
 }
 class SceneObject {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error("Missing key(s) in " + objname + " object settings.");
+    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects])})`);
     this.id = settings.id;
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
