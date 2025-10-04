@@ -18,10 +18,9 @@ class Scene {
     ];
   }
   add(...comps) {
-    // for(const sceneobject of comps) {
-    //   if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot add non scene object.");
-    // }
-    // will need to accept all possible types later
+    for(const comp of comps) {
+      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot add invalid type object.");
+    }
     this.#components.push(...comps);
   }
   rem(...comps) {
@@ -37,10 +36,9 @@ class Scene {
     this.ctx.fillRect(x, y, width, height);
   }
   render() {
-    for(const sceneobject of this.#components) {
-      if(!(sceneobject instanceof SceneObject)) throw new Error("Cannot render non scene object.");
+    for(const comp of this.#components) {
+      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
     }
-    // will need to accept all possible types later
     this.#components.forEach(component => {
       this.rect(component.pos.x, component.pos.y, component.width, component.height, component.color);
     });
@@ -172,6 +170,8 @@ class ControllableCharacter {
     this.strength = settings.strength ?? 0;
     this.#binds = settings.binds ?? {};
     this.#keys = {};
+    window.addEventListener("keydown", (event) => this.#keys[event.key] = true);
+    window.addEventListener("keyup", (event) => this.#keys[event.key] = false);
   }
   getBind(key) {
     return this.#binds[key];
@@ -199,13 +199,6 @@ class ControllableCharacter {
     for(const [name, action] of Object.entries(this.#binds)) {
       if(this.#keys[name]) action();
     }
-    // for(const { key, value } of Object.entries(this.#binds)) {
-    //   // if(this.#keys[key]) {
-    //   // }
-    // }
-    // TODO: figure out binds mapping
-    // assume they pass a func
-    // then how to exec func?
   }
 }
 class NonPlayableCharacter {
