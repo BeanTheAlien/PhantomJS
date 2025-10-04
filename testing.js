@@ -25,7 +25,6 @@ const movingObject = new phantom.MovingObject({
     isBouncing: true,
     speed: 1
 });
-scene.add(movingObject);
 // ControllableCharacter (with gravity)
 const playerWithGravity = new phantom.ControllableCharacter({
     id: "player1",
@@ -60,7 +59,8 @@ const playerWithBinds = new phantom.ControllableCharacter({
 // you can change with setBind, get with getBind
 const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
 playerWithBinds.setBind("w", () => playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
-scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
+// scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
+scene.add(playerWithBinds);
 // BouncyObject (without ignore)
 const bouncyObjectWithoutIgnore = new phantom.BouncyObject({
     id: "mybo1",

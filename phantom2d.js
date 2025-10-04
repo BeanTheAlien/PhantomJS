@@ -3,6 +3,7 @@ import { expect } from "/phantom.js";
 /* Phantom2D v0.0.1 */
 class Scene {
   #components;
+  #validTypes;
   constructor(canvas, width, height) {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -10,6 +11,11 @@ class Scene {
     this.canvas.style.height = height;
     this.ctx = this.canvas.getContext("2d");
     this.#components = [];
+    this.#validTypes = [
+      SceneObject,
+      ControllableCharacter,
+      NonPlayableCharacter
+    ];
   }
   add(...comps) {
     // for(const sceneobject of comps) {
@@ -230,4 +236,4 @@ class NonPlayableCharacter {
   }
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, Vector, ControllableCharacter, NonPlayableCharacter };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, Vector, ControllableCharacter, NonPlayableCharacter };
