@@ -7,7 +7,7 @@ function expect(obj, keys) {
 function findMissing(input, expected) {
   let missing = [];
   for(const key of expected) {
-    if(!input.includes(key)) missing.push(key);
+    if(!Object.keys(input).includes(key)) missing.push(key);
   }
 }
 
