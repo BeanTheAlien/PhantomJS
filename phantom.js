@@ -4,4 +4,11 @@ function expect(obj, keys) {
   return Object.keys(obj).every(k => keys.includes(k));
 }
 
-export { expect };
+function findMissing(input, expected) {
+  let missing = [];
+  for(const key of expected) {
+    if(!input.includes(key)) missing.push(key);
+  }
+}
+
+export { expect, findMissing };
