@@ -3,7 +3,6 @@ import * as phantom from "./phantom2d.js";
 const canvas = document.getElementById("phantom-2d-canvas");
 
 const scene = new phantom.Scene(canvas, "100vw", "100vh");
-scene.rect(0, 0, 50, 50, "green");
 // StaticObject is a static shape (it doesn't do anything, has collision)
 const staticObject = new phantom.StaticObject({
     id: "myso",
@@ -23,7 +22,9 @@ const movingObject = new phantom.MovingObject({
     extentLeft: 10, extentRight: 50,
     extentDown: null, extentUp: null,
     isBouncing: true,
-    speed: 1
+    speed: 1,
+    collide: null,
+    color: "red"
 });
 // ControllableCharacter (with gravity)
 const playerWithGravity = new phantom.ControllableCharacter({

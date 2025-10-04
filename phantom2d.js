@@ -40,7 +40,8 @@ class Scene {
       if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
     }
     this.#components.forEach(component => {
-      this.rect(component.pos.x, component.pos.y, component.width, component.height, component.color);
+      this.ctx.fillStyle = component.color;
+      this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
     });
   }
   getById(id) {
@@ -49,7 +50,7 @@ class Scene {
 }
 class SceneObject {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects])})`);
+    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects]).join(", ")})`);
     this.id = settings.id;
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
