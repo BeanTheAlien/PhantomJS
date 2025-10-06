@@ -233,6 +233,9 @@ class Scene {
   getById(id) {
     return this.#components.find(component => component.name == id);
   }
+  getByAttr(attr, value) {
+    return this.#components.find(component => component[attr] == value);
+  }
 }
 
 export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, Vector, ControllableCharacter, NonPlayableCharacter };
