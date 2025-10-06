@@ -206,7 +206,7 @@ class Scene {
     }
     this.#components.push(...comps);
   }
-  rem(...comps) {
+  remove(...comps) {
     for(let i = this.#components.length - 1; i >= 0; i--) {
       if(comps.includes(this.#components[i])) {
         this.#components.splice(i, 1);
