@@ -245,7 +245,7 @@ class Scene {
     });
   }
   getById(id) {
-    return this.#components.find(component => component.name == id);
+    return this.#components.find(component => component.id == id);
   }
   getByAttr(attr, value) {
     return this.#components.find(component => component[attr] == value);
