@@ -2,7 +2,7 @@ import * as phantom from "./phantom2d.js";
 
 const canvas = document.getElementById("phantom-2d-canvas");
 
-const scene = new phantom.Scene(canvas, "100vw", "100vh");
+const scene = new phantom.Scene(canvas, 500, 500);
 scene.rect(1, 1, 20, 20, "blue");
 // StaticObject is a static shape (it doesn't do anything, has collision)
 const staticObject = new phantom.StaticObject({
@@ -66,7 +66,7 @@ scene.add(playerWithBinds);
 // BouncyObject (without ignore)
 const bouncyObjectWithoutIgnore = new phantom.BouncyObject({
     id: "mybo1",
-    wwidth: 10,
+    width: 10,
     height: 3,
     strength: 3,
     shape: "rect",

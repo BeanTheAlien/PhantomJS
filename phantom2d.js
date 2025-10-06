@@ -4,7 +4,7 @@ import { expect, findMissing } from "/phantom.js";
 class Scene {
   #components;
   #validTypes;
-  constructor(canvas, width, height) {
+  constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
     this.canvas.style.width = width;
