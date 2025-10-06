@@ -1,56 +1,6 @@
 import { expect, findMissing } from "/phantom.js";
 
 /* Phantom2D v0.0.1 */
-class Scene {
-  #components;
-  #validTypes;
-  constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
-    if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
-    this.canvas = canvas;
-    this.canvas.style.width = width;
-    this.canvas.style.height = height;
-    this.ctx = this.canvas.getContext("2d");
-    this.#components = [];
-    this.#validTypes = [
-      SceneObject,
-      ControllableCharacter,
-      NonPlayableCharacter
-    ];
-  }
-  add(...comps) {
-    for(const comp of comps) {
-      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot add invalid type object.");
-    }
-    this.#components.push(...comps);
-  }
-  rem(...comps) {
-    for(let i = this.#components.length - 1; i >= 0; i--) {
-      if(comps.includes(this.#components[i])) {
-        this.#components.splice(i, 1);
-      }
-    }
-  }
-  // ctx functions
-  rect(x, y, width, height, colour) {
-    this.ctx.fillStyle = colour;
-    this.ctx.fillRect(x, y, width, height);
-  }
-  clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-  render() {
-    for(const comp of this.#components) {
-      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
-    }
-    this.#components.forEach(component => {
-      this.ctx.fillStyle = component.color;
-      this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
-    });
-  }
-  getById(id) {
-    return this.#components.find(component => component.name == id);
-  }
-}
 class SceneObject {
   constructor(expects, objname, settings) {
     if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects]).join(", ")})`);
@@ -230,6 +180,58 @@ class NonPlayableCharacter {
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
+  }
+}
+class Scene {
+  #components;
+  #validTypes;
+  constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
+    if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
+    this.canvas = canvas;
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.canvas.style.width = cssWidth;
+    this.canvas.style.height = cssHeight;
+    this.ctx = this.canvas.getContext("2d");
+    this.#components = [];
+    this.#validTypes = [
+      Scene, SceneObject, StaticObject,
+      PhysicsObject, MovingObject, BouncyObject,
+      Vector, ControllableCharacter, NonPlayableCharacter
+    ];
+  }
+  add(...comps) {
+    for(const comp of comps) {
+      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot add invalid type object.");
+    }
+    this.#components.push(...comps);
+  }
+  rem(...comps) {
+    for(let i = this.#components.length - 1; i >= 0; i--) {
+      if(comps.includes(this.#components[i])) {
+        this.#components.splice(i, 1);
+      }
+    }
+  }
+  // ctx functions
+  rect(x, y, width, height, colour) {
+    this.ctx.fillStyle = colour;
+    this.ctx.fillRect(x, y, width, height);
+  }
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+  render() {
+    for(const comp of this.#components) {
+      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
+    }
+    this.#components.forEach(component => {
+      this.ctx.fillStyle = component.color;
+      this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
+    });
+  }
+  getById(id) {
+    return this.#components.find(component => component.name == id);
   }
 }
 
