@@ -104,6 +104,32 @@ class BouncyObject extends SceneObject {
     this.targetByType = settings.targetByType ?? [];
   }
 }
+class BulletObject extends SceneObject {
+  constructor(settings) {
+    super(["clampLeft", "clampRight", "clampUp", "clampDown", "speed", "dir", "scene"], "bullet", settings);
+    this.clampLeft = settings.clampLeft;
+    this.clampRight = settings.clampRight;
+    this.clampUp = settings.clampUp;
+    this.clampDown = settings.clampDown;
+    this.speed = settings.speed;
+    // 0 is NORTH, 1 is EAST, 2 is SOUTH, 3 is WEST
+    this.dir = settings.dir;
+    this.onDestroyed = settings.onDestroyed ?? (() => {});
+    // Needs a reference to the scene to be able to self-destruct
+    this.scene = settings.scene;
+  }
+  update() {
+    switch(this.dir) {
+      case 0: this.pos.y -= this.speed; break;
+      case 1: this.pos.x += this.speed; break;
+      case 2: this.pos.y += this.speed; break;
+      case 3: this.pos.x -= this.speed; break;
+    }
+    if(this.pos.x + this.width < this.clampLeft || this.pos.x + this.width > this.clampRight || this.pos.y + this.height < this.clampUp || this.pos.y + this.height > this.clampDown) {
+      this.scene.remove(this);
+    }
+  }
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -251,5 +277,16 @@ class Scene {
     return this.#components.find(component => component[attr] == value);
   }
 }
+function isColliding(object1, object2) {
+  const obj1W = object1.width;
+  const obj1H = object1.height;
+  const obj1X = object1.pos.x;
+  const obj1Y = object1.pos.y;
+  const obj2W = object2.width;
+  const obj2H = object2.height;
+  const obj2X = object2.pos.x;
+  const obj2Y = object2.pos.y;
+  return obj2X < obj1X + obj1W && obj2X + obj2W > obj1X && obj2Y < obj1Y + obj1H && obj2Y + obj2H > obj1Y;
+}
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, Vector, ControllableCharacter, NonPlayableCharacter, random };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, ControllableCharacter, NonPlayableCharacter, random, isColliding };
