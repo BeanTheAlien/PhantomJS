@@ -126,6 +126,8 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     width: 5,
     height: 7
 });
+// sets our NPC to wander around
+const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
 /*
 constructor(settings) {
     if(!expect(settings, ["id", "states", "color"])) throw new Error("Missing key(s) in non-playable character.");
