@@ -177,6 +177,20 @@ class NonPlayableCharacter {
   applyState(name) {
     this.#states[name]();
   }
+  move(distance, axis) {
+    if(axis == "x" || axis == 0) {
+      this.pos.x += distance;
+    }
+    else if(axis == "y" || axis == 1) {
+      this.pos.y += distance;
+    }
+  }
+  moveX(distance) {
+    this.pos.x += distance;
+  }
+  moveY(distance) {
+    this.pos.y += distance;
+  }
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
