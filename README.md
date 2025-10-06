@@ -30,9 +30,19 @@ id: string
 shape: string
 collide: function | null
 color: string
+px: number = 0
+py: number = 0
+rx: number = 0
+ry: number = 0
+width: number = 0
+height: number = 0
 **Description**<br>
+A static shape. Does not have any unique properties.<br>
 **Methods**<br>
+none<br>
 **Properties**<br>
+<br>
+
 PhysicsObject<br>
 MovingObject<br>
 BouncyObject<br>
