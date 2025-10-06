@@ -1,4 +1,4 @@
-import { expect, findMissing } from "/phantom.js";
+import { expect, findMissing, random } from "/phantom.js";
 
 /* Phantom2D v0.0.1 */
 class SceneObject {
@@ -238,4 +238,4 @@ class Scene {
   }
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, Vector, ControllableCharacter, NonPlayableCharacter };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, Vector, ControllableCharacter, NonPlayableCharacter, random };

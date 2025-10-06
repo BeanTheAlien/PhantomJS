@@ -116,7 +116,14 @@ const bouncyObjectWithTargetByType = new phantom.BouncyObject({
 // NonPlayableCharacter
 const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     id: "mynpc",
-    states: { }
+    states: {
+        "idle": (() => {
+            //
+        })
+    },
+    color: "orange",
+    width: 5,
+    height: 7
 });
 /*
 constructor(settings) {
