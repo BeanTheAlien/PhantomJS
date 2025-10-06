@@ -113,3 +113,34 @@ const bouncyObjectWithTargetByType = new phantom.BouncyObject({
     color: "green",
     targetByType: [phantom.ControllableCharacter]
 });
+// NonPlayableCharacter
+const nonPlayableCharacter = new phantom.NonPlayableCharacter({
+    id: "mynpc",
+    states: { }
+});
+/*
+constructor(settings) {
+    if(!expect(settings, ["id", "states", "color"])) throw new Error("Missing key(s) in non-playable character.");
+    this.id = settings.id;
+    this.pos = { x: settings.x ?? 0, y: settings.y ?? 0 };
+    this.width = settings.width ?? 0;
+    this.height = settings.height ?? 0;
+    this.color = settings.color;
+    this.gravspd = 0;
+    this.strength = settings.strength ?? 0;
+    this.#states = settings.states;
+  }
+  getState(name) {
+    return this.#states[name];
+  }
+  setState(name, check, action) {
+    this.#states[name] = { check, action };
+  }
+  applyState(name) {
+    this.#states[name]();
+  }
+  update() {
+    this.gravspd += this.strength;
+    this.pos.y += this.gravspd;
+  }
+*/

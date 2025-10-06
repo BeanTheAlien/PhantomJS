@@ -171,8 +171,8 @@ class NonPlayableCharacter {
   getState(name) {
     return this.#states[name];
   }
-  setState(name, check, action) {
-    this.#states[name] = { check, action };
+  setState(name, action) {
+    this.#states[name] = action;
   }
   applyState(name) {
     this.#states[name]();
