@@ -26,22 +26,25 @@ ctx: 2D Context<br>
 
 ### StaticObject (extends SceneObject)
 **Params**<br>
-id: string
-shape: string
-collide: function | null
-color: string
-px: number = 0
-py: number = 0
-rx: number = 0
-ry: number = 0
-width: number = 0
-height: number = 0
+id: string<br>
+shape: string<br>
+collide: function | null<br>
+color: string<br>
+px: number = 0<br>
+py: number = 0<br>
+rx: number = 0<br>
+ry: number = 0<br>
+width: number = 0<br>
+height: number = 0<br>
 **Description**<br>
 A static shape. Does not have any unique properties.<br>
 **Methods**<br>
 none<br>
 **Properties**<br>
-<br>
+id: string<br>
+shape: string<br>
+collide: function | null<br>
+color: string<br>
 
 PhysicsObject<br>
 MovingObject<br>
