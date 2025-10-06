@@ -118,7 +118,8 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     id: "mynpc",
     states: {
         "idle": (() => {
-            //
+            if(phantom.random() <= 50) nonPlayableCharacter.moveX(phantom.random(-1, 2));
+            else nonPlayableCharacter.moveY(phantom.random(-1, 2));
         })
     },
     color: "orange",
