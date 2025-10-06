@@ -35,6 +35,9 @@ class Scene {
     this.ctx.fillStyle = colour;
     this.ctx.fillRect(x, y, width, height);
   }
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
   render() {
     for(const comp of this.#components) {
       if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
