@@ -254,6 +254,10 @@ class Scene {
       PhysicsObject, MovingObject, BouncyObject, BulletObject,
       Vector, PlayableCharacter, NonPlayableCharacter
     ];
+    this.mousePos = { x: 0, y: 0 };
+    document.addEventListener("mousemove", (event) => {
+      this.mousePos = { x: event.clientX, y: event.clientY };
+    });
   }
   add(...comps) {
     for(const comp of comps) {
