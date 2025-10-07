@@ -169,6 +169,9 @@ class Character {
   moveY(distance) {
     this.pos.y += distance;
   }
+  setPos(x, y) {
+    this.pos = { x, y };
+  }
 }
 class PlayableCharacter extends Character {
   #binds;
