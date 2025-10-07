@@ -150,6 +150,11 @@ class ControllableCharacter {
     this.strength = settings.strength ?? 0;
     this.#binds = settings.binds ?? {};
     this.#keys = {};
+    if(settings.customProperties) {
+      for(const { key, value } of Object.entries(settings.customProperties)) {
+        this[key] = value;
+      }
+    }
     window.addEventListener("keydown", (event) => this.#keys[event.key] = true);
     window.addEventListener("keyup", (event) => this.#keys[event.key] = false);
   }
@@ -193,6 +198,11 @@ class NonPlayableCharacter {
     this.gravspd = 0;
     this.strength = settings.strength ?? 0;
     this.#states = settings.states;
+    if(settings.customProperties) {
+      for(const { key, value } of Object.entries(settings.customProperties)) {
+        this[key] = value;
+      }
+    }
   }
   getState(name) {
     return this.#states[name];
