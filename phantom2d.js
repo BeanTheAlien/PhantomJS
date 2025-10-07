@@ -236,7 +236,7 @@ class Scene {
     this.#components = [];
     this.#validTypes = [
       Scene, SceneObject, StaticObject,
-      PhysicsObject, MovingObject, BouncyObject,
+      PhysicsObject, MovingObject, BouncyObject, BulletObject,
       Vector, ControllableCharacter, NonPlayableCharacter
     ];
   }
