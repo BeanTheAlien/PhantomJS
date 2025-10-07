@@ -60,4 +60,9 @@ none -->
 ControllableCharacter<br>
 NonPlayableCharacter
 
+## Feature Roadmap
+- navmesh
+- AI-controlled characters
+- more ctx methods
+
 # Phantom 3D v0.0.0
