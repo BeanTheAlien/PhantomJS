@@ -136,25 +136,47 @@ class Vector {
     this.y = y;
   }
 }
-class ControllableCharacter {
-  #binds;
-  #keys;
-  constructor(settings) {
-    if(!expect(settings, ["id", "width", "height", "color"])) throw new Error("Missing key(s) in controllable character.");
+class Character {
+  constructor(expects, objname, settings) {
+    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects]).join(", ")})`);
     this.id = settings.id;
-    this.pos = { x: settings.x ?? 0, y: settings.y ?? 0 };
-    this.width = settings.width;
-    this.height = settings.height;
+    this.shape = settings.shape;
+    this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
+    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
+    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
+    this.width = settings.width ?? 0;
+    this.height = settings.height ?? 0;
     this.gravspd = 0;
     this.strength = settings.strength ?? 0;
-    this.#binds = settings.binds ?? {};
-    this.#keys = {};
     if(settings.customProperties) {
       for(const { key, value } of Object.entries(settings.customProperties)) {
         this[key] = value;
       }
     }
+  }
+  move(distance, axis) {
+    if(axis == "x" || axis == 0) {
+      this.pos.x += distance;
+    }
+    else if(axis == "y" || axis == 1) {
+      this.pos.y += distance;
+    }
+  }
+  moveX(distance) {
+    this.pos.x += distance;
+  }
+  moveY(distance) {
+    this.pos.y += distance;
+  }
+}
+class PlayableCharacter extends Character {
+  #binds;
+  #keys;
+  constructor(settings) {
+    super(["width", "height"], "playable character", settings);
+    this.#binds = settings.binds ?? {};
+    this.#keys = {};
     window.addEventListener("keydown", (event) => this.#keys[event.key] = true);
     window.addEventListener("keyup", (event) => this.#keys[event.key] = false);
   }
@@ -164,20 +186,6 @@ class ControllableCharacter {
   setBind(key, action) {
     this.#binds[key] = action;
   }
-  move(distance, axis) {
-    if(axis == "x" || axis == 0) {
-      this.pos.x += distance;
-    }
-    else if(axis == "y" || axis == 1) {
-      this.pos.y += distance;
-    }
-  }
-  moveX(distance) {
-    this.pos.x += distance;
-  }
-  moveY(distance) {
-    this.pos.y += distance;
-  }
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
@@ -186,23 +194,11 @@ class ControllableCharacter {
     }
   }
 }
-class NonPlayableCharacter {
+class NonPlayableCharacter extends Character {
   #states;
   constructor(settings) {
-    if(!expect(settings, ["id", "states", "color"])) throw new Error("Missing key(s) in non-playable character.");
-    this.id = settings.id;
-    this.pos = { x: settings.x ?? 0, y: settings.y ?? 0 };
-    this.width = settings.width ?? 0;
-    this.height = settings.height ?? 0;
-    this.color = settings.color;
-    this.gravspd = 0;
-    this.strength = settings.strength ?? 0;
+    super(["states"], "non-playable character", settings);
     this.#states = settings.states;
-    if(settings.customProperties) {
-      for(const { key, value } of Object.entries(settings.customProperties)) {
-        this[key] = value;
-      }
-    }
   }
   getState(name) {
     return this.#states[name];
@@ -212,20 +208,6 @@ class NonPlayableCharacter {
   }
   applyState(name) {
     this.#states[name]();
-  }
-  move(distance, axis) {
-    if(axis == "x" || axis == 0) {
-      this.pos.x += distance;
-    }
-    else if(axis == "y" || axis == 1) {
-      this.pos.y += distance;
-    }
-  }
-  moveX(distance) {
-    this.pos.x += distance;
-  }
-  moveY(distance) {
-    this.pos.y += distance;
   }
   update() {
     this.gravspd += this.strength;
@@ -247,7 +229,7 @@ class Scene {
     this.#validTypes = [
       Scene, SceneObject, StaticObject,
       PhysicsObject, MovingObject, BouncyObject, BulletObject,
-      Vector, ControllableCharacter, NonPlayableCharacter
+      Vector, PlayableCharacter, NonPlayableCharacter
     ];
   }
   add(...comps) {
@@ -299,4 +281,4 @@ function isColliding(object1, object2) {
   return obj2X < obj1X + obj1W && obj2X + obj2W > obj1X && obj2Y < obj1Y + obj1H && obj2Y + obj2H > obj1Y;
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, ControllableCharacter, NonPlayableCharacter, random, isColliding };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding };
