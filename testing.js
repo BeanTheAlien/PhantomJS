@@ -28,7 +28,7 @@ const movingObject = new phantom.MovingObject({
     color: "red"
 });
 // ControllableCharacter (with gravity)
-const playerWithGravity = new phantom.ControllableCharacter({
+const playerWithGravity = new phantom.PlayableCharacter({
     id: "player1",
     width: 5,
     height: 10,
@@ -36,7 +36,7 @@ const playerWithGravity = new phantom.ControllableCharacter({
     color: "blue"
 });
 // ControllableCharacter (without gravity)
-const playerWithoutGravity = new phantom.ControllableCharacter({
+const playerWithoutGravity = new phantom.PlayableCharacter({
     id: "player2",
     width: 5,
     height: 10,
@@ -44,7 +44,7 @@ const playerWithoutGravity = new phantom.ControllableCharacter({
     color: "blue"
 });
 // ControllableCharacter (with preset binds)
-const playerWithBinds = new phantom.ControllableCharacter({
+const playerWithBinds = new phantom.PlayableCharacter({
     id: "player3",
     width: 5,
     height: 10,
@@ -111,7 +111,7 @@ const bouncyObjectWithTargetByType = new phantom.BouncyObject({
     strength: 3,
     shape: "rect",
     color: "green",
-    targetByType: [phantom.ControllableCharacter]
+    targetByType: [phantom.PlayableCharacter]
 });
 // NonPlayableCharacter
 const nonPlayableCharacter = new phantom.NonPlayableCharacter({
