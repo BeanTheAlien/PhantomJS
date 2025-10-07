@@ -199,6 +199,7 @@ class NonPlayableCharacter extends Character {
   constructor(settings) {
     super(["states"], "non-playable character", settings);
     this.#states = settings.states;
+    this.interval = null;
   }
   getState(name) {
     return this.#states[name];
@@ -208,6 +209,9 @@ class NonPlayableCharacter extends Character {
   }
   applyState(name) {
     this.#states[name]();
+  }
+  useInterval(name, delay) {
+    this.interval = setInterval(this.#states[name], delay);
   }
   update() {
     this.gravspd += this.strength;
