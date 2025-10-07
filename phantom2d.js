@@ -291,6 +291,33 @@ class Scene {
   getByAttr(attr, value) {
     return this.#components.find(component => component[attr] == value);
   }
+  getByIdx(idx) {
+    return this.#components[idx];
+  }
+  setById(id, newItem) {
+    const comp = this.#components.find(component => component.id == id);
+    const idx = this.#components.indexOf(comp);
+    if(!comp || idx == -1) return;
+    this.#components[idx] = newItem;
+  }
+  setByAttr(attr, value, newItem) {
+    const comp = this.#components.find(component => component[attr] == value);
+    const idx = this.#components.indexOf(comp);
+    if(!comp || idx == -1) return;
+    this.#components[idx] = newItem;
+  }
+  setByIdx(idx, newItem) {
+    this.#components[idx] = newItem;
+  }
+  hasItem(item) {
+    return this.#components.includes(item);
+  }
+  hasItemWithId(id) {
+    return this.#components.some(component => component.id == id);
+  }
+  hasItemWithAttr(attr, value) {
+    return this.#components.some(component => component[attr] == value);
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
