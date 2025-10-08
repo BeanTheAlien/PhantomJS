@@ -346,6 +346,9 @@ class Scene {
   hasItemWithAttr(attr, value) {
     return this.#components.some(component => component[attr] == value);
   }
+  idxOf(component) {
+    return this.#components.indexOf(component);
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
