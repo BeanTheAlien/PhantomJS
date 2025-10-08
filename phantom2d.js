@@ -103,6 +103,7 @@ class BouncyObject extends SceneObject {
     this.target = settings.target ?? [];
     this.targetByType = settings.targetByType ?? [];
   }
+  update() {}
 }
 class BulletObject extends SceneObject {
   constructor(settings) {
