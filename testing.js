@@ -145,6 +145,8 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 // scene.render draws everything
 function render() {
     scene.update();
+    playerWithBinds.clampPosX(0, canvas.width);
+    playerWithBinds.clampPosY(0, canvas.height);
     scene.clear();
     scene.render();
     requestAnimationFrame(render);
