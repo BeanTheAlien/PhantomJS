@@ -140,8 +140,9 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
 const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
 
 function render() {
-    requestAnimationFrame(render);
+    scene.update();
     scene.clear();
     scene.render();
+    requestAnimationFrame(render);
 }
 render();

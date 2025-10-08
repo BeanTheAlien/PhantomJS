@@ -295,6 +295,14 @@ class Scene {
       this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
     });
   }
+  update() {
+    for(const comp of this.#components) {
+      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot update invalid type object.");
+    }
+    this.#components.forEach(component => {
+      component.update();
+    });
+  }
   getById(id) {
     return this.#components.find(component => component.id == id);
   }
