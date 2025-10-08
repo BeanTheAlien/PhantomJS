@@ -141,6 +141,7 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 
 function render() {
     requestAnimationFrame(render);
+    scene.clear();
     scene.render();
 }
 render();
