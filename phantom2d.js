@@ -349,6 +349,9 @@ class Scene {
   idxOf(component) {
     return this.#components.indexOf(component);
   }
+  len() {
+    return this.#components.length;
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
