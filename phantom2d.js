@@ -352,6 +352,10 @@ class Scene {
   len() {
     return this.#components.length;
   }
+  fillBg(colour) {
+    this.ctx.fillStyle = colour;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
