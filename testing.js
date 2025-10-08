@@ -139,6 +139,10 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
 // sets our NPC to wander around
 const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
 
+// render loop
+// scene.update updates each component's logic
+// scene.clear clears the canvas (removes artifacts)
+// scene.render draws everything
 function render() {
     scene.update();
     scene.clear();

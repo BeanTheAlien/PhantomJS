@@ -178,9 +178,13 @@ class PlayableCharacter extends Character {
   #binds;
   #keys;
   constructor(settings) {
-    super(["width", "height"], "playable character", settings);
+    super(["width", "height", "clampLeft", "clampRight", "clampUp", "clampDown"], "playable character", settings);
     this.#binds = settings.binds ?? {};
     this.#keys = {};
+    this.clampLeft = settings.clampLeft;
+    this.clampRight = settings.clampRight;
+    this.clampUp = settings.clampUp;
+    this.clampDown = settings.clampDown;
     window.addEventListener("keydown", (event) => this.#keys[event.key] = true);
     window.addEventListener("keyup", (event) => this.#keys[event.key] = false);
   }
@@ -193,7 +197,8 @@ class PlayableCharacter extends Character {
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
-    if(this.pos.y > 300) this.pos.y = 300;
+    if(this.pos.x + this.width < this.minX)
+    this.pos.x + this.width < this.clampLeft || this.pos.x + this.width > this.clampRight || this.pos.y + this.height < this.clampUp || this.pos.y + this.height > this.clampDown
     for(const [name, action] of Object.entries(this.#binds)) {
       if(this.#keys[name]) action();
     }
