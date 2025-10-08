@@ -67,16 +67,16 @@ class MovingObject extends SceneObject {
       }
     }
     if(this.extentDown != null && this.extentUp != null) {
-      if(this.extentDown >= this.y && this.isBouncing && this.directionY == 0) {
-        this.y += this.speed;
+      if(this.extentDown >= this.pos.y && this.isBouncing && this.directionY == 0) {
+        this.pos.y += this.speed;
         this.directionY = 1;
-      } else if(this.extentDown <= this.y && this.isBouncing && this.directionY == 1) {
-        this.y -= this.speed;
+      } else if(this.extentDown <= this.pos.y && this.isBouncing && this.directionY == 1) {
+        this.pos.y -= this.speed;
         this.directionY = 0;
-      } else if(this.extentUp < this.y && !this.isBouncing && this.directionY == 0) {
-        this.y -= this.speed;
-      } else if(this.extentUp > this.y && !this.isBouncing && this.directionY == 1) {
-        this.y += this.speed;
+      } else if(this.extentUp < this.pos.y && !this.isBouncing && this.directionY == 0) {
+        this.pos.y -= this.speed;
+      } else if(this.extentUp > this.pos.y && !this.isBouncing && this.directionY == 1) {
+        this.pos.y += this.speed;
       }
     }
   }
