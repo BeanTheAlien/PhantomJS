@@ -1,5 +1,7 @@
 import * as phantom from "./phantom2d.js";
 
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+
 const canvas = document.getElementById("phantom-2d-canvas");
 
 const scene = new phantom.Scene(canvas, 500, 500);
@@ -33,7 +35,9 @@ const playerWithGravity = new phantom.PlayableCharacter({
     width: 5,
     height: 10,
     strength: 3,
-    color: "blue"
+    color: "blue",
+    shape: "rect",
+    collide: null
 });
 // ControllableCharacter (without gravity)
 const playerWithoutGravity = new phantom.PlayableCharacter({
@@ -41,7 +45,9 @@ const playerWithoutGravity = new phantom.PlayableCharacter({
     width: 5,
     height: 10,
     strength: 0, // or leave out
-    color: "blue"
+    color: "blue",
+    shape: "rect",
+    collide: null
 });
 // ControllableCharacter (with preset binds)
 const playerWithBinds = new phantom.PlayableCharacter({
@@ -55,7 +61,9 @@ const playerWithBinds = new phantom.PlayableCharacter({
         "s": () => playerWithBinds.moveY(3),
         "d": () => playerWithBinds.moveX(3)
     },
-    color: "blue"
+    color: "blue",
+    shape: "rect",
+    collide: null
 });
 
 // you can change with setBind, get with getBind
@@ -124,7 +132,9 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     },
     color: "orange",
     width: 5,
-    height: 7
+    height: 7,
+    shape: "rect",
+    collide: null
 });
 // sets our NPC to wander around
 const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
