@@ -193,6 +193,7 @@ class PlayableCharacter extends Character {
   update() {
     this.gravspd += this.strength;
     this.pos.y += this.gravspd;
+    if(this.pos.y > 300) this.pos.y = 300;
     for(const [name, action] of Object.entries(this.#binds)) {
       if(this.#keys[name]) action();
     }
