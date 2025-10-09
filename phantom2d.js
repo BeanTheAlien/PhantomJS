@@ -183,6 +183,9 @@ class Character {
   clampPosY(min, max) {
     this.pos.y = Math.min(Math.max(this.pos.y, min), max);
   }
+  setGravSpd(newSpd) {
+    this.gravspd = newSpd;
+  }
 }
 class PlayableCharacter extends Character {
   #binds;
