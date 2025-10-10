@@ -56,9 +56,11 @@ const playerWithBinds = new phantom.PlayableCharacter({
     height: 10,
     strength: 0.01,
     binds: {
-        "w": (() => playerWithBinds.moveY(-3)),
+        "w": (() => {
+            if(playerWithBinds.pos.y >= 300) playerWithBinds.setGravSpd(-1);
+            else console.log(playerWithBinds.pos.y);
+        }),
         "a": (() => playerWithBinds.moveX(-3)),
-        "s": (() => playerWithBinds.moveY(3)),
         "d": (() => playerWithBinds.moveX(3))
     },
     color: "blue",
@@ -146,7 +148,7 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 function render() {
     scene.update();
     playerWithBinds.clampPosX(0, canvas.width);
-    playerWithBinds.clampPosY(0, canvas.height);
+    playerWithBinds.clampPosY(0, 300);
     scene.clear();
     scene.render();
     requestAnimationFrame(render);
