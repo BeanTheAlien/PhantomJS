@@ -189,6 +189,10 @@ class Character {
   jump(height) {
     this.gravspd = -(height);
   }
+  setRanPos(min, max) {
+    this.pos.x = random(min, max + 1);
+    this.pos.y  = random(min, max + 1);
+  }
 }
 class PlayableCharacter extends Character {
   #binds;
