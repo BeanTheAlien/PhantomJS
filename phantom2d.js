@@ -151,7 +151,7 @@ class Character {
     this.gravspd = 0;
     this.strength = settings.strength ?? 0;
     if(settings.customProperties) {
-      for(const { key, value } of Object.entries(settings.customProperties)) {
+      for(const [key, value] of Object.entries(settings.customProperties)) {
         this[key] = value;
       }
     }
