@@ -56,11 +56,11 @@ const playerWithBinds = new phantom.PlayableCharacter({
     height: 10,
     strength: 0.01,
     binds: {
-        "w": (() => {
+        "w": () => {
             if(playerWithBinds.pos.y >= 300) playerWithBinds.jump(1);
-        }),
-        "a": (() => playerWithBinds.moveX(-3)),
-        "d": (() => playerWithBinds.moveX(3))
+        },
+        "a": () => playerWithBinds.moveX(-1),
+        "d": () => playerWithBinds.moveX(1)
     },
     color: "blue",
     shape: "rect",
@@ -69,7 +69,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
 
 // you can change with setBind, get with getBind
 const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
-// playerWithBinds.setBind("w", (() => playerWithBinds.moveY(3))); // sets bind to "w" => player moveY 3
+// playerWithBinds.setBind("w", () => playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
 // scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
 scene.add(playerWithBinds);
 // BouncyObject (without ignore)
@@ -126,10 +126,10 @@ const bouncyObjectWithTargetByType = new phantom.BouncyObject({
 const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     id: "mynpc",
     states: {
-        "idle": (() => {
+        "idle": () => {
             if(phantom.random() <= 50) nonPlayableCharacter.moveX(phantom.random(-1, 2));
             else nonPlayableCharacter.moveY(phantom.random(-1, 2));
-        })
+        }
     },
     color: "orange",
     width: 5,
