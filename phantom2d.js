@@ -186,6 +186,9 @@ class Character {
   setGravSpd(newSpd) {
     this.gravspd = newSpd;
   }
+  jump(height) {
+    this.gravspd = -(height);
+  }
 }
 class PlayableCharacter extends Character {
   #binds;

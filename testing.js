@@ -57,7 +57,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
     strength: 0.01,
     binds: {
         "w": (() => {
-            if(playerWithBinds.pos.y >= 300) playerWithBinds.setGravSpd(-1);
+            if(playerWithBinds.pos.y >= 300) playerWithBinds.jump(1);
             else console.log(playerWithBinds.pos.y);
         }),
         "a": (() => playerWithBinds.moveX(-3)),
