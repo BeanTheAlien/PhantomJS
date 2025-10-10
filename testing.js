@@ -59,14 +59,14 @@ const playerWithBinds = new phantom.PlayableCharacter({
         "w": () => {
             if(playerWithBinds.pos.y >= 300) playerWithBinds.jump(1);
         },
-        "a": () => playerWithBinds.moveX(-0.6),
-        "d": () => playerWithBinds.moveX(0.6)
+        "a": () => playerWithBinds.moveX(-playerWithBinds.speed),
+        "d": () => playerWithBinds.moveX(playerWithBinds.speed)
     },
     color: "blue",
     shape: "rect",
     collide: null,
     customProperties: {
-        speed: 0.75
+        speed: 0.5
     }
 });
 
