@@ -5,7 +5,7 @@ window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno
 const canvas = document.getElementById("phantom-2d-canvas");
 
 const scene = new phantom.Scene(canvas, 500, 500);
-scene.rect(1, 1, 20, 20, "blue");
+// scene.rect(1, 1, 20, 20, "blue");
 // StaticObject is a static shape (it doesn't do anything, has collision)
 const staticObject = new phantom.StaticObject({
     id: "myso",
@@ -68,7 +68,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
 });
 
 // you can change with setBind, get with getBind
-const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
+// const playerWithBindsWBind = playerWithBinds.getBind("w"); // returns the bind for "w" (player moveY -3)
 // playerWithBinds.setBind("w", () => playerWithBinds.moveY(3)); // sets bind to "w" => player moveY 3
 // scene.add(playerWithGravity, playerWithoutGravity, playerWithBinds);
 scene.add(playerWithBinds);
@@ -139,6 +139,7 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
 });
 // sets our NPC to wander around
 const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
+// scene.add(nonPlayableCharacter);
 
 // render loop
 // scene.update updates each component's logic
