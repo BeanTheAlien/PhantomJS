@@ -402,6 +402,16 @@ class Scene {
       throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
     }
   }
+  getRotTo(source, target) {
+    if(source.x && source.y && target.x && target.y) {
+      const deltaX = source.x - target.x;
+      const deltaY = source.y - target.y;
+      const radians = Math.atan2(deltaY, deltaX);
+      return radians;
+    } else {
+      throw new Error(`Requires x and y values. (missing keys: ${[findMissing(source, ["x", "y"]), findMissing(target, ["x", "y"])].flat(Infinity).join(", ")})`);
+    }
+  }
   #isValidType(item) {
     return this.#validTypes.some(type => item instanceof type);
   }
