@@ -10,7 +10,7 @@ const scene = new phantom.Scene(canvas, 500, 500);
 const staticObject = new phantom.StaticObject({
     id: "myso",
     shape: "rect",
-    px: 10, py: 10,
+    x: 10, y: 10,
     width: 30, height: 10,
     collide: null,
     color: "blue"
@@ -57,7 +57,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
     strength: 0.01,
     binds: {
         "w": () => {
-            if(playerWithBinds.pos.y >= 300) playerWithBinds.jump(1);
+            if(playerWithBinds.y >= 300) playerWithBinds.jump(1);
         },
         "a": () => playerWithBinds.moveX(-playerWithBinds.speed),
         "d": () => playerWithBinds.moveX(playerWithBinds.speed)
@@ -145,7 +145,9 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 // scene.add(nonPlayableCharacter);
 // sample event addition to scene
 function generateBullet() {
-    const rot = scene.getMouseRotTo({ x: playerWithBinds.pos.x, y: playerWithBinds.pos.y });
+    const x = playerWithBinds.x;
+    const y = playerWithBinds.y;
+    const rot = scene.getMouseRotTo({ x, y });
     const bullet = new phantom.BulletObject({
         scene,
         id: "bullet",
@@ -156,11 +158,12 @@ function generateBullet() {
         clampRight: scene.canvas.width,
         clampUp: -Infinity,
         clampDown: Infinity,
-        speed: 0.2,
+        speed: 1,
         dir: rot,
         rot,
-        width: 3,
-        height: 0.5
+        width: 5,
+        height: 3,
+        x, y
     });
     scene.add(bullet);
 }
