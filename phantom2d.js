@@ -9,7 +9,7 @@ class SceneObject {
     this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
     this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
-    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
+    this.rot = settings.rot ?? 0;
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
   }
@@ -144,8 +144,9 @@ class Character {
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
+    // px (position x), py (position y)
     this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
-    this.rot = { x: settings.rx ?? 0, y: settings.ry ?? 0 };
+    this.rot = settings.rot ?? 0;
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
     this.gravspd = 0;
