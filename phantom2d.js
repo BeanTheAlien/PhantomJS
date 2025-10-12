@@ -86,22 +86,24 @@ class BouncyObject extends SceneObject {
   // Add passthrough/stop logic with ignore/target returns
   // Allow for existing colliding setting, mix with required colliding setting
   constructor(settings) {
-    settings.collide = (col) => {
-      // Exits prematurely if colliding object should be ignored
-      if(this.ignore.includes(col) || this.ignoreByType.some(type => col instanceof type)) return;
-      // Checks for match within targeted entities and types
-      const matchesTarget = this.target.includes(col);
-      const matchesTargetByType = this.targetByType.some(type => col instanceof type);
-      if((this.target.length > 0 || this.targetByType.length > 0) && !(matchesTarget || matchesTargetByType)) return;
-      col.velocity.x *= -(this.strength);
-      col.velocity.y *= -(this.strength);
-    };
     super(["strength"], "bouncy", settings);
     this.strength = settings.strength;
     this.ignore = settings.ignore ?? [];
     this.ignoreByType = settings.ignoreByType ?? [];
     this.target = settings.target ?? [];
     this.targetByType = settings.targetByType ?? [];
+    this.collide = (col) => {
+      // Exits prematurely if colliding object should be ignored
+      if(this.ignore.includes(col) || this.ignoreByType.some(type => col instanceof type)) return;
+      // Checks for match within targeted entities and types
+      const matchesTarget = this.target.includes(col);
+      const matchesTargetByType = this.targetByType.some(type => col instanceof type);
+      if((this.target.length > 0 || this.targetByType.length > 0) && !(matchesTarget || matchesTargetByType)) return;
+      if(col.velocity) {
+        col.velocity.x *= -(this.strength);
+        col.velocity.y *= -(this.strength);
+      }
+    };
   }
   update() {}
 }
@@ -288,7 +290,8 @@ class Scene {
     ];
     this.mousePos = { x: 0, y: 0 };
     document.addEventListener("mousemove", (event) => {
-      this.mousePos = { x: event.clientX, y: event.clientY };
+      const rect = this.canvas.getBoundingClientRect();
+      this.mousePos = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     });
     this._events = {};
   }
@@ -390,6 +393,7 @@ class Scene {
   #resolveCollisions() {
     this.#components.forEach(component1 => {
       this.#components.forEach(component2 => {
+        if(component1 == component2) return;
         if(isColliding(component1, component2)) {
           component1.collide(component2);
         }
@@ -397,7 +401,7 @@ class Scene {
     });
   }
   getMouseRotTo(target) {
-    if(target.x && target.y) {
+    if(target.x != null && target.y != null) {
       const mouseX = this.mousePos.x;
       const mouseY = this.mousePos.y;
       const refX = target.x;
@@ -413,7 +417,7 @@ class Scene {
     }
   }
   getRotTo(source, target) {
-    if(source.x && source.y && target.x && target.y) {
+    if(source.x != null && source.y != null && target.x != null && target.y != null) {
       const deltaX = source.x - target.x;
       const deltaY = source.y - target.y;
       const radians = Math.atan2(deltaY, deltaX);
@@ -429,9 +433,11 @@ class Scene {
     this._events[name] = exec;
     this.canvas.addEventListener(name, exec);
   }
-  remEvent(name, exec) {
+  remEvent(name) {
     if(this._events[name]) {
+      const exec = this._events[name];
       this.canvas.removeEventListener(name, exec);
+      delete this._events[name];
     }
   }
 }
