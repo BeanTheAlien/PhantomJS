@@ -217,6 +217,10 @@ class Character {
     if(!this.nheight) return;
     this.height = this.nheight;
   }
+  isCrouched() {
+    if(!this.nheight) return;
+    return this.height != this.nheight;
+  }
 }
 class PlayableCharacter extends Character {
   #binds;
