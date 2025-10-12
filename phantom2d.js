@@ -125,6 +125,16 @@ class BulletObject extends SceneObject {
       case 1: this.pos.x += this.speed; break;
       case 2: this.pos.y += this.speed; break;
       case 3: this.pos.x -= this.speed; break;
+      default:
+        // assumes dir is an angle and not a direction
+        // to get the forward vector, we use (where theta is the angle):
+        // (cos(theta), sin(theta))
+        const dx = Math.cos(this.dir);
+        const dy = Math.sin(this.dir);
+        // Update the position by adding the scaled direction vector
+        this.pos.x += dx * this.speed;
+        this.pos.y += dy * this.speed;
+        break;
     }
     if(this.pos.x + this.width < this.clampLeft || this.pos.x + this.width > this.clampRight || this.pos.y + this.height < this.clampUp || this.pos.y + this.height > this.clampDown) {
       this.scene.remove(this);
