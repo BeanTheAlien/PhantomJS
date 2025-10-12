@@ -262,6 +262,7 @@ class Scene {
   #components;
   #validTypes;
   #resolveCollisions;
+  #isValidType;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -283,7 +284,7 @@ class Scene {
   }
   add(...comps) {
     for(const comp of comps) {
-      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot add invalid type object.");
+      if(!this.#isValidType(comp)) throw new Error("Cannot add invalid type object.");
     }
     this.#components.push(...comps);
   }
@@ -309,7 +310,7 @@ class Scene {
   }
   render() {
     for(const comp of this.#components) {
-      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot render invalid type object.");
+      if(!this.#isValidType(comp)) throw new Error("Cannot render invalid type object.");
     }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
@@ -318,7 +319,7 @@ class Scene {
   }
   update() {
     for(const comp of this.#components) {
-      if(!this.#validTypes.some(type => comp instanceof type)) throw new Error("Cannot update invalid type object.");
+      if(!this.#isValidType(comp)) throw new Error("Cannot update invalid type object.");
     }
     this.#components.forEach(component => {
       component.update();
@@ -376,6 +377,25 @@ class Scene {
         }
       });
     });
+  }
+  getMouseRotTo(target) {
+    if(target.x && target.y) {
+      const mouseX = this.mousePos.x;
+      const mouseY = this.mousePos.y;
+      const refX = target.x;
+      const refY = target.y;
+      // Calculate difference vector
+      const deltaX = mouseX - refX;
+      const deltaY = mouseY - refY;
+      // For utilizing rotation canvas items, it requires radians
+      const radians = Math.atan2(deltaY, deltaX);
+      return radians;
+    } else {
+      throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
+    }
+  }
+  #isValidType(item) {
+    return this.#validTypes.some(type => item instanceof type);
   }
 }
 function isColliding(object1, object2) {
