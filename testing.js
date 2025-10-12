@@ -143,6 +143,28 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
 // sets our NPC to wander around
 const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
 // scene.add(nonPlayableCharacter);
+// sample event addition to scene
+function generateBullet() {
+    const rot = scene.getMouseRotTo({ x: playerWithBinds.pos.x, y: playerWithBinds.pos.y });
+    const bullet = new phantom.BulletObject({
+        scene,
+        id: "bullet",
+        shape: "rect",
+        collide: null,
+        color: "yellow",
+        clampLeft: 0,
+        clampRight: scene.canvas.width,
+        clampUp: -Infinity,
+        clampDown: Infinity,
+        speed: 0.2,
+        dir: rot,
+        rot,
+        width: 3,
+        height: 0.5
+    });
+    scene.add(bullet);
+}
+scene.addEvent("click", generateBullet);
 
 // render loop
 // scene.update updates each component's logic
