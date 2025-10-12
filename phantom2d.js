@@ -418,8 +418,8 @@ class Scene {
   }
   getRotTo(source, target) {
     if(source.x != null && source.y != null && target.x != null && target.y != null) {
-      const deltaX = source.x - target.x;
-      const deltaY = source.y - target.y;
+      const deltaX = target.x - source.x;
+      const deltaY = target.y - source.y;
       const radians = Math.atan2(deltaY, deltaX);
       return radians;
     } else {
