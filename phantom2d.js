@@ -3,13 +3,13 @@ import { expect, findMissing, random } from "/phantom.js";
 // Phantom2D v0.0.5
 class Phantom2DEntity {
   constructor(expects, objname, settings) {
-    // id, shape, color and collide are all base properties
-    const base = ["id", "shape", "color", "collide"];
+    // id, shape and color are all base properties
+    const base = ["id", "shape", "color"];
     if(!expect(settings, [...base, ...expects])) throw new Error(`Missing keys(s) in ${objname} settings. (missing: ${findMissing(settings, [...base, ...expects]).join(", ")})`);
     this._id = settings.id;
     this.shape = settings.shape;
     this.color = settings.color;
-    this.collide = settings.collide;
+    this.collide = settings.collide ?? (() => {});
     this.x = settings.x ?? 0;
     this.y = settings.y ?? 0;
     this.rot = settings.rot ?? 0;
