@@ -1,6 +1,6 @@
 import { expect, findMissing, random } from "/phantom.js";
 
-// Phantom2D v0.0.5
+// Phantom2D v0.0.6
 class Phantom2DEntity {
   constructor(expects, objname, settings) {
     // id, shape and color are all base properties
@@ -62,6 +62,12 @@ class Phantom2DEntity {
   }
   clampPosY(min, max) {
     this.y = Math.min(Math.max(this.y, min), max);
+  }
+  getPos() {
+    return { x: this.x, y: this.y };
+  }
+  getCenter() {
+    return { x: this.x + this.width / 2, y: this.y + this.height / 2 };
   }
 }
 class SceneObject extends Phantom2DEntity {
@@ -300,7 +306,9 @@ class Scene {
     this.mousePos = { x: 0, y: 0 };
     document.addEventListener("mousemove", (event) => {
       const rect = this.canvas.getBoundingClientRect();
-      this.mousePos = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      this.mousePos = { x: (event.clientX - rect.left) * scaleX, y: (event.clientY - rect.top) * scaleY };
     });
     this._events = {};
   }
@@ -435,6 +443,22 @@ class Scene {
       throw new Error(`Requires x and y values. (missing keys: ${[findMissing(source, ["x", "y"]), findMissing(target, ["x", "y"])].flat(Infinity).join(", ")})`);
     }
   }
+  getRotToMouse(source) {
+    if(source.x != null && source.y != null) {
+      const mouseX = this.mousePos.x;
+      const mouseY = this.mousePos.y;
+      const refX = source.x;
+      const refY = source.y;
+      // Calculate difference vector
+      const deltaX = mouseX - refX;
+      const deltaY = mouseY - refY;
+      // For utilizing rotation canvas items, it requires radians
+      const radians = Math.atan2(deltaY, deltaX);
+      return radians;
+    } else {
+      throw new Error(`Requires x and y values. (missing keys: ${findMissing(source, ["x", "y"]).join(", ")})`);
+    }
+  }
   #isPhantom2DEntity(item) {
     return item instanceof Phantom2DEntity;
   }
@@ -448,6 +472,12 @@ class Scene {
       this.canvas.removeEventListener(name, exec);
       delete this._events[name];
     }
+  }
+  width() {
+    return this.canvas.width;
+  }
+  height() {
+    return this.canvas.height;
   }
 }
 function isColliding(object1, object2) {

@@ -145,9 +145,9 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 // scene.add(nonPlayableCharacter);
 // sample event addition to scene
 function generateBullet() {
-    const x = playerWithBinds.x;
-    const y = playerWithBinds.y;
-    const rot = scene.getMouseRotTo({ x, y });
+    const { x, y } = playerWithBinds.getCenter();
+    const rot = scene.getRotToMouse({ x, y });
+    console.log(x, y, "\n", rot);
     const bullet = new phantom.BulletObject({
         scene,
         id: "bullet",
@@ -155,7 +155,7 @@ function generateBullet() {
         collide: null,
         color: "yellow",
         clampLeft: 0,
-        clampRight: scene.canvas.width,
+        clampRight: scene.width(),
         clampUp: -Infinity,
         clampDown: Infinity,
         speed: 1,
