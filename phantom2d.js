@@ -261,6 +261,7 @@ class NonPlayableCharacter extends Character {
 class Scene {
   #components;
   #validTypes;
+  #resolveCollisions;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -322,6 +323,7 @@ class Scene {
     this.#components.forEach(component => {
       component.update();
     });
+    this.#resolveCollisions();
   }
   getById(id) {
     return this.#components.find(component => component.id == id);
@@ -365,6 +367,15 @@ class Scene {
   fillBg(colour) {
     this.ctx.fillStyle = colour;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+  #resolveCollisions() {
+    this.#components.forEach(component1 => {
+      this.#components.forEach(component2 => {
+        if(isColliding(component1, component2)) {
+          component1.collide(component2);
+        }
+      });
+    });
   }
 }
 function isColliding(object1, object2) {
