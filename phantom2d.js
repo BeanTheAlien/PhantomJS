@@ -86,6 +86,7 @@ class BouncyObject extends SceneObject {
   // Add passthrough/stop logic with ignore/target returns
   // Allow for existing colliding setting, mix with required colliding setting
   constructor(settings) {
+    settings.collide = null;
     super(["strength"], "bouncy", settings);
     this.strength = settings.strength;
     this.ignore = settings.ignore ?? [];
