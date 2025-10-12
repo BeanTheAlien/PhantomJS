@@ -280,6 +280,7 @@ class Scene {
     document.addEventListener("mousemove", (event) => {
       this.mousePos = { x: event.clientX, y: event.clientY };
     });
+    this._events = {};
   }
   add(...comps) {
     for(const comp of comps) {
@@ -403,6 +404,15 @@ class Scene {
   }
   #isValidType(item) {
     return this.#validTypes.some(type => item instanceof type);
+  }
+  addEvent(name, exec) {
+    this._events[name] = exec;
+    this.canvas.addEventListener(name, exec);
+  }
+  remEvent(name, exec) {
+    if(this._events[name]) {
+      this.canvas.removeEventListener(name, exec);
+    }
   }
 }
 function isColliding(object1, object2) {
