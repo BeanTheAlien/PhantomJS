@@ -81,6 +81,10 @@ class Phantom2DEntity {
   setPosY(y) {
     this.y = y;
   }
+  setRanPos(min, max) {
+    this.x = random(min, max + 1);
+    this.y = random(min, max + 1);
+  }
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
@@ -234,10 +238,6 @@ class Character extends Phantom2DEntity {
   }
   jump(height) {
     this.gravspd = -(height);
-  }
-  setRanPos(min, max) {
-    this.x = random(min, max + 1);
-    this.y = random(min, max + 1);
   }
 }
 class PlayableCharacter extends Character {
