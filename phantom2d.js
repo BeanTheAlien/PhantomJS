@@ -209,6 +209,14 @@ class Character {
     this.x = random(min, max + 1);
     this.y  = random(min, max + 1);
   }
+  crouch(height) {
+    this.nheight = this.height;
+    this.height = height;
+  }
+  uncrouch() {
+    if(!this.nheight) return;
+    this.height = this.nheight;
+  }
 }
 class PlayableCharacter extends Character {
   #binds;
