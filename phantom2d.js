@@ -8,7 +8,8 @@ class SceneObject {
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
-    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
+    this.x = settings.x ?? 0;
+    this.y = settings.y ?? 0;
     this.rot = settings.rot ?? 0;
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
@@ -28,7 +29,7 @@ class PhysicsObject extends SceneObject {
   }
   update() {
     this.gravspd += this.strength;
-    this.pos.y += this.gravspd;
+    this.y += this.gravspd;
   }
 }
 class MovingObject extends SceneObject {
@@ -54,29 +55,29 @@ class MovingObject extends SceneObject {
   }
   update() {
     if(this.extentLeft != null && this.extentRight != null) {
-      if(this.extentLeft >= this.pos.x && this.isBouncing && this.directionX == 0) {
-        this.pos.x += this.speed;
+      if(this.extentLeft >= this.x && this.isBouncing && this.directionX == 0) {
+        this.x += this.speed;
         this.directionX = 1;
-      } else if(this.extentRight <= this.pos.x && this.isBouncing && this.directionX == 1) {
-        this.pos.x -= this.speed;
+      } else if(this.extentRight <= this.x && this.isBouncing && this.directionX == 1) {
+        this.x -= this.speed;
         this.directionX = 0;
-      } else if(this.extentLeft < this.pos.x && !this.isBouncing && this.directionX == 0) {
-        this.pos.x -= this.speed;
-      } else if(this.extentRight > this.pos.x && !this.isBouncing && this.directionX == 1) {
-        this.pos.x += this.speed;
+      } else if(this.extentLeft < this.x && !this.isBouncing && this.directionX == 0) {
+        this.x -= this.speed;
+      } else if(this.extentRight > this.x && !this.isBouncing && this.directionX == 1) {
+        this.x += this.speed;
       }
     }
     if(this.extentDown != null && this.extentUp != null) {
-      if(this.extentDown >= this.pos.y && this.isBouncing && this.directionY == 0) {
-        this.pos.y += this.speed;
+      if(this.extentDown >= this.y && this.isBouncing && this.directionY == 0) {
+        this.y += this.speed;
         this.directionY = 1;
-      } else if(this.extentDown <= this.pos.y && this.isBouncing && this.directionY == 1) {
-        this.pos.y -= this.speed;
+      } else if(this.extentDown <= this.y && this.isBouncing && this.directionY == 1) {
+        this.y -= this.speed;
         this.directionY = 0;
-      } else if(this.extentUp < this.pos.y && !this.isBouncing && this.directionY == 0) {
-        this.pos.y -= this.speed;
-      } else if(this.extentUp > this.pos.y && !this.isBouncing && this.directionY == 1) {
-        this.pos.y += this.speed;
+      } else if(this.extentUp < this.y && !this.isBouncing && this.directionY == 0) {
+        this.y -= this.speed;
+      } else if(this.extentUp > this.y && !this.isBouncing && this.directionY == 1) {
+        this.y += this.speed;
       }
     }
   }
@@ -124,10 +125,10 @@ class BulletObject extends SceneObject {
   }
   update() {
     switch(this.dir) {
-      case 0: this.pos.y -= this.speed; break;
-      case 1: this.pos.x += this.speed; break;
-      case 2: this.pos.y += this.speed; break;
-      case 3: this.pos.x -= this.speed; break;
+      case 0: this.y -= this.speed; break;
+      case 1: this.x += this.speed; break;
+      case 2: this.y += this.speed; break;
+      case 3: this.x -= this.speed; break;
       default:
         // assumes dir is an angle and not a direction
         // to get the forward vector, we use (where theta is the angle):
@@ -135,11 +136,11 @@ class BulletObject extends SceneObject {
         const dx = Math.cos(this.dir);
         const dy = Math.sin(this.dir);
         // Update the position by adding the scaled direction vector
-        this.pos.x += dx * this.speed;
-        this.pos.y += dy * this.speed;
+        this.x += dx * this.speed;
+        this.y += dy * this.speed;
         break;
     }
-    if(this.pos.x + this.width < this.clampLeft || this.pos.x + this.width > this.clampRight || this.pos.y + this.height < this.clampUp || this.pos.y + this.height > this.clampDown) {
+    if(this.x + this.width < this.clampLeft || this.x + this.width > this.clampRight || this.y + this.height < this.clampUp || this.y + this.height > this.clampDown) {
       this.scene.remove(this);
     }
   }
@@ -157,8 +158,8 @@ class Character {
     this.shape = settings.shape;
     this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
-    // px (position x), py (position y)
-    this.pos = { x: settings.px ?? 0, y: settings.py ?? 0 };
+    this.x = settings.x ?? 0;
+    this.y = settings.y ?? 0;
     this.rot = settings.rot ?? 0;
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
@@ -172,30 +173,31 @@ class Character {
   }
   move(distance, axis) {
     if(axis == "x" || axis == 0) {
-      this.pos.x += distance;
+      this.x += distance;
     }
     else if(axis == "y" || axis == 1) {
-      this.pos.y += distance;
+      this.y += distance;
     }
   }
   moveX(distance) {
-    this.pos.x += distance;
+    this.x += distance;
   }
   moveY(distance) {
-    this.pos.y += distance;
+    this.y += distance;
   }
   setPos(x, y) {
-    this.pos = { x, y };
+    this.x = x;
+    this.y = y;
   }
   clampPos(min, max, axis) {
-    if(axis == "x" || axis == 0) this.pos.x = Math.min(Math.max(this.pos.x, min), max);
-    else if(axis == "y" || axis == 1) this.pos.y = Math.min(Math.max(this.pos.y, min), max);
+    if(axis == "x" || axis == 0) this.x = Math.min(Math.max(this.x, min), max);
+    else if(axis == "y" || axis == 1) this.y = Math.min(Math.max(this.y, min), max);
   }
   clampPosX(min, max) {
-    this.pos.x = Math.min(Math.max(this.pos.x, min), max);
+    this.x = Math.min(Math.max(this.x, min), max);
   }
   clampPosY(min, max) {
-    this.pos.y = Math.min(Math.max(this.pos.y, min), max);
+    this.y = Math.min(Math.max(this.y, min), max);
   }
   setGravSpd(newSpd) {
     this.gravspd = newSpd;
@@ -204,8 +206,8 @@ class Character {
     this.gravspd = -(height);
   }
   setRanPos(min, max) {
-    this.pos.x = random(min, max + 1);
-    this.pos.y  = random(min, max + 1);
+    this.x = random(min, max + 1);
+    this.y  = random(min, max + 1);
   }
 }
 class PlayableCharacter extends Character {
@@ -226,7 +228,7 @@ class PlayableCharacter extends Character {
   }
   update() {
     this.gravspd += this.strength;
-    this.pos.y += this.gravspd;
+    this.y += this.gravspd;
     for(const [name, action] of Object.entries(this.#binds)) {
       if(this.#keys[name]) action();
     }
@@ -253,7 +255,7 @@ class NonPlayableCharacter extends Character {
   }
   update() {
     this.gravspd += this.strength;
-    this.pos.y += this.gravspd;
+    this.y += this.gravspd;
   }
 }
 // class NavigationMesh {
@@ -330,7 +332,7 @@ class Scene {
       this.ctx.fillStyle = component.color;
       this.ctx.save();
       // Translate to the center of the rectangle
-      this.ctx.translate(component.pos.x + component.width / 2, component.pos.y + component.height / 2);
+      this.ctx.translate(component.x + component.width / 2, component.y + component.height / 2);
       // Rotate the canvas
       this.ctx.rotate(component.rot);
       // Draw the rectangle at the new origin (its center)
@@ -445,12 +447,12 @@ class Scene {
 function isColliding(object1, object2) {
   const obj1W = object1.width;
   const obj1H = object1.height;
-  const obj1X = object1.pos.x;
-  const obj1Y = object1.pos.y;
+  const obj1X = object1.x;
+  const obj1Y = object1.y;
   const obj2W = object2.width;
   const obj2H = object2.height;
-  const obj2X = object2.pos.x;
-  const obj2Y = object2.pos.y;
+  const obj2X = object2.x;
+  const obj2Y = object2.y;
   return obj2X < obj1X + obj1W && obj2X + obj2W > obj1X && obj2Y < obj1Y + obj1H && obj2Y + obj2H > obj1Y;
 }
 
