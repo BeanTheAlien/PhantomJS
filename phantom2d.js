@@ -69,6 +69,18 @@ class Phantom2DEntity {
   getCenter() {
     return { x: this.x + this.width / 2, y: this.y + this.height / 2 };
   }
+  getPosX() {
+    return this.x;
+  }
+  getPosY() {
+    return this.y;
+  }
+  setPosX(x) {
+    this.x = x;
+  }
+  setPosY(y) {
+    this.y = y;
+  }
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
