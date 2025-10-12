@@ -207,7 +207,7 @@ class Character {
   }
   setRanPos(min, max) {
     this.x = random(min, max + 1);
-    this.y  = random(min, max + 1);
+    this.y = random(min, max + 1);
   }
 }
 class PlayableCharacter extends Character {
