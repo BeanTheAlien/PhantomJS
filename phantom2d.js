@@ -262,8 +262,6 @@ class NonPlayableCharacter extends Character {
 class Scene {
   #components;
   #validTypes;
-  #resolveCollisions;
-  #isValidType;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -315,7 +313,15 @@ class Scene {
     }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
-      this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
+      this.ctx.save();
+      // Translate to the center of the rectangle
+      this.ctx.translate(component.pos.x + component.width / 2, component.pos.y + component.height / 2);
+      // Rotate the canvas
+      this.ctx.rotate(component.rot);
+      // Draw the rectangle at the new origin (its center)
+      this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
+      this.ctx.restore(); // Restore the canvas to its original state
+      //this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
     });
   }
   update() {
