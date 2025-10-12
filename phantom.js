@@ -1,4 +1,4 @@
-// Phantom.js v0.0.0
+// Phantom.js
 
 function expect(obj, keys) {
   return keys.every(k => Object.prototype.hasOwnProperty.call(obj, k));
