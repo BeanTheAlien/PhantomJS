@@ -1,18 +1,72 @@
 import { expect, findMissing, random } from "/phantom.js";
 
 // Phantom2D v0.0.5
-class SceneObject {
+class Phantom2DEntity {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects]).join(", ")})`);
-    this.id = settings.id;
+    // id, shape, color and collide are all base properties
+    const base = ["id", "shape", "color", "collide"];
+    if(!expect(settings, [...base, ...expects])) throw new Error(`Missing keys(s) in ${objname} settings. (missing: ${findMissing(settings, [...base, ...expects]).join(", ")})`);
+    this._id = settings.id;
     this.shape = settings.shape;
-    this.collide = settings.collide ?? (() => {});
     this.color = settings.color;
+    this.collide = settings.collide;
     this.x = settings.x ?? 0;
     this.y = settings.y ?? 0;
     this.rot = settings.rot ?? 0;
     this.width = settings.width ?? 0;
     this.height = settings.height ?? 0;
+    if(settings.customProperties) {
+      for(const [key, value] of Object.entries(settings.customProperties)) {
+        this[key] = value;
+      }
+    }
+  }
+  setPos(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  setRot(rad) {
+    this.rot = rad;
+  }
+  setWidth(width) {
+    this.width = width;
+  }
+  setHeight(height) {
+    this.height = height;
+  }
+  getForwardVector() {
+    const dx = Math.cos(this.rot);
+    const dy = Math.sin(this.rot);
+    return { dx, dy };
+  }
+  move(distance, axis) {
+    if(axis == "x" || axis == 0) {
+      this.x += distance;
+    }
+    else if(axis == "y" || axis == 1) {
+      this.y += distance;
+    }
+  }
+  moveX(distance) {
+    this.x += distance;
+  }
+  moveY(distance) {
+    this.y += distance;
+  }
+  clampPos(min, max, axis) {
+    if(axis == "x" || axis == 0) this.x = Math.min(Math.max(this.x, min), max);
+    else if(axis == "y" || axis == 1) this.y = Math.min(Math.max(this.y, min), max);
+  }
+  clampPosX(min, max) {
+    this.x = Math.min(Math.max(this.x, min), max);
+  }
+  clampPosY(min, max) {
+    this.y = Math.min(Math.max(this.y, min), max);
+  }
+}
+class SceneObject extends Phantom2DEntity {
+  constructor(expects, objname, settings) {
+    super(expects, `${objname} object`, settings);
   }
 }
 class StaticObject extends SceneObject {
@@ -105,7 +159,7 @@ class BouncyObject extends SceneObject {
         col.velocity.x *= -(this.strength);
         col.velocity.y *= -(this.strength);
       }
-    };
+    }
   }
   update() {}
 }
@@ -151,53 +205,11 @@ class Vector {
     this.y = y;
   }
 }
-class Character {
+class Character extends Phantom2DEntity {
   constructor(expects, objname, settings) {
-    if(!expect(settings, ["id", "shape", "collide", "color", ...expects])) throw new Error(`Missing key(s) in ${objname} object settings. (missing keys: ${findMissing(settings, ["id", "shape", "collide", "color", ...expects]).join(", ")})`);
-    this.id = settings.id;
-    this.shape = settings.shape;
-    this.collide = settings.collide ?? (() => {});
-    this.color = settings.color;
-    this.x = settings.x ?? 0;
-    this.y = settings.y ?? 0;
-    this.rot = settings.rot ?? 0;
-    this.width = settings.width ?? 0;
-    this.height = settings.height ?? 0;
+    super(expects, `${objname} character`, settings);
     this.gravspd = 0;
     this.strength = settings.strength ?? 0;
-    if(settings.customProperties) {
-      for(const [key, value] of Object.entries(settings.customProperties)) {
-        this[key] = value;
-      }
-    }
-  }
-  move(distance, axis) {
-    if(axis == "x" || axis == 0) {
-      this.x += distance;
-    }
-    else if(axis == "y" || axis == 1) {
-      this.y += distance;
-    }
-  }
-  moveX(distance) {
-    this.x += distance;
-  }
-  moveY(distance) {
-    this.y += distance;
-  }
-  setPos(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-  clampPos(min, max, axis) {
-    if(axis == "x" || axis == 0) this.x = Math.min(Math.max(this.x, min), max);
-    else if(axis == "y" || axis == 1) this.y = Math.min(Math.max(this.y, min), max);
-  }
-  clampPosX(min, max) {
-    this.x = Math.min(Math.max(this.x, min), max);
-  }
-  clampPosY(min, max) {
-    this.y = Math.min(Math.max(this.y, min), max);
   }
   setGravSpd(newSpd) {
     this.gravspd = newSpd;
@@ -214,7 +226,7 @@ class PlayableCharacter extends Character {
   #binds;
   #keys;
   constructor(settings) {
-    super(["width", "height"], "playable character", settings);
+    super(["width", "height"], "playable", settings);
     this.#binds = settings.binds ?? {};
     this.#keys = {};
     window.addEventListener("keydown", (event) => this.#keys[event.key] = true);
@@ -237,7 +249,7 @@ class PlayableCharacter extends Character {
 class NonPlayableCharacter extends Character {
   #states;
   constructor(settings) {
-    super(["states"], "non-playable character", settings);
+    super(["states"], "non-playable", settings);
     this.#states = settings.states;
     this.interval = null;
   }
@@ -276,7 +288,6 @@ class NonPlayableCharacter extends Character {
 // }
 class Scene {
   #components;
-  #validTypes;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -286,11 +297,6 @@ class Scene {
     this.canvas.style.height = cssHeight;
     this.ctx = this.canvas.getContext("2d");
     this.#components = [];
-    this.#validTypes = [
-      Scene, SceneObject, StaticObject,
-      PhysicsObject, MovingObject, BouncyObject, BulletObject,
-      Vector, PlayableCharacter, NonPlayableCharacter
-    ];
     this.mousePos = { x: 0, y: 0 };
     document.addEventListener("mousemove", (event) => {
       const rect = this.canvas.getBoundingClientRect();
@@ -300,7 +306,7 @@ class Scene {
   }
   add(...comps) {
     for(const comp of comps) {
-      if(!this.#isValidType(comp)) throw new Error("Cannot add invalid type object.");
+      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot add invalid type object.");
     }
     this.#components.push(...comps);
   }
@@ -326,7 +332,7 @@ class Scene {
   }
   render() {
     for(const comp of this.#components) {
-      if(!this.#isValidType(comp)) throw new Error("Cannot render invalid type object.");
+      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot render invalid type object.");
     }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
@@ -343,7 +349,7 @@ class Scene {
   }
   update() {
     for(const comp of this.#components) {
-      if(!this.#isValidType(comp)) throw new Error("Cannot update invalid type object.");
+      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot update invalid type object.");
     }
     this.#components.forEach(component => {
       component.update();
@@ -429,8 +435,8 @@ class Scene {
       throw new Error(`Requires x and y values. (missing keys: ${[findMissing(source, ["x", "y"]), findMissing(target, ["x", "y"])].flat(Infinity).join(", ")})`);
     }
   }
-  #isValidType(item) {
-    return this.#validTypes.some(type => item instanceof type);
+  #isPhantom2DEntity(item) {
+    return item instanceof Phantom2DEntity;
   }
   addEvent(name, exec) {
     this._events[name] = exec;
