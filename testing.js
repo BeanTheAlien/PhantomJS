@@ -177,7 +177,7 @@ function render() {
     playerWithBinds.clampPosX(0, canvas.width);
     playerWithBinds.clampPosY(0, 300);
     scene.clear();
-    playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
+    // playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
     scene.render();
     requestAnimationFrame(render);
 }
