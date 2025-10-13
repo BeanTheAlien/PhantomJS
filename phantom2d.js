@@ -86,8 +86,8 @@ class Phantom2DEntity {
     this.y = random(min, max + 1);
   }
   raycast(settings) {
-    if(!expect(settings, ["x", "y", "width", "height", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["x", "y", "width", "height", "scene"]).join(", ")})`);
-    return settings.scene.collides(settings);
+    if(!expect(settings, ["angle", "maxDist", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "maxDist", "scene"]).join(", ")})`);
+    return settings.scene.raycast(this.getCenter(), settings.angle, settings.maxDist);
   }
 }
 class SceneObject extends Phantom2DEntity {
@@ -495,8 +495,26 @@ class Scene {
   height() {
     return this.canvas.height;
   }
-  collides(comp) {
-    return this.#components.some(component => isColliding(comp, component));
+  raycast(origin, angle, maxDist = Infinity, filter = () => true) {
+    const rayDir = { x: Math.cos(angle), y: Math.sin(angle) };
+    let closestHit = null;
+    let closestDist = maxDist;
+    for(const comp of this.#components) {
+      if(!filter(comp)) continue;
+      const hit = rayIntersectsRect(origin, rayDir, comp);
+      if(hit != null && hit < closestDist) {
+        closestDist = hit;
+        closestHit = {
+          object: comp,
+          point: {
+            x: origin.x + rayDir.x * hit,
+            y: origin.y + rayDir.y * hit
+          },
+          distance: hit
+        };
+      }
+    }
+    return closestHit;
   }
 }
 function isColliding(object1, object2) {
@@ -509,6 +527,18 @@ function isColliding(object1, object2) {
   const obj2X = object2.x;
   const obj2Y = object2.y;
   return obj2X < obj1X + obj1W && obj2X + obj2W > obj1X && obj2Y < obj1Y + obj1H && obj2Y + obj2H > obj1Y;
+}
+function rayIntersectsRect(rayOrigin, rayDir, rect) {
+  const t1 = (rect.x - rayOrigin.x) / rayDir.x;
+  const t2 = (rect.x + rect.width - rayOrigin.x) / rayDir.x;
+  const t3 = (rect.y - rayOrigin.y) / rayDir.y;
+  const t4 = (rect.y + rect.height - rayOrigin.y) / rayDir.y;
+
+  const tmin = Math.max(Math.min(t1, t2), Math.min(t3, t4));
+  const tmax = Math.min(Math.max(t1, t2), Math.max(t3, t4));
+
+  if(tmax < 0 || tmin > tmax) return null; // No hit
+  return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
 export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding };
