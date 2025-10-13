@@ -516,6 +516,13 @@ class Scene {
     }
     return closestHit;
   }
+  debugRay(origin, angle, dist, colour) {
+    this.ctx.strokeStyle = colour;
+    this.ctx.beginPath();
+    this.ctx.moveTo(origin.x, origin.y);
+    this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+    this.ctx.stroke();
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
