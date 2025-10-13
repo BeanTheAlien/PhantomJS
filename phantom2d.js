@@ -91,7 +91,7 @@ class Phantom2DEntity {
   }
   debugRay(settings) {
     if(!expect(settings, ["angle", "dist", "color", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "dist", "color", "scene"]).join(", ")})`);
-    return settings.scene.debugRay(this.getCenter(), settings.angle, settings.maxDist, settings.color);
+    settings.scene.debugRay(this.getCenter(), settings.angle, settings.maxDist, settings.color);
   }
 }
 class SceneObject extends Phantom2DEntity {
