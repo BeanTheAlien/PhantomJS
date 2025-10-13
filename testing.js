@@ -147,7 +147,6 @@ const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000
 function generateBullet() {
     const { x, y } = playerWithBinds.getCenter();
     const rot = scene.getRotToMouse({ x, y });
-    console.log(x, y, "\n", rot);
     const bullet = new phantom.BulletObject({
         scene,
         id: "bullet",
