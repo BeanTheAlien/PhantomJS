@@ -85,6 +85,10 @@ class Phantom2DEntity {
     this.x = random(min, max + 1);
     this.y = random(min, max + 1);
   }
+  raycast(settings) {
+    if(!expect(settings, ["x", "y", "width", "height", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["x", "y", "width", "height", "scene"]).join(", ")})`);
+    return settings.scene.collides(settings);
+  }
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
@@ -490,6 +494,9 @@ class Scene {
   }
   height() {
     return this.canvas.height;
+  }
+  collides(comp) {
+    return this.#components.some(component => isColliding(comp, component));
   }
 }
 function isColliding(object1, object2) {
