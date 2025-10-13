@@ -87,7 +87,7 @@ class Phantom2DEntity {
   }
   raycast(settings) {
     if(!expect(settings, ["angle", "maxDist", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "maxDist", "scene"]).join(", ")})`);
-    return settings.scene.raycast(this.getCenter(), settings.angle, settings.maxDist);
+    return settings.scene.raycast(this.getCenter(), settings.angle, settings.maxDist, settings.filter ?? (() => true));
   }
   debugRay(settings) {
     if(!expect(settings, ["angle", "dist", "color", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "dist", "color", "scene"]).join(", ")})`);
