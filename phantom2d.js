@@ -302,22 +302,15 @@ class NonPlayableCharacter extends Character {
     this.y += this.gravspd;
   }
 }
-// class NavigationMesh {
-//   constructor(settings) {
-//     if(!expect(settings, ["id", "x", "y", "width", "height"])) throw new Error(`Missing key(s) in navigation mesh settings. (missing keys: ${findMissing(settings, []).join(", ")}`);
-//     this.id = settings.id;
-//     this.pos = { x: settings.x, y: settings.y };
-//     this.width = settings.width;
-//     this.height = settings.height;
-//     this.color = "rgba(0, 0, 0, 0)";
-//     this.ignore = settings.ignore ?? [];
-//     this.ignoreByType = settings.ignoreByType ?? [];
-//     this.nodes = [];
-//   }
-//   generate() {
-//     this.nodes = [];
-//   }
-// }
+class NavigationMesh extends Phantom2DEntity {
+  constructor(settings) {
+    super(["x", "y", "width", "height"], "navigation mesh", settings);
+    this.nodes = [];
+  }
+  generate() {
+    this.nodes = [];
+  }
+}
 class Scene {
   #components;
   #imgCache;
