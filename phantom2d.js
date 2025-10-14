@@ -302,42 +302,42 @@ class NonPlayableCharacter extends Character {
     this.y += this.gravspd;
   }
 }
-class Light extends Phantom2DEntity {
-  constructor(expects, objname, settings) {
-    super(expects, `${objname} light`, settings);
-    // candelas (cd) is the measurement of a light source in a specific direction
-    // lumens (lm) is the measurement of a light source in all directions
-    // attenuation is the decaying effect lights produce
-    // you can find the intensity of a light at a position
-    // using the inverse-square law
-    this.attenuation = settings.atten ?? 1;
-    this.reach = settings.reach ?? 0;
-  }
-  intensityAt(intensity, startDist, endDist) {
-    // inverse-square law
-    // (I1 / I2) = (D2^2) / (D1^2)
-    // I2 = I1 * (D1 / D2)^2
-    // where:
-    // I1 represents the starting intensity
-    // I2 represents the ending intensity
-    // D1 represents the starting distance
-    // D2 represents the ending distance
-    return intensity * (startDist * startDist) / (endDist * endDist);
-  }
-}
-class DirectionLight extends Light {
-  constructor(settings) {
-    super(["cd", "beamSize"], "direction", settings);
-    this.candelas = settings.cd;
-    this.beamSize = settings.beamSize;
-  }
-}
-class AreaLight extends Light {
-  constructor(settings) {
-    super(["lm"], "area", settings);
-    this.lumens = settings.lm;
-  }
-}
+// class Light extends Phantom2DEntity {
+//   constructor(expects, objname, settings) {
+//     super(expects, `${objname} light`, settings);
+//     // candelas (cd) is the measurement of a light source in a specific direction
+//     // lumens (lm) is the measurement of a light source in all directions
+//     // attenuation is the decaying effect lights produce
+//     // you can find the intensity of a light at a position
+//     // using the inverse-square law
+//     this.attenuation = settings.atten ?? 1;
+//     this.reach = settings.reach ?? 0;
+//   }
+//   intensityAt(intensity, startDist, endDist) {
+//     // inverse-square law
+//     // (I1 / I2) = (D2^2) / (D1^2)
+//     // I2 = I1 * (D1 / D2)^2
+//     // where:
+//     // I1 represents the starting intensity
+//     // I2 represents the ending intensity
+//     // D1 represents the starting distance
+//     // D2 represents the ending distance
+//     return intensity * (startDist * startDist) / (endDist * endDist);
+//   }
+// }
+// class DirectionLight extends Light {
+//   constructor(settings) {
+//     super(["cd", "beamSize"], "direction", settings);
+//     this.candelas = settings.cd;
+//     this.beamSize = settings.beamSize;
+//   }
+// }
+// class AreaLight extends Light {
+//   constructor(settings) {
+//     super(["lm"], "area", settings);
+//     this.lumens = settings.lm;
+//   }
+// }
 // class NavigationMesh extends Phantom2DEntity {
 //   constructor(settings) {
 //     super(["x", "y", "width", "height", "size"], "navigation mesh", settings);
@@ -350,7 +350,6 @@ class AreaLight extends Light {
 class Scene {
   #components;
   #imgCache;
-  #lights;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -369,13 +368,6 @@ class Scene {
     });
     this._events = {};
     this.#imgCache = new Map();
-    this.#lights;
-  }
-  add(...comps) {
-    for(const comp of comps) {
-      if(!is(comp, Phantom2DEntity)) throw new Error("Cannot add invalid type object.");
-    }
-    this.#components.push(...comps);
   }
   add(...comps) {
     for(const comp of comps) {
@@ -581,24 +573,25 @@ class Scene {
   imgBg(path) {
     this.img(0, 0, this.canvas.width, this.canvas.height, path);
   }
-  bake(lights) {
-    for(const light of lights) {
-      if(!is(light, Light)) throw new Error("Cannot bake invalid type object.");
-    }
-    const comps = this.#components.slice(0);
-    comps.forEach(component => {
-      this.ctx.fillStyle = component.color;
-      this.ctx.save();
-      // Translate to the center of the rectangle
-      this.ctx.translate(component.x + component.width / 2, component.y + component.height / 2);
-      // Rotate the canvas
-      this.ctx.rotate(component.rot);
-      // Draw the rectangle at the new origin (its center)
-      this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
-      this.ctx.restore(); // Restore the canvas to its original state
-      //this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
-    });
-  }
+  // bake() {
+  //   const lights = this.#components.slice(0).filter(component => is(component, Light));
+  //   lights.forEach(light => {
+  //     const { x, y, reach, color } = light;
+  //     // Create a radial gradient for the light
+  //     const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, reach);
+  //     gradient.addColorStop(0, color); // Inner part of the light
+  //     gradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Fades to transparent at the edge
+  //     // Set the composite operation to 'lighter' for additive blending
+  //     this.ctx.globalCompositeOperation = "lighter";
+  //     // Draw the light area using the gradient
+  //     this.ctx.fillStyle = gradient;
+  //     this.ctx.beginPath();
+  //     this.ctx.arc(x, y, reach, 0, Math.PI * 2);
+  //     this.ctx.fill(); 
+  //   });
+  //   // Reset composite operation to default
+  //   this.ctx.globalCompositeOperation = "source-over";
+  // }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
@@ -624,4 +617,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Light, DirectionLight, AreaLight, random, isColliding };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding };
