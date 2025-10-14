@@ -317,6 +317,7 @@ class NonPlayableCharacter extends Character {
 // }
 class Scene {
   #components;
+  #focusTarget;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -326,6 +327,7 @@ class Scene {
     this.canvas.style.height = cssHeight;
     this.ctx = this.canvas.getContext("2d");
     this.#components = [];
+    this.#focusTarget = null;
     this.mousePos = { x: 0, y: 0 };
     document.addEventListener("mousemove", (event) => {
       const rect = this.canvas.getBoundingClientRect();
@@ -529,6 +531,10 @@ class Scene {
     this.ctx.moveTo(origin.x, origin.y);
     this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
     this.ctx.stroke();
+  }
+  focus(target) {
+    if(target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
+    this.#focusTarget = target;
   }
 }
 function isColliding(object1, object2) {
