@@ -530,6 +530,9 @@ class Scene {
     this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
     this.ctx.stroke();
   }
+  imgBg(path) {
+    this.img(0, 0, this.canvas.width, this.canvas.height, path);
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
