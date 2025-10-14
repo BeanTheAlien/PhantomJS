@@ -408,6 +408,12 @@ class Scene {
     for(const comp of this.#components) {
       if(!is(comp, Phantom2DEntity)) throw new Error("Cannot render invalid type object.");
     }
+    /*
+    ox = focus.x - comp.x
+    oy = focus.y - comp.y
+    draw focus at width / 2, height / 2
+    draw comp at comp.x + ox, comp.y + oy
+    */
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
       this.ctx.save();
