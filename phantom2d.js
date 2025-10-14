@@ -1,4 +1,4 @@
-import { expect, findMissing, random } from "/phantom.js";
+import { expect, findMissing, random, is } from "/phantom.js";
 
 // Phantom2D v0.0.6
 class Phantom2DEntity {
@@ -350,6 +350,7 @@ class AreaLight extends Light {
 class Scene {
   #components;
   #imgCache;
+  #lights;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -368,10 +369,17 @@ class Scene {
     });
     this._events = {};
     this.#imgCache = new Map();
+    this.#lights;
   }
   add(...comps) {
     for(const comp of comps) {
-      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot add invalid type object.");
+      if(!is(comp, Phantom2DEntity)) throw new Error("Cannot add invalid type object.");
+    }
+    this.#components.push(...comps);
+  }
+  add(...comps) {
+    for(const comp of comps) {
+      if(!is(comp, Phantom2DEntity)) throw new Error("Cannot add invalid type object.");
     }
     this.#components.push(...comps);
   }
@@ -406,7 +414,7 @@ class Scene {
   }
   render() {
     for(const comp of this.#components) {
-      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot render invalid type object.");
+      if(!is(comp, Phantom2DEntity)) throw new Error("Cannot render invalid type object.");
     }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
@@ -423,7 +431,7 @@ class Scene {
   }
   update() {
     for(const comp of this.#components) {
-      if(!this.#isPhantom2DEntity(comp)) throw new Error("Cannot update invalid type object.");
+      if(!is(comp, Phantom2DEntity)) throw new Error("Cannot update invalid type object.");
     }
     this.#components.forEach(component => {
       component.update();
@@ -525,9 +533,6 @@ class Scene {
       throw new Error(`Requires x and y values. (missing keys: ${findMissing(source, ["x", "y"]).join(", ")})`);
     }
   }
-  #isPhantom2DEntity(item) {
-    return item instanceof Phantom2DEntity;
-  }
   addEvent(name, exec) {
     this._events[name] = exec;
     this.canvas.addEventListener(name, exec);
@@ -578,7 +583,7 @@ class Scene {
   }
   bake(lights) {
     for(const light of lights) {
-      if(!(light instanceof Light)) throw new Error("Cannot bake invalid type object.");
+      if(!is(light, Light)) throw new Error("Cannot bake invalid type object.");
     }
     const comps = this.#components.slice(0);
     comps.forEach(component => {
