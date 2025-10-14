@@ -609,6 +609,9 @@ class Scene {
     if(target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
     this.#focusTarget = target;
   }
+  unfocus() {
+    this.#focusTarget = null;
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
