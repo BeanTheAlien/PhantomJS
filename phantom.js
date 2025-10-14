@@ -30,4 +30,8 @@ function random(a = null, b = null) {
     }
 }
 
-export { expect, findMissing, random };
+function is(item, targetClass) {
+    return item instanceof targetClass;
+}
+
+export { expect, findMissing, random, is };
