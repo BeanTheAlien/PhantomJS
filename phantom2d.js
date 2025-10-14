@@ -601,4 +601,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Light, DirectionLight, AreaLight, random, isColliding };
