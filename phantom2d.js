@@ -302,15 +302,15 @@ class NonPlayableCharacter extends Character {
     this.y += this.gravspd;
   }
 }
-class NavigationMesh extends Phantom2DEntity {
-  constructor(settings) {
-    super(["x", "y", "width", "height"], "navigation mesh", settings);
-    this.nodes = [];
-  }
-  generate() {
-    this.nodes = [];
-  }
-}
+// class NavigationMesh extends Phantom2DEntity {
+//   constructor(settings) {
+//     super(["x", "y", "width", "height", "size"], "navigation mesh", settings);
+//     this.nodes = [];
+//   }
+//   generate() {
+//     this.nodes = [];
+//   }
+// }
 class Scene {
   #components;
   #imgCache;
