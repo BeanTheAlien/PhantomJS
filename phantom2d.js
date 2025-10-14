@@ -350,6 +350,7 @@ class NonPlayableCharacter extends Character {
 class Scene {
   #components;
   #imgCache;
+  #focusTarget;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -368,6 +369,7 @@ class Scene {
     });
     this._events = {};
     this.#imgCache = new Map();
+    this.#focusTarget = null;
   }
   add(...comps) {
     for(const comp of comps) {
@@ -408,23 +410,28 @@ class Scene {
     for(const comp of this.#components) {
       if(!is(comp, Phantom2DEntity)) throw new Error("Cannot render invalid type object.");
     }
-    /*
-    ox = focus.x - comp.x
-    oy = focus.y - comp.y
-    draw focus at width / 2, height / 2
-    draw comp at comp.x + ox, comp.y + oy
-    */
+    let offsetX = 0;
+    let offsetY = 0;
+    if(this.#focusTarget) {
+      const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
+      const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
+      offsetX = this.width() / 2 - focusCenterX;
+      offsetY = this.height() / 2 - focusCenterY;
+    }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
+      // position relative to camera
+      const drawX = component.x + offsetX;
+      const drawY = component.y + offsetY;
       this.ctx.save();
-      // Translate to the center of the rectangle
-      this.ctx.translate(component.x + component.width / 2, component.y + component.height / 2);
+      // move to the center of the object (after offset)
+      this.ctx.translate(drawX + component.width / 2, drawY + component.height / 2);
       // Rotate the canvas
       this.ctx.rotate(component.rot);
       // Draw the rectangle at the new origin (its center)
       this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
-      this.ctx.restore(); // Restore the canvas to its original state
-      //this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
+      // Restore the canvas to its original state
+      this.ctx.restore();
     });
   }
   update() {
@@ -598,6 +605,10 @@ class Scene {
   //   // Reset composite operation to default
   //   this.ctx.globalCompositeOperation = "source-over";
   // }
+  focus(target) {
+    if(target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
+    this.#focusTarget = target;
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
