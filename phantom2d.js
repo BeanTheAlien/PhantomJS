@@ -307,18 +307,29 @@ class Light extends Phantom2DEntity {
     super(expects, `${objname} light`, settings);
     // candelas (cd) is the measurement of a light source in a specific direction
     // lumens (lm) is the measurement of a light source in all directions
+    // attenuation is the decaying effect lights produce
+    // you can find the intensity of a light at a position
+    // using the inverse-square law
+    this.attenuation = settings.atten ?? 1;
+    this.reach = settings.reach ?? 0;
   }
   intensityAt(intensity, startDist, endDist) {
+    // inverse-square law
+    // (I1 / I2) = (D2^2) / (D1^2)
+    // I2 = I1 * (D1 / D2)^2
+    // where:
+    // I1 represents the starting intensity
+    // I2 represents the ending intensity
+    // D1 represents the starting distance
+    // D2 represents the ending distance
     return intensity * (startDist * startDist) / (endDist * endDist);
   }
 }
 class DirectionLight extends Light {
   constructor(settings) {
-    super(["cd", "reach", "beamSize"], "direction", settings);
+    super(["cd", "beamSize"], "direction", settings);
     this.candelas = settings.cd;
-    this.reach = settings.reach;
     this.beamSize = settings.beamSize;
-    this.attenuation = settings.atten ?? 1;
   }
 }
 class AreaLight extends Light {
