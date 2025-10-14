@@ -303,20 +303,29 @@ class NonPlayableCharacter extends Character {
   }
 }
 class Light extends Phantom2DEntity {
-  constructor(epxects, objname, settings) {
+  constructor(expects, objname, settings) {
     super(expects, `${objname} light`, settings);
     // candelas (cd) is the measurement of a light source in a specific direction
     // lumens (lm) is the measurement of a light source in all directions
   }
-}
-class AreaLight extends Light {
-  constructor(settings) {
-    super(["cd"], "area", settings);
-    this.candelas = settings.cd;
+  intensityAt(intensity, startDist, endDist) {
+    return intensity * (startDist * startDist) / (endDist * endDist);
   }
 }
 class DirectionLight extends Light {
-  constructor() {}
+  constructor(settings) {
+    super(["cd", "reach", "beamSize"], "direction", settings);
+    this.candelas = settings.cd;
+    this.reach = settings.reach;
+    this.beamSize = settings.beamSize;
+    this.attenuation = settings.atten ?? 1;
+  }
+}
+class AreaLight extends Light {
+  constructor(settings) {
+    super(["lm"], "area", settings);
+    this.lumens = settings.lm;
+  }
 }
 // class NavigationMesh extends Phantom2DEntity {
 //   constructor(settings) {
