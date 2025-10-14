@@ -359,7 +359,7 @@ class Scene {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
   img(x, y, w, h, path) {
-    const img = this.loadImg();
+    const img = this.loadImg(path);
     if(img.complete) {
       this.ctx.drawImage(img, x, y, w, h);
     } else {

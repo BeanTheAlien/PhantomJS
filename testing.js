@@ -168,6 +168,8 @@ function generateBullet() {
 }
 scene.addEvent("click", generateBullet);
 
+scene.loadImg("./missing_content.png");
+
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)
