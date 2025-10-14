@@ -576,6 +576,24 @@ class Scene {
   imgBg(path) {
     this.img(0, 0, this.canvas.width, this.canvas.height, path);
   }
+  bake(lights) {
+    for(const light of lights) {
+      if(!(light instanceof Light)) throw new Error("Cannot bake invalid type object.");
+    }
+    const comps = this.#components.slice(0);
+    comps.forEach(component => {
+      this.ctx.fillStyle = component.color;
+      this.ctx.save();
+      // Translate to the center of the rectangle
+      this.ctx.translate(component.x + component.width / 2, component.y + component.height / 2);
+      // Rotate the canvas
+      this.ctx.rotate(component.rot);
+      // Draw the rectangle at the new origin (its center)
+      this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
+      this.ctx.restore(); // Restore the canvas to its original state
+      //this.ctx.fillRect(component.pos.x, component.pos.y, component.width, component.height);
+    });
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
