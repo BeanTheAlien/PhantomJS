@@ -178,6 +178,10 @@ function render() {
     playerWithBinds.clampPosY(0, 300);
     scene.clear();
     // playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
+    // filled bg
+    // scene.fillBg("rgb(0, 0, 0)");
+    // img bg
+    scene.imgBg("./missing_content.png");
     scene.render();
     requestAnimationFrame(render);
 }

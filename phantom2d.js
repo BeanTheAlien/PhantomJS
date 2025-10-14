@@ -317,6 +317,7 @@ class NonPlayableCharacter extends Character {
 // }
 class Scene {
   #components;
+  #imgCache;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -334,6 +335,7 @@ class Scene {
       this.mousePos = { x: (event.clientX - rect.left) * scaleX, y: (event.clientY - rect.top) * scaleY };
     });
     this._events = {};
+    this.#imgCache = new Map();
   }
   add(...comps) {
     for(const comp of comps) {
@@ -360,6 +362,12 @@ class Scene {
     const img = new Image();
     img.src = path;
     img.onload = () => this.ctx.drawImage(img, x, y, w, h);
+  }
+  loadImg(path) {
+    if(this.#imgCache.has(path)) return;
+    const img = new Image();
+    img.src = path;
+    this.#imgCache.set(path, img);
   }
   render() {
     for(const comp of this.#components) {
