@@ -302,6 +302,22 @@ class NonPlayableCharacter extends Character {
     this.y += this.gravspd;
   }
 }
+class Light extends Phantom2DEntity {
+  constructor(epxects, objname, settings) {
+    super(expects, `${objname} light`, settings);
+    // candelas (cd) is the measurement of a light source in a specific direction
+    // lumens (lm) is the measurement of a light source in all directions
+  }
+}
+class AreaLight extends Light {
+  constructor(settings) {
+    super(["cd"], "area", settings);
+    this.candelas = settings.cd;
+  }
+}
+class DirectionLight extends Light {
+  constructor() {}
+}
 // class NavigationMesh extends Phantom2DEntity {
 //   constructor(settings) {
 //     super(["x", "y", "width", "height", "size"], "navigation mesh", settings);
