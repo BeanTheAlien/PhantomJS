@@ -359,12 +359,15 @@ class Scene {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
   img(x, y, w, h, path) {
-    const img = new Image();
-    img.src = path;
-    img.onload = () => this.ctx.drawImage(img, x, y, w, h);
+    const img = this.loadImg();
+    if(img.complete) {
+      this.ctx.drawImage(img, x, y, w, h);
+    } else {
+      img.onload = () => this.ctx.drawImage(img, x, y, w, h);
+    }
   }
   loadImg(path) {
-    if(this.#imgCache.has(path)) return;
+    if(this.#imgCache.has(path)) return this.#imgCache.get(path);
     const img = new Image();
     img.src = path;
     this.#imgCache.set(path, img);
