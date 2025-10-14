@@ -168,7 +168,7 @@ function generateBullet() {
 }
 scene.addEvent("click", generateBullet);
 
-scene.loadImg("./missing_content.png");
+// scene.loadImg("./missing_content.png");
 
 // render loop
 // scene.update updates each component's logic
@@ -183,7 +183,7 @@ function render() {
     // filled bg
     // scene.fillBg("rgb(0, 0, 0)");
     // img bg
-    scene.imgBg("./missing_content.png");
+    // scene.imgBg("./missing_content.png");
     scene.render();
     requestAnimationFrame(render);
 }
