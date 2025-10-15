@@ -370,7 +370,7 @@ class Scene {
     this._events = {};
     this.#imgCache = new Map();
     this.#focusTarget = null;
-    this.scaleFactor = 1;
+    // this.scaleFactor = 1;
   }
   add(...comps) {
     for(const comp of comps) {
@@ -426,7 +426,7 @@ class Scene {
       const drawX = component.x + offsetX;
       const drawY = component.y + offsetY;
       this.ctx.save();
-      this.ctx.scale(this.scaleFactor, this.scaleFactor);
+      // this.ctx.scale(this.scaleFactor, this.scaleFactor);
       // move to the center of the object (after offset)
       this.ctx.translate(drawX + component.width / 2, drawY + component.height / 2);
       // Rotate the canvas
@@ -623,9 +623,9 @@ class Scene {
   unfocus() {
     this.#focusTarget = null;
   }
-  scale(scaleFactor) {
-    this.scaleFactor = scaleFactor;
-  }
+  // scale(scaleFactor) {
+  //   this.scaleFactor = scaleFactor;
+  // }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
