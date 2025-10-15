@@ -519,46 +519,32 @@ class Scene {
     return { x: pos.x - offsetX, y: pos.y - offsetY };
   }
   getMouseRotTo(target) {
-    if(target.x != null && target.y != null) {
-      const mouseX = this.mousePos.x;
-      const mouseY = this.mousePos.y;
-      const refX = target.x;
-      const refY = target.y;
-      // Calculate difference vector
-      const deltaX = mouseX - refX;
-      const deltaY = mouseY - refY;
-      // For utilizing rotation canvas items, it requires radians
-      const radians = Math.atan2(deltaY, deltaX);
-      return radians;
-    } else {
-      throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
-    }
+    if(target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
+    // get world screen position
+    const targetScreen = this.worldToScreen(target);
+    // Calculate difference vector
+    const deltaX = this.mousePos.x - targetScreen.x;
+    const deltaY = this.mousePos.y - targetScreen.y;
+    // For utilizing rotation canvas items, it requires radians
+    const radians = Math.atan2(deltaY, deltaX);
+    return radians;
   }
   getRotTo(source, target) {
-    if(source.x != null && source.y != null && target.x != null && target.y != null) {
-      const deltaX = target.x - source.x;
-      const deltaY = target.y - source.y;
-      const radians = Math.atan2(deltaY, deltaX);
-      return radians;
-    } else {
-      throw new Error(`Requires x and y values. (missing keys: ${[findMissing(source, ["x", "y"]), findMissing(target, ["x", "y"])].flat(Infinity).join(", ")})`);
-    }
+    if(source.x == null || source.y == null || target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${[findMissing(source, ["x", "y"]), findMissing(target, ["x", "y"])].flat(Infinity).join(", ")})`);
+    const s = this.worldToScreen(source);
+    const t = this.worldToScreen(target);
+    const deltaX = t.x - s.x;
+    const deltaY = t.y - s.y;
+    const radians = Math.atan2(deltaY, deltaX);
+    return radians;
   }
   getRotToMouse(source) {
-    if(source.x != null && source.y != null) {
-      const mouseX = this.mousePos.x;
-      const mouseY = this.mousePos.y;
-      const refX = source.x;
-      const refY = source.y;
-      // Calculate difference vector
-      const deltaX = mouseX - refX;
-      const deltaY = mouseY - refY;
-      // For utilizing rotation canvas items, it requires radians
-      const radians = Math.atan2(deltaY, deltaX);
-      return radians;
-    } else {
-      throw new Error(`Requires x and y values. (missing keys: ${findMissing(source, ["x", "y"]).join(", ")})`);
-    }
+    if(source.x == null || source.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(source, ["x", "y"]).join(", ")})`);
+    const srcScreen = this.worldToScreen(source);
+    const deltaX = this.mousePos.x - srcScreen.x;
+    const deltaY = this.mousePos.y - srcScreen.y;
+    const radians = Math.atan2(deltaY, deltaX);
+    return radians;
   }
   addEvent(name, exec) {
     this._events[name] = exec;
