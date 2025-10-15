@@ -496,6 +496,28 @@ class Scene {
       });
     });
   }
+  worldToScreen(pos) {
+    let offsetX = 0;
+    let offsetY = 0;
+    if(this.#focusTarget) {
+      const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
+      const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
+      offsetX = this.width() / 2 - focusCenterX;
+      offsetY = this.height() / 2 - focusCenterY;
+    }
+    return { x: pos.x + offsetX, y: pos.y + offsetY };
+  }
+  screenToWorld(pos) {
+    let offsetX = 0;
+    let offsetY = 0;
+    if(this.#focusTarget) {
+      const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
+      const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
+      offsetX = this.width() / 2 - focusCenterX;
+      offsetY = this.height() / 2 - focusCenterY;
+    }
+    return { x: pos.x - offsetX, y: pos.y - offsetY };
+  }
   getMouseRotTo(target) {
     if(target.x != null && target.y != null) {
       const mouseX = this.mousePos.x;
