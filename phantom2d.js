@@ -284,6 +284,7 @@ class NonPlayableCharacter extends Character {
     super(["states"], "non-playable", settings);
     this.#states = settings.states;
     this.interval = null;
+    this.moveInterval = null;
   }
   getState(name) {
     return this.#states[name];
@@ -296,6 +297,19 @@ class NonPlayableCharacter extends Character {
   }
   useInterval(name, delay) {
     this.interval = setInterval(this.#states[name], delay);
+  }
+  moveTo(target, step, tick) {
+    if(target.x == null || target.y == null) throw new Error(`Requires x and y values. (missing keys: ${findMissing(target, ["x", "y"]).join(", ")})`);
+    this.moveInterval = setInterval(() => {
+      if(isColliding(this, target)) {
+        clearInterval(this.moveInterval);
+        return;
+      }
+      if(target.x < this.x) this.x -= step;
+      else if(target.x > this.x) this.x += step;
+      if(target.y < this.y) this.y -= step;
+      else if(target.y > this.y) this.y += step;
+    }, tick);
   }
   update() {
     this.gravspd += this.strength;
