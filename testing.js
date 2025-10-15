@@ -29,7 +29,7 @@ const movingObject = new phantom.MovingObject({
     collide: null,
     color: "red"
 });
-// ControllableCharacter (with gravity)
+// PlayableCharacter (with gravity)
 const playerWithGravity = new phantom.PlayableCharacter({
     id: "player1",
     width: 5,
@@ -39,7 +39,7 @@ const playerWithGravity = new phantom.PlayableCharacter({
     shape: "rect",
     collide: null
 });
-// ControllableCharacter (without gravity)
+// PlayableCharacter (without gravity)
 const playerWithoutGravity = new phantom.PlayableCharacter({
     id: "player2",
     width: 5,
@@ -49,7 +49,7 @@ const playerWithoutGravity = new phantom.PlayableCharacter({
     shape: "rect",
     collide: null
 });
-// ControllableCharacter (with preset binds)
+// PlayableCharacter (with preset binds)
 const playerWithBinds = new phantom.PlayableCharacter({
     id: "player3",
     width: 5,
@@ -142,7 +142,7 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
 });
 // sets our NPC to wander around
 // const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
-scene.add(nonPlayableCharacter);
+// scene.add(nonPlayableCharacter);
 // sample event addition to scene
 function generateBullet() {
     const { x, y } = playerWithBinds.getCenter();
