@@ -667,10 +667,18 @@ class Scene {
     if(!expect(settings, ["target", "width", "height", "spd", "name"])) throw new Error(`Missing keys in settings. (missing: ${findMissing(settings, ["target", "width", "height", "spd", "name"].join(", "))})`);
     const { target, width, height, spd, name } = settings;
     const anim = this.#anims[name];
+    let loopCount = 0;
     async function runAnim() {
+      loopCount++;
       for(let i = 0; i < anim.length; i++) {
         this.img(target.x, target.y, width, height, anim[i]);
         await wait(spd);
+      }
+      if(settings.repeat == true) {
+        if(settings.loop) {
+          if(settings.loop > loopCount) runAnim();
+        }
+        else runAnim();
       }
     }
     runAnim();
