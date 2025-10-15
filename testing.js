@@ -170,17 +170,17 @@ scene.addEvent("click", generateBullet);
 
 // scene.loadImg("./missing_content.png");
 
-// scene.focus(playerWithBinds);
+scene.focus(playerWithBinds);
 
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)
 // scene.render draws everything
 function render() {
+    scene.clear();
     scene.update();
     playerWithBinds.clampPosX(0, canvas.width);
     playerWithBinds.clampPosY(0, 300);
-    scene.clear();
     // playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
     // filled bg
     // scene.fillBg("rgb(0, 0, 0)");
