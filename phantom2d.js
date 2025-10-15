@@ -311,6 +311,12 @@ class NonPlayableCharacter extends Character {
       else if(target.y > this.y) this.y += step;
     }, tick);
   }
+  stopInterval() {
+    clearInterval(this.interval);
+  }
+  stopMoveInterval() {
+    clearInterval(this.interval);
+  }
   update() {
     this.gravspd += this.strength;
     this.y += this.gravspd;

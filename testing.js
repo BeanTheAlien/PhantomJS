@@ -141,8 +141,8 @@ const nonPlayableCharacter = new phantom.NonPlayableCharacter({
     collide: null
 });
 // sets our NPC to wander around
-const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
-// scene.add(nonPlayableCharacter);
+// const interval = setInterval(() => nonPlayableCharacter.applyState("idle"), 1000);
+scene.add(nonPlayableCharacter);
 // sample event addition to scene
 function generateBullet() {
     const { x, y } = playerWithBinds.getCenter();
