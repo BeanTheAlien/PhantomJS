@@ -664,15 +664,16 @@ class Scene {
     delete this.#anims[name];
   }
   applyAnim(settings) {
-    if(!expect(settings, ["target", "width", "height", "spd"])) throw new Error(`Missing keys in settings. (missing: ${"h"}`);
-    if(!settings.target) throw new Error("Cannot apply anim without target.");
-    if(!is(settings.target, Phantom2DEntity)) throw new Error("Cannot apply anim on invalid target.");
+    if(!expect(settings, ["target", "width", "height", "spd", "name"])) throw new Error(`Missing keys in settings. (missing: ${findMissing(settings, ["target", "width", "height", "spd", "name"].join(", "))})`);
+    const { target, width, height, spd, name } = settings;
+    const anim = this.#anims[name];
     async function runAnim() {
-      for(let i = 0; i < this.#anims[settings.name].length; i++) {
-        this.img(settings.target.x, settings.target.y, settings.width, settings.height, this.#anims[settings.name][i]);
-        await wait(settings.speed);
+      for(let i = 0; i < anim.length; i++) {
+        this.img(target.x, target.y, width, height, anim[i]);
+        await wait(spd);
       }
     }
+    runAnim();
   }
 }
 function isColliding(object1, object2) {
