@@ -371,6 +371,7 @@ class Scene {
   #components;
   #imgCache;
   #focusTarget;
+  #anims;
   constructor(canvas, width, height, cssWidth = "100vw", cssHeight = "100vh") {
     if(!(canvas instanceof HTMLCanvasElement)) throw new Error("Please provide a valid canvas.");
     this.canvas = canvas;
@@ -391,6 +392,7 @@ class Scene {
     this.#imgCache = new Map();
     this.#focusTarget = null;
     // this.scaleFactor = 1;
+    this.#anims = {};
   }
   add(...comps) {
     for(const comp of comps) {
@@ -646,6 +648,25 @@ class Scene {
   // scale(scaleFactor) {
   //   this.scaleFactor = scaleFactor;
   // }
+  storeAnim(name, ...frames) {
+    let animStore = [];
+    for(const frame of frames) {
+      const img = new Image();
+      img.src = frame.src;
+      animStore.push(img);
+    }
+    this.#anims[name] = animStore;
+  }
+  getAnim(name) {
+    return this.#anims[name];
+  }
+  remAnim(name) {
+    delete this.#anims[name];
+  }
+  applyAnim(settings) {
+    if(!settings.target) throw new Error("Cannot apply anim without target.");
+    if(!is(settings.target, Phantom2DEntity)) throw new Error("Cannot apply anim on invalid target.");
+  }
 }
 function isColliding(object1, object2) {
   const obj1W = object1.width;
