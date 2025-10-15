@@ -170,6 +170,8 @@ scene.addEvent("click", generateBullet);
 
 // scene.loadImg("./missing_content.png");
 
+// scene.focus(playerWithBinds);
+
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)
