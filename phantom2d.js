@@ -664,8 +664,7 @@ class Scene {
     delete this.#anims[name];
   }
   applyAnim(settings) {
-    const reqs = [];
-    if(!expect(settings, []))
+    if(!expect(settings, ["target", "width", "height", "spd"])) throw new Error(`Missing keys in settings. (missing: ${"h"}`);
     if(!settings.target) throw new Error("Cannot apply anim without target.");
     if(!is(settings.target, Phantom2DEntity)) throw new Error("Cannot apply anim on invalid target.");
     async function runAnim() {
