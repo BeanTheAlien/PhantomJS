@@ -666,6 +666,12 @@ class Scene {
   applyAnim(settings) {
     if(!settings.target) throw new Error("Cannot apply anim without target.");
     if(!is(settings.target, Phantom2DEntity)) throw new Error("Cannot apply anim on invalid target.");
+    async function runAnim() {
+      for(let i = 0; i < this.#anims[settings.name].length; i++) {
+        this.img(settings.target.x, settings.target.y, settings.width, settings.height, this.#anims[settings.name][i]);
+        // wait(settings.speed)
+      }
+    }
   }
 }
 function isColliding(object1, object2) {
