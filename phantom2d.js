@@ -1,4 +1,4 @@
-import { expect, findMissing, random, is } from "/phantom.js";
+import { expect, findMissing, random, is, wait } from "/phantom.js";
 
 // Phantom2D v0.0.6
 class Phantom2DEntity {
@@ -664,12 +664,14 @@ class Scene {
     delete this.#anims[name];
   }
   applyAnim(settings) {
+    const reqs = [];
+    if(!expect(settings, []))
     if(!settings.target) throw new Error("Cannot apply anim without target.");
     if(!is(settings.target, Phantom2DEntity)) throw new Error("Cannot apply anim on invalid target.");
     async function runAnim() {
       for(let i = 0; i < this.#anims[settings.name].length; i++) {
         this.img(settings.target.x, settings.target.y, settings.width, settings.height, this.#anims[settings.name][i]);
-        // wait(settings.speed)
+        await wait(settings.speed);
       }
     }
   }
@@ -698,4 +700,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding, wait };
