@@ -96,6 +96,11 @@ class Phantom2DEntity {
   distTo(object) {
     return Math.hypot(object.x - this.x, object.y - this.y);
   }
+  inverse(scene, axis) {
+    if(axis == "x" || axis == 0) this.x = scene.width() - this.x;
+    else if(axis == "y" || axis == 1) this.y = scene.height() - this.y;
+  }
+  reflect(scene, axis) {} // reflect around 0 - pos around the reflection line
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
