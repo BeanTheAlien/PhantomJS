@@ -100,7 +100,22 @@ class Phantom2DEntity {
     if(axis == "x" || axis == 0) this.x = scene.width() - this.x;
     else if(axis == "y" || axis == 1) this.y = scene.height() - this.y;
   }
-  reflect(scene, axis) {} // reflect around 0 - pos around the reflection line
+  inverseX(scene) {
+    this.x = scene.width() - this.x;
+  }
+  inverseY(scene) {
+    this.y = scene.height() - this.y;
+  }
+  reflect(axis, rline) {
+    if(axis == "x" || axis == 0) this.x = this.x > rline ? rline - this.x : rline + this.x;
+    else if(axis == "y" || axis == 1) this.y = this.y > rline ? rline - this.y : rline + this.y;
+  }
+  reflectX(rline) {
+    this.x = this.x > rline ? rline - this.x : rline + this.x;
+  }
+  reflectY(rline) {
+    this.y = this.y > rline ? rline - this.y : rline + this.y;
+  }
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
