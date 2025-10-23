@@ -116,6 +116,14 @@ class Phantom2DEntity {
   reflectY(rline) {
     this.y = this.y > rline ? rline - this.y : rline + this.y;
   }
+  rotRight(deg) {
+    this.rot += deg;
+    if(this.rot > 360) this.rot -= 360;
+  }
+  rotLeft(deg) {
+    this.rot -= deg;
+    if(this.rot < 0) this.rot += 360;
+  }
 }
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
