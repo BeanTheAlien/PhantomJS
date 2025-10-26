@@ -424,6 +424,17 @@ class Audio extends Phantom2DEntity {
     this.#audioElement.pause();
     this.#audioElement.currentTime = 0;
   }
+  destroy() {
+    this.#audioElement = null;
+  }
+  add() {
+    if(!this.#audioElement) throw new Error("Audio element has not been initalized yet.");
+    document.body.appendChild(this.#audioElement);
+  }
+  remove() {
+    if(!this.#audioElement) throw new Error("Audio element has not been initalized yet.");
+    document.body.removeChild(this.#audioElement);
+  }
 }
 class Scene {
   #components;
