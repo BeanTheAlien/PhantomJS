@@ -395,6 +395,36 @@ class NonPlayableCharacter extends Character {
 //     this.nodes = [];
 //   }
 // }
+class Audio extends Phantom2DEntity {
+  #audioElement
+  consturctor(settings) {
+    super(["volume", "src"], "audio object", settings);
+    this.src = settings.src;
+    this.volume = settings.volume;
+    this.#audioElement = null;
+  }
+  create() {
+    this.#audioElement = document.createElement("audio");
+    this.#audioElement.volume = this.volume;
+    this.#audioElement.src = this.src;
+  }
+  setHeadPos(headpos) {
+    this.#audioElement.currentTime = headpos;
+  }
+  getHeadPos() {
+    return this.#audioElement.currentTime;
+  }
+  start() {
+    this.#audioElement.start();
+  }
+  pause() {
+    this.#audioElement.pause();
+  }
+  stop() {
+    this.#audioElement.pause();
+    this.#audioElement.currentTime = 0;
+  }
+}
 class Scene {
   #components;
   #imgCache;
@@ -736,4 +766,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, random, isColliding, wait };
