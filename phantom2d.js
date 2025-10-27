@@ -1,7 +1,19 @@
 import { expect, findMissing, random, is, wait } from "/phantom.js";
 
 // Phantom2D v0.0.6
+/**
+ * The root class for all Phantom2D entities.
+ * @name Phantom2DEntity
+ * @description The root class that all Phantom2D entities use.
+ * @class
+*/
 class Phantom2DEntity {
+  /**
+   * 
+   * @param {Array.<string>} expects - Keys that are required within settings.
+   * @param {*} objname - 
+   * @param {*} settings 
+   */
   constructor(expects, objname, settings) {
     // id, shape and color are all base properties
     const base = ["id", "shape", "color"];
