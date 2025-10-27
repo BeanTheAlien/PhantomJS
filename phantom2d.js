@@ -64,14 +64,19 @@ class Phantom2DEntity {
     this.height = height;
   }
   /**
-   * 
-   * @returns {Map<string, number>}
+   * A function that returns the forward facing vector relative to the entity.
+   * @returns {{ dx: number, dy: number }}
    */
   getForwardVector() {
     const dx = Math.cos(this.rot);
     const dy = Math.sin(this.rot);
     return { dx, dy };
   }
+  /**
+   * A function that moves itself on the axis provided of the distance provided.
+   * @param {number} distance - The distance to be moved.
+   * @param {string|number} axis - The axis to move on.
+   */
   move(distance, axis) {
     if(axis == "x" || axis == 0) {
       this.x += distance;
@@ -80,9 +85,17 @@ class Phantom2DEntity {
       this.y += distance;
     }
   }
+  /**
+   * A function that moves itself on the x-axis.
+   * @param {number} distance - The distance to be moved.
+   */
   moveX(distance) {
     this.x += distance;
   }
+  /**
+   * A function that moves itself on the y-axis.
+   * @param {number} distance - The distance to be moved.
+   */
   moveY(distance) {
     this.y += distance;
   }
