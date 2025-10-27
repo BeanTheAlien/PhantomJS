@@ -99,13 +99,29 @@ class Phantom2DEntity {
   moveY(distance) {
     this.y += distance;
   }
+  /**
+   * A function to clamp the current position on a certain axis.
+   * @param {number} min - The minimum possible value.
+   * @param {number} max - The maximum possible value.
+   * @param {number} axis - The axis to clamp.
+   */
   clampPos(min, max, axis) {
     if(axis == "x" || axis == 0) this.x = Math.min(Math.max(this.x, min), max);
     else if(axis == "y" || axis == 1) this.y = Math.min(Math.max(this.y, min), max);
   }
+  /**
+   * A function to clamp the current x position.
+   * @param {number} min - The minimum possible value.
+   * @param {number} max - The maximum possible value.
+   */
   clampPosX(min, max) {
     this.x = Math.min(Math.max(this.x, min), max);
   }
+  /**
+   * A function to the clamp the current y position.
+   * @param {number} min - The minimum possible value.
+   * @param {number} max - The maxmium possible value.
+   */
   clampPosY(min, max) {
     this.y = Math.min(Math.max(this.y, min), max);
   }
