@@ -125,68 +125,150 @@ class Phantom2DEntity {
   clampPosY(min, max) {
     this.y = Math.min(Math.max(this.y, min), max);
   }
+  /**
+   * A function to return the current position.
+   * @returns {{ x: number, y: number }}
+   */
   getPos() {
     return { x: this.x, y: this.y };
   }
+  /**
+   * A function to return the center coordinate of this entity.
+   * @returns {{ x: number, y: number}}
+   */
   getCenter() {
     return { x: this.x + this.width / 2, y: this.y + this.height / 2 };
   }
+  /**
+   * A function that returns the current x position.
+   * @returns {number}
+   */
   getPosX() {
     return this.x;
   }
+  /**
+   * A function that returns the current y position.
+   * @returns {number}
+   */
   getPosY() {
     return this.y;
   }
+  /**
+   * A function to set the current x position.
+   * @param {number} x - The new x-coordinate.
+   */
   setPosX(x) {
     this.x = x;
   }
+  /**
+   * A function to set the current y position.
+   * @param {number} y - The new y-coordinate.
+   */
   setPosY(y) {
     this.y = y;
   }
+  /**
+   * A function that applies a random position.
+   * @param {number} min - The minimum position.
+   * @param {number} max - The maximum position.
+   */
   setRanPos(min, max) {
     this.x = random(min, max + 1);
     this.y = random(min, max + 1);
   }
+  /**
+   * A function that generates a raycast from the entities center coordinate.
+   * @param {{ angle: number, maxDist: number, filter?: function|undefined, scene: Scene }} settings - The settings to customize the raycast.
+   * @returns {boolean}
+   */
   raycast(settings) {
     if(!expect(settings, ["angle", "maxDist", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "maxDist", "scene"]).join(", ")})`);
     return settings.scene.raycast(this.getCenter(), settings.angle, settings.maxDist, settings.filter ?? (() => true));
   }
+  /**
+   * A function that generates a debug ray.
+   * @param {{ angle: number, dist: number, color: string, scene: Scene }} settings - The settings to customize the raycast.
+   */
   debugRay(settings) {
     if(!expect(settings, ["angle", "dist", "color", "scene"])) throw new Error(`Missing properties in raycast settings. (missing: ${findMissing(settings, ["angle", "dist", "color", "scene"]).join(", ")})`);
     settings.scene.debugRay(this.getCenter(), settings.angle, settings.dist, settings.color);
   }
+  /**
+   * A function to measure the distance between two entities.
+   * @param {Phantom2DEntity} object - The target entity.
+   * @returns {number}
+   */
   distTo(object) {
     return Math.hypot(object.x - this.x, object.y - this.y);
   }
+  /**
+   * A function that inverses the position on an axis.
+   * @param {Scene} scene - The scene.
+   * @param {string|number} axis - The axis to inverse on.
+   */
   inverse(scene, axis) {
     if(axis == "x" || axis == 0) this.x = scene.width() - this.x;
     else if(axis == "y" || axis == 1) this.y = scene.height() - this.y;
   }
+  /**
+   * A function that inverses the x-coordinate.
+   * @param {Scene} scene - The scene.
+   */
   inverseX(scene) {
     this.x = scene.width() - this.x;
   }
+  /**
+   * A function that inverses the y-coordinate.
+   * @param {Scene} scene - The scene.
+   */
   inverseY(scene) {
     this.y = scene.height() - this.y;
   }
+  /**
+   * A function that reflects the current position on the axis on the line of reflection.
+   * @param {string|number} axis - The axis to reflect on.
+   * @param {number} rline - The line of reflection.
+   */
   reflect(axis, rline) {
     if(axis == "x" || axis == 0) this.x = this.x > rline ? rline - this.x : rline + this.x;
     else if(axis == "y" || axis == 1) this.y = this.y > rline ? rline - this.y : rline + this.y;
   }
+  /**
+   * A function that reflects the x-coordinate on the line of reflection.
+   * @param {number} rline - The line of reflection.
+   */
   reflectX(rline) {
     this.x = this.x > rline ? rline - this.x : rline + this.x;
   }
+  /**
+   * A function that reflects the y-coordinate on the line of reflection.
+   * @param {number} rline - The line of reflection.
+   */
   reflectY(rline) {
     this.y = this.y > rline ? rline - this.y : rline + this.y;
   }
+  /**
+   * Applies a rightwards spin of the provided radians.
+   * @param {number} deg - The radians to add.
+   */
   rotRight(deg) {
     this.rot += deg;
     if(this.rot > 360) this.rot -= 360;
   }
+  /**
+   * Applies a leftward spin of the provided radians.
+   * @param {number} deg - The radians to remove.
+   */
   rotLeft(deg) {
     this.rot -= deg;
     if(this.rot < 0) this.rot += 360;
   }
 }
+/**
+ * A class to define scenery.
+ * @implements {Phantom2DEntity}
+ * @class
+ */
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
     super(expects, `${objname} object`, settings);
