@@ -9,10 +9,10 @@ import { expect, findMissing, random, is, wait } from "/phantom.js";
 */
 class Phantom2DEntity {
   /**
-   * 
+   * The Phantom2DEntity constructor.
    * @param {Array.<string>} expects - Keys that are required within settings.
-   * @param {*} objname - 
-   * @param {*} settings 
+   * @param {string} objname - The name of the constructing class.
+   * @param {Map<String, Object>} settings - The characteristics of the entity.
    */
   constructor(expects, objname, settings) {
     // id, shape and color are all base properties
@@ -33,19 +33,40 @@ class Phantom2DEntity {
       }
     }
   }
+  /**
+   * A utility function to set the position.
+   * @param {number} x - The x-coordinate to set to. 
+   * @param {number} y - The y-coordinate to set to.
+   */
   setPos(x, y) {
     this.x = x;
     this.y = y;
   }
+  /**
+   * A utility function to set the rotation.
+   * @param {number} rad - The radian rotation to set to.
+   */
   setRot(rad) {
     this.rot = rad;
   }
+  /**
+   * A utility function to set the width.
+   * @param {number} width - The width to set to.
+   */
   setWidth(width) {
     this.width = width;
   }
+  /**
+   * A utility function to set the height.
+   * @param {number} height - The height to set to.
+   */
   setHeight(height) {
     this.height = height;
   }
+  /**
+   * 
+   * @returns {Map<string, number>}
+   */
   getForwardVector() {
     const dx = Math.cos(this.rot);
     const dy = Math.sin(this.rot);
