@@ -3,8 +3,6 @@ import { expect, findMissing, random, is, wait } from "/phantom.js";
 // Phantom2D v0.0.6
 /**
  * The root class for all Phantom2D entities.
- * @name Phantom2DEntity
- * @description The root class that all Phantom2D entities use.
  * @class
 */
 class Phantom2DEntity {
@@ -266,20 +264,29 @@ class Phantom2DEntity {
 }
 /**
  * A class to define scenery.
- * @implements {Phantom2DEntity}
- * @class
+ * @extends {Phantom2DEntity}
  */
 class SceneObject extends Phantom2DEntity {
   constructor(expects, objname, settings) {
     super(expects, `${objname} object`, settings);
   }
 }
+/**
+ * A simple scenery object. Does not have any special attributes.
+ * @extends {SceneObject}
+ * @class
+ */
 class StaticObject extends SceneObject {
   constructor(settings) {
     super([], "static", settings);
   }
   update() {}
 }
+/**
+ * A scenery object that also has phyiscs.
+ * @extends {SceneObject}
+ * @class
+ */
 class PhysicsObject extends SceneObject {
   constructor(settings) {
     super(["strength"], "physics", settings);
@@ -291,6 +298,11 @@ class PhysicsObject extends SceneObject {
     this.y += this.gravspd;
   }
 }
+/**
+ * A scenry object that moves.
+ * @extends {SceneObject}
+ * @class
+ */
 class MovingObject extends SceneObject {
   constructor(settings) {
     super(["speed", "dirX", "dirY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
