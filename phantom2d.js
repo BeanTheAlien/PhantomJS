@@ -299,7 +299,7 @@ class PhysicsObject extends SceneObject {
   }
 }
 /**
- * A scenry object that moves.
+ * A scenery object that moves.
  * @extends {SceneObject}
  * @class
  */
@@ -353,6 +353,11 @@ class MovingObject extends SceneObject {
     }
   }
 }
+/**
+ * A scenery object that causes colliding objects to bounce.
+ * @extends {SceneObject}
+ * @class
+ */
 class BouncyObject extends SceneObject {
   // TODO:
   // Add passthrough/stop logic with ignore/target returns
@@ -380,6 +385,11 @@ class BouncyObject extends SceneObject {
   }
   update() {}
 }
+/**
+ * A scene object that moves in a single direction and destroys itself upon reaching extent.
+ * @extends {SceneObject}
+ * @class
+ */
 class BulletObject extends SceneObject {
   constructor(settings) {
     super(["clampLeft", "clampRight", "clampUp", "clampDown", "speed", "dir", "scene"], "bullet", settings);
@@ -422,6 +432,10 @@ class Vector {
     this.y = y;
   }
 }
+/**
+ * A class used for entities that are used as game characters.
+ * @extends {Phantom2DEntity}
+ */
 class Character extends Phantom2DEntity {
   constructor(expects, objname, settings) {
     super(expects, `${objname} character`, settings);
@@ -435,6 +449,11 @@ class Character extends Phantom2DEntity {
     this.gravspd = -(height);
   }
 }
+/**
+ * A class that creates a controllable character.
+ * @extends {Character}
+ * @class
+ */
 class PlayableCharacter extends Character {
   #binds;
   #keys;
@@ -462,6 +481,11 @@ class PlayableCharacter extends Character {
     }
   }
 }
+/**
+ * A class that creates a non-controllable character.
+ * @extends {Character}
+ * @class
+ */
 class NonPlayableCharacter extends Character {
   #states;
   constructor(settings) {
@@ -551,6 +575,10 @@ class NonPlayableCharacter extends Character {
 //     this.nodes = [];
 //   }
 // }
+/**
+ * Used for generating audio.
+ * @extends {Phantom2DEntity}
+ */
 class Audio extends Phantom2DEntity {
   #audioElement
   consturctor(settings) {
@@ -595,6 +623,10 @@ class Audio extends Phantom2DEntity {
     return this.#audioElement.duration;
   }
 }
+/**
+ * The root canvas manager.
+ * @class
+ */
 class Scene {
   #components;
   #imgCache;
