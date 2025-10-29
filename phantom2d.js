@@ -623,9 +623,9 @@ class Audio extends Phantom2DEntity {
     return this.#audioElement.duration;
   }
 }
-class Spawnpad extends Phantom2DEntity {
+class Spawner extends Phantom2DEntity {
   constructor(settings) {
-    super(["spawns", "cd", "spawnargs", "scene"], "spawnpad", settings);
+    super(["spawns", "cd", "spawnargs", "scene"], "spawner", settings);
     this.spawns = settings.spawns;
     this.spawnargs = settings.spawnargs;
     this.cd = settings.cd;
@@ -991,4 +991,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawnpad, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, random, isColliding, wait };
