@@ -581,7 +581,7 @@ class NonPlayableCharacter extends Character {
  */
 class Audio extends Phantom2DEntity {
   #audioElement
-  consturctor(settings) {
+  constructor(settings) {
     super(["volume", "src"], "audio object", settings);
     this.src = settings.src;
     this.volume = settings.volume;
@@ -598,8 +598,8 @@ class Audio extends Phantom2DEntity {
   getHeadPos() {
     return this.#audioElement.currentTime;
   }
-  start() {
-    this.#audioElement.start();
+  play() {
+    this.#audioElement.play();
   }
   pause() {
     this.#audioElement.pause();
