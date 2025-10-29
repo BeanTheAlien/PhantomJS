@@ -623,6 +623,29 @@ class Audio extends Phantom2DEntity {
     return this.#audioElement.duration;
   }
 }
+class Spawnpad extends Phantom2DEntity {
+  constructor(settings) {
+    super(["spawns", "cd", "spawnargs", "scene"], "spawnpad", settings);
+    this.spawns = settings.spawns;
+    this.spawnargs = settings.spawnargs;
+    this.cd = settings.cd;
+    this.currentCD = this.cd;
+    this.interval = null;
+    this.scene = settings.scene;
+  }
+  start() {
+    this.interval = setInterval(() => {
+      this.currentCD--;
+      if(this.currentCD <= 0) {
+        this.scene.add(new this.spawns(...this.spawnargs));
+        this.currentCD = this.cd;
+      }
+    }, 1);
+  }
+  stop() {
+    clearInterval(this.interval);
+  }
+}
 /**
  * The root canvas manager.
  * @class
@@ -968,4 +991,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawnpad, random, isColliding, wait };
