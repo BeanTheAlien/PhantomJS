@@ -426,6 +426,38 @@ class BulletObject extends SceneObject {
     }
   }
 }
+class WallObject extends SceneObject {
+  constructor(bubblesOnAxis, objname, settings) {
+    super(["x", "y", "width", "height"], objname, settings);
+    this.collide = (comp) => {
+      if((settings.target && settings.target.some(type => is(comp, type))) || is(comp, Character)) {
+        if(bubblesOnAxis == 0 || bubblesOnAxis == "x") {
+          if(comp.x < this.x) comp.x += this.x - comp.x;
+          else if(comp.x > this.x) comp.x -= comp.x - this.x;
+        } else if(bubblesOnAxis == 1 || bubblesOnAxis == "y") {
+          if(comp.y < this.y) comp.y += this.y - comp.y;
+          else if(comp.y > this.y) comp.y -= comp.y - this.y;
+        } else if(bubblesOnAxis == 2 || bubblesOnAxis == "-x") {
+          if(comp.x < this.x) comp.x -= this.x - comp.x;
+        }
+      }
+    }
+  }
+}
+class FloorObject extends WallObject {
+  constructor(settings) {
+    super("floor", settings);
+    this.collide = (comp) => {
+      if(settings.target && settings.target.some(type => is(comp, type))) {
+        if(comp.y < this.y) comp.y += comp.y - this.y;
+        else if(comp.y > this.y) comp.y
+      }
+      if(!is(comp, Character)) return;
+      //
+    }
+  }
+  update() {}
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -488,11 +520,13 @@ class PlayableCharacter extends Character {
  */
 class NonPlayableCharacter extends Character {
   #states;
+  #chasing;
   constructor(settings) {
     super(["states"], "non-playable", settings);
     this.#states = settings.states;
     this.interval = null;
     this.moveInterval = null;
+    this.#chasing = null;
   }
   getState(name) {
     return this.#states[name];
@@ -524,6 +558,17 @@ class NonPlayableCharacter extends Character {
   }
   stopMoveInterval() {
     clearInterval(this.interval);
+  }
+  stopChasing() {
+    clearInterval(this.#chasing);
+  }
+  chase(target, spd, tick) {
+    this.#chasing = setInterval(() => {
+      if(target.x < this.x) this.x -= spd;
+      else if(target.x > this.x) this.x += spd;
+      if(target.y < this.y) this.y -= spd;
+      else if(target.y > this.y) this.y  += spd;
+    }, tick);
   }
   update() {
     this.gravspd += this.strength;
