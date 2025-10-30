@@ -426,34 +426,13 @@ class BulletObject extends SceneObject {
     }
   }
 }
-class WallObject extends SceneObject {
-  constructor(bubblesOnAxis, objname, settings) {
-    super(["x", "y", "width", "height"], objname, settings);
+class FloorObject extends SceneObject {
+  constructor(settings) {
+    super(["x", "y", "width", "height"], "floor object", settings);
     this.collide = (comp) => {
       if((settings.target && settings.target.some(type => is(comp, type))) || is(comp, Character)) {
-        if(bubblesOnAxis == 0 || bubblesOnAxis == "x") {
-          if(comp.x < this.x) comp.x += this.x - comp.x;
-          else if(comp.x > this.x) comp.x -= comp.x - this.x;
-        } else if(bubblesOnAxis == 1 || bubblesOnAxis == "y") {
-          if(comp.y < this.y) comp.y += this.y - comp.y;
-          else if(comp.y > this.y) comp.y -= comp.y - this.y;
-        } else if(bubblesOnAxis == 2 || bubblesOnAxis == "-x") {
-          if(comp.x < this.x) comp.x -= this.x - comp.x;
-        }
+        if(comp.y + comp.height > this.y) comp.y = this.y - comp.height;
       }
-    }
-  }
-}
-class FloorObject extends WallObject {
-  constructor(settings) {
-    super("floor", settings);
-    this.collide = (comp) => {
-      if(settings.target && settings.target.some(type => is(comp, type))) {
-        if(comp.y < this.y) comp.y += comp.y - this.y;
-        else if(comp.y > this.y) comp.y
-      }
-      if(!is(comp, Character)) return;
-      //
     }
   }
   update() {}
@@ -1036,4 +1015,4 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, random, isColliding, wait };
