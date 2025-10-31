@@ -309,7 +309,7 @@ class Phantom2DEntity {
 }
 /**
  * A class to define scenery.
- * @extends {Phantom2DEntity}
+ * @extends Phantom2DEntity
  */
 class SceneObject extends Phantom2DEntity {
   /**
@@ -324,7 +324,7 @@ class SceneObject extends Phantom2DEntity {
 }
 /**
  * A simple scenery object. Does not have any special attributes.
- * @extends {SceneObject}
+ * @extends SceneObject
  * @class
  */
 class StaticObject extends SceneObject {
@@ -339,7 +339,7 @@ class StaticObject extends SceneObject {
 }
 /**
  * A scenery object that also has phyiscs.
- * @extends {SceneObject}
+ * @extends SceneObject
  * @class
  */
 class PhysicsObject extends SceneObject {
@@ -371,7 +371,7 @@ class PhysicsObject extends SceneObject {
 }
 /**
  * A scenery object that moves.
- * @extends {SceneObject}
+ * @extends SceneObject
  * @class
  */
 class MovingObject extends SceneObject {
@@ -476,7 +476,7 @@ class MovingObject extends SceneObject {
 }
 /**
  * A scenery object that causes colliding objects to bounce.
- * @extends {SceneObject}
+ * @extends SceneObject
  * @class
  */
 class BouncyObject extends SceneObject {
@@ -543,10 +543,14 @@ class BouncyObject extends SceneObject {
 }
 /**
  * A scene object that moves in a single direction and destroys itself upon reaching extent.
- * @extends {SceneObject}
+ * @extends SceneObject
  * @class
  */
 class BulletObject extends SceneObject {
+  /**
+   * The constructor for bullet objects.
+   * @param {{ id: string, shape: string, color: string, clampLeft: number, clampRight: number, clampUp: number, clampDown: number, speed: number, dir: number, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["clampLeft", "clampRight", "clampUp", "clampDown", "speed", "dir", "scene"], "bullet", settings);
     /**
@@ -624,7 +628,16 @@ class BulletObject extends SceneObject {
     }
   }
 }
+/**
+ * A simple object that pushes others upwards.
+ * @extends SceneObject
+ * @class
+ */
 class FloorObject extends SceneObject {
+  /**
+   * The constructor for floor objects.
+   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["x", "y", "width", "height"], "floor", settings);
     /**
@@ -651,9 +664,16 @@ class Vector {
 }
 /**
  * A class used for entities that are used as game characters.
- * @extends {Phantom2DEntity}
+ * @extends Phantom2DEntity
+ * @class
  */
 class Character extends Phantom2DEntity {
+  /**
+   * The constructor for the character class.
+   * @param {string[]} expects - Keys that are required within settings.
+   * @param {string} objname - The name of the constructing class.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(expects, objname, settings) {
     super(expects, `${objname} character`, settings);
     /**
@@ -690,7 +710,7 @@ class Character extends Phantom2DEntity {
 }
 /**
  * A class that creates a controllable character.
- * @extends {Character}
+ * @extends Character
  * @class
  */
 class PlayableCharacter extends Character {
@@ -706,6 +726,10 @@ class PlayableCharacter extends Character {
    * @type {Map<string, boolean>}
    */
   #keys;
+  /**
+   * The constructor for playable characters.
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["width", "height"], "playable", settings);
     this.#binds = settings.binds ?? {};
@@ -746,7 +770,7 @@ class PlayableCharacter extends Character {
 }
 /**
  * A class that creates a non-controllable character.
- * @extends {Character}
+ * @extends Character
  * @class
  */
 class NonPlayableCharacter extends Character {
@@ -762,6 +786,10 @@ class NonPlayableCharacter extends Character {
    * @type {number|undefined}
    */
   #chasing;
+  /**
+   * The constructor for non-playable characters.
+   * @param {{ id: string, shape: string, color: string, states: Map, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["states"], "non-playable", settings);
     this.#states = settings.states;
@@ -913,7 +941,8 @@ class NonPlayableCharacter extends Character {
 // }
 /**
  * Used for generating audio.
- * @extends {Phantom2DEntity}
+ * @extends Phantom2DEntity
+ * @class
  */
 class Audio extends Phantom2DEntity {
   /**
@@ -922,6 +951,10 @@ class Audio extends Phantom2DEntity {
    * @type {HTMLAudioElement|undefined}
    */
   #audioElement
+  /**
+   * The constructor for audio.
+   * @param {{ id: string, shape: string, color: string, volume: number, src: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["volume", "src"], "audio object", settings);
     /**
@@ -1013,6 +1046,10 @@ class Audio extends Phantom2DEntity {
  * @class
  */
 class Spawner extends Phantom2DEntity {
+  /**
+   * The constructor for spawners.
+   * @param {{ id: string, shape: string, color: string, spawns: Phantom2DEntity, cd: number, spawnargs: Map, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["spawns", "cd", "spawnargs", "scene"], "spawner", settings);
     /**
