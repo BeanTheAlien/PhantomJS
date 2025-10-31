@@ -178,6 +178,24 @@ const floor = new phantom.FloorObject({
 });
 scene.add(floor);
 
+const bulletsummoner = new phantom.Spawner({
+    id: "stupidspawner", shape: "rect", color: "#d40d0dff",
+    spawns: phantom.BulletObject, spawnargs: {
+        dir: phantom.random(0, 181),
+        id: "b", shape: "rect", color: "#f3ba00ff",
+        clampLeft: 0, clampRight: canvas.width, clampUp: 0, clampDown: canvas.height,
+        speed: 2,
+        scene
+    },
+    cd: 3,
+    scene,
+    x: 50, y: 50,
+    width: 5,
+    height: 5
+});
+bulletsummoner.start();
+scene.add(bulletsummoner);
+
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)

@@ -1039,7 +1039,7 @@ class Spawner extends Phantom2DEntity {
     this.interval = setInterval(() => {
       this.currentCD--;
       if(this.currentCD <= 0) {
-        this.scene.add(new this.spawns(...this.spawnargs));
+        this.scene.add(new this.spawns(this.spawnargs));
         this.currentCD = this.cd;
       }
     }, 1);
@@ -1050,6 +1050,7 @@ class Spawner extends Phantom2DEntity {
   stop() {
     clearInterval(this.interval);
   }
+  update() {}
 }
 /**
  * The root canvas manager.
