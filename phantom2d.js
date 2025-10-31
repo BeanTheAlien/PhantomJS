@@ -8,9 +8,9 @@ import { expect, findMissing, random, is, wait } from "/phantom.js";
 class Phantom2DEntity {
   /**
    * The Phantom2DEntity constructor.
-   * @param {Array.<string>} expects - Keys that are required within settings.
+   * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
-   * @param {Map<String, Object>} settings - The characteristics of the entity.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
    */
   constructor(expects, objname, settings) {
     // id, shape and color are all base properties
@@ -312,6 +312,12 @@ class Phantom2DEntity {
  * @extends {Phantom2DEntity}
  */
 class SceneObject extends Phantom2DEntity {
+  /**
+   * The constructor for scene objects.
+   * @param {string[]} expects - Keys that are required within settings.
+   * @param {string} objname - The name of the constructing class.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
+   */
   constructor(expects, objname, settings) {
     super(expects, `${objname} object`, settings);
   }
@@ -322,6 +328,10 @@ class SceneObject extends Phantom2DEntity {
  * @class
  */
 class StaticObject extends SceneObject {
+  /**
+   * The constructor for static objects.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
+   */
   constructor(settings) {
     super([], "static", settings);
   }
@@ -333,6 +343,10 @@ class StaticObject extends SceneObject {
  * @class
  */
 class PhysicsObject extends SceneObject {
+  /**
+   * The constructor for physics objects.
+   * @param {{ id: string, shape: string, color: string, strength: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["strength"], "physics", settings);
     /**
@@ -361,6 +375,10 @@ class PhysicsObject extends SceneObject {
  * @class
  */
 class MovingObject extends SceneObject {
+  /**
+   * The constructor for moving objects.
+   * @param {{ id: string, shape: string, color: string, speed: number, dirX: number, dirY: number, extentLeft: number, extentRight: number, extentDown: number, extentUp: number, isBouncing?: boolean|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     super(["speed", "dirX", "dirY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
     /**
@@ -465,6 +483,10 @@ class BouncyObject extends SceneObject {
   // TODO:
   // Add passthrough/stop logic with ignore/target returns
   // Allow for existing colliding setting, mix with required colliding setting
+  /**
+   * The constructor for bouncy objects.
+   * @param {{ id: string, shape: string, color: string, strength: number, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, target?: Phantom2DEntity[]|undefined, targetByType?: class[]|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
   constructor(settings) {
     settings.collide = null;
     super(["strength"], "bouncy", settings);
@@ -1002,7 +1024,7 @@ class Spawner extends Phantom2DEntity {
     /**
      * The args to pass to the summoned units.
      * @prop
-     * @type {Object[]}
+     * @type {Map}
      */
     this.spawnargs = settings.spawnargs;
     /**
