@@ -656,6 +656,34 @@ class FloorObject extends SceneObject {
   }
   update() {}
 }
+/**
+ * A simple object that blocks others movement.
+ * @extends SceneObject
+ * @class
+ */
+class WallObject extends SceneObject {
+  /**
+   * The constructor for floor objects.
+   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   */
+  constructor(settings) {
+    super(["x", "y", "width", "height"], "wall", settings);
+    /**
+     * A simple object that will push colliding objects (if specified).
+     * 
+     * Pushes all Character entities.
+     * @param {Phantom2DEntity} comp - The colliding object.
+     * @prop
+     * @type {function}
+     */
+    this.collide = (comp) => {
+      if((settings.target && settings.target.some(type => is(comp, type))) || is(comp, Character)) {
+        if(comp.x + comp.width > this.x) comp.x = this.x - comp.width; 
+      }
+    }
+  }
+  update() {}
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
