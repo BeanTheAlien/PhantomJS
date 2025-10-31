@@ -57,7 +57,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
     strength: 0.01,
     binds: {
         "w": () => {
-            if(playerWithBinds.y >= 300) playerWithBinds.jump(1);
+            if(phantom.isColliding(playerWithBinds, floor)) playerWithBinds.jump(1);
         },
         "a": () => playerWithBinds.moveX(-playerWithBinds.speed),
         "d": () => playerWithBinds.moveX(playerWithBinds.speed)
@@ -170,7 +170,13 @@ scene.addEvent("click", generateBullet);
 
 // scene.loadImg("./missing_content.png");
 
-scene.focus(playerWithBinds);
+// scene.focus(playerWithBinds);
+
+const floor = new phantom.FloorObject({
+    id: "floor", shape: "rect", color: "#000f67ff",
+    x: 0, y: 300, width: canvas.width, height: 100
+});
+scene.add(floor);
 
 // render loop
 // scene.update updates each component's logic
@@ -180,7 +186,7 @@ function render() {
     scene.clear();
     scene.update();
     playerWithBinds.clampPosX(0, canvas.width);
-    playerWithBinds.clampPosY(0, 300);
+    // playerWithBinds.clampPosY(0, 300);
     // playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
     // filled bg
     // scene.fillBg("rgb(0, 0, 0)");
