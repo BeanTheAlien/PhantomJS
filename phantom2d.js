@@ -1712,5 +1712,13 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   if(tmax < 0 || tmin > tmax) return null; // No hit
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
+const GameTools = {
+  useWASD: (character, speed) => {
+    if(!is(character, PlayableCharacter)) throw new Error("Cannot apply keybinds to non-playable character.");
+    character.setBind("w", character.jump(speed));
+    character.setBind("a", character.moveX(-speed));
+    character.setBind("d", character.moveX(speed));
+  }
+};
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };
