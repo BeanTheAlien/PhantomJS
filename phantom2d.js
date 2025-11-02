@@ -632,6 +632,8 @@ class BulletObject extends SceneObject {
  * A simple object that pushes others upwards.
  * @extends SceneObject
  * @class
+ * @deprecated Use WallObject instead.
+ * @see {@link WallObject} See WallObject.
  */
 class FloorObject extends SceneObject {
   /**
@@ -1126,12 +1128,6 @@ class Spawner extends Phantom2DEntity {
      */
     this.cd = settings.cd;
     /**
-     * The current cooldown.
-     * @prop
-     * @type {number}
-     */
-    this.currentCD = this.cd;
-    /**
      * The interval for summoning.
      * @prop
      * @type {number|undefined}
@@ -1151,12 +1147,10 @@ class Spawner extends Phantom2DEntity {
    */
   start() {
     this.interval = setInterval(() => {
-      this.currentCD--;
-      if(this.currentCD <= 0) {
-        this.scene.add(new this.spawns(this.spawnargs));
-        this.currentCD = this.cd;
-      }
-    }, 1);
+      const spawned = new this.spawns({ ...this.spawnargs});
+      console.log(spawned);
+      this.scene.add(spawned);
+    }, this.cd);
   }
   /**
    * Stops the spawning process.
@@ -1776,4 +1770,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };

@@ -172,7 +172,7 @@ scene.addEvent("click", generateBullet);
 
 // scene.focus(playerWithBinds);
 
-const floor = new phantom.FloorObject({
+const floor = new phantom.WallObject({
     id: "floor", shape: "rect", color: "#000f67ff",
     x: 0, y: 300, width: canvas.width, height: 100
 });
@@ -181,13 +181,13 @@ scene.add(floor);
 const bulletsummoner = new phantom.Spawner({
     id: "stupidspawner", shape: "rect", color: "#d40d0dff",
     spawns: phantom.BulletObject, spawnargs: {
-        dir: phantom.random(0, 181),
+        dir: 1,
         id: "b", shape: "rect", color: "#f3ba00ff",
         clampLeft: 0, clampRight: canvas.width, clampUp: 0, clampDown: canvas.height,
-        speed: 2,
+        speed: 2, x: 50, y: 50, width: 20, height: 10,
         scene
     },
-    cd: 3,
+    cd: 3000,
     scene,
     x: 50, y: 50,
     width: 5,
