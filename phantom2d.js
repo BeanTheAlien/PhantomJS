@@ -624,6 +624,7 @@ class BulletObject extends SceneObject {
         break;
     }
     if(this.x + this.width < this.clampLeft || this.x + this.width > this.clampRight || this.y + this.height < this.clampUp || this.y + this.height > this.clampDown) {
+      this.onDestroyed();
       this.scene.remove(this);
     }
   }
