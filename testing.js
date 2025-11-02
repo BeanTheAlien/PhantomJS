@@ -65,7 +65,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
     color: "blue",
     shape: "rect",
     collide: null,
-    customProperties: {
+    custom: {
         speed: 0.5
     }
 });

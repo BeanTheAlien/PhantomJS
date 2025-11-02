@@ -10,7 +10,7 @@ class Phantom2DEntity {
    * The Phantom2DEntity constructor.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
-   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity.
    */
   constructor(expects, objname, settings) {
     // id, shape and color are all base properties
@@ -70,8 +70,8 @@ class Phantom2DEntity {
      * @type {number}
      */
     this.height = settings.height ?? 0;
-    if(settings.customProperties) {
-      for(const [key, value] of Object.entries(settings.customProperties)) {
+    if(settings.custom) {
+      for(const [key, value] of Object.entries(settings.custom)) {
         this[key] = value;
       }
     }
@@ -316,7 +316,7 @@ class SceneObject extends Phantom2DEntity {
    * The constructor for scene objects.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
-   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity.
    */
   constructor(expects, objname, settings) {
     super(expects, `${objname} object`, settings);
@@ -330,7 +330,7 @@ class SceneObject extends Phantom2DEntity {
 class StaticObject extends SceneObject {
   /**
    * The constructor for static objects.
-   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity.
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity.
    */
   constructor(settings) {
     super([], "static", settings);
@@ -345,7 +345,7 @@ class StaticObject extends SceneObject {
 class PhysicsObject extends SceneObject {
   /**
    * The constructor for physics objects.
-   * @param {{ id: string, shape: string, color: string, strength: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, strength: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["strength"], "physics", settings);
@@ -377,7 +377,7 @@ class PhysicsObject extends SceneObject {
 class MovingObject extends SceneObject {
   /**
    * The constructor for moving objects.
-   * @param {{ id: string, shape: string, color: string, speed: number, dirX: number, dirY: number, extentLeft: number, extentRight: number, extentDown: number, extentUp: number, isBouncing?: boolean|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, speed: number, dirX: number, dirY: number, extentLeft: number, extentRight: number, extentDown: number, extentUp: number, isBouncing?: boolean|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["speed", "dirX", "dirY", "extentLeft", "extentRight", "extentDown", "extentUp"], "moving", settings);
@@ -485,7 +485,7 @@ class BouncyObject extends SceneObject {
   // Allow for existing colliding setting, mix with required colliding setting
   /**
    * The constructor for bouncy objects.
-   * @param {{ id: string, shape: string, color: string, strength: number, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, target?: Phantom2DEntity[]|undefined, targetByType?: class[]|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, strength: number, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, target?: Phantom2DEntity[]|undefined, targetByType?: class[]|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     settings.collide = null;
@@ -549,7 +549,7 @@ class BouncyObject extends SceneObject {
 class BulletObject extends SceneObject {
   /**
    * The constructor for bullet objects.
-   * @param {{ id: string, shape: string, color: string, clampLeft: number, clampRight: number, clampUp: number, clampDown: number, speed: number, dir: number, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, clampLeft: number, clampRight: number, clampUp: number, clampDown: number, speed: number, dir: number, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["clampLeft", "clampRight", "clampUp", "clampDown", "speed", "dir", "scene"], "bullet", settings);
@@ -639,7 +639,7 @@ class BulletObject extends SceneObject {
 class FloorObject extends SceneObject {
   /**
    * The constructor for floor objects.
-   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["x", "y", "width", "height"], "floor", settings);
@@ -667,7 +667,7 @@ class FloorObject extends SceneObject {
 class WallObject extends SceneObject {
   /**
    * The constructor for wall objects.
-   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["x", "y", "width", "height"], "wall", settings);
@@ -730,7 +730,7 @@ class Character extends Phantom2DEntity {
    * The constructor for the character class.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
-   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(expects, objname, settings) {
     super(expects, `${objname} character`, settings);
@@ -786,7 +786,7 @@ class PlayableCharacter extends Character {
   #keys;
   /**
    * The constructor for playable characters.
-   * @param {{ id: string, shape: string, color: string, width: number, height: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["width", "height"], "playable", settings);
@@ -846,7 +846,7 @@ class NonPlayableCharacter extends Character {
   #chasing;
   /**
    * The constructor for non-playable characters.
-   * @param {{ id: string, shape: string, color: string, states: Map, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, states: Map, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["states"], "non-playable", settings);
@@ -1011,7 +1011,7 @@ class Audio extends Phantom2DEntity {
   #audioElement
   /**
    * The constructor for audio.
-   * @param {{ id: string, shape: string, color: string, volume: number, src: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, volume: number, src: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["volume", "src"], "audio object", settings);
@@ -1106,7 +1106,7 @@ class Audio extends Phantom2DEntity {
 class Spawner extends Phantom2DEntity {
   /**
    * The constructor for spawners.
-   * @param {{ id: string, shape: string, color: string, spawns: Phantom2DEntity, cd: number, spawnargs: Map, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, spawns: Phantom2DEntity, cd: number, spawnargs: Map, scene: Scene, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["spawns", "cd", "spawnargs", "scene"], "spawner", settings);
@@ -1148,9 +1148,7 @@ class Spawner extends Phantom2DEntity {
    */
   start() {
     this.interval = setInterval(() => {
-      const spawned = new this.spawns({ ...this.spawnargs});
-      console.log(spawned);
-      this.scene.add(spawned);
+      this.scene.add(new this.spawns({ ...this.spawnargs }));
     }, this.cd);
   }
   /**
@@ -1762,6 +1760,7 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   if(tmax < 0 || tmin > tmax) return null; // No hit
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
+
 const GameTools = {
   useWASD: (character, speed) => {
     if(!is(character, PlayableCharacter)) throw new Error("Cannot apply keybinds to non-playable character.");
