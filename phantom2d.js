@@ -663,7 +663,7 @@ class FloorObject extends SceneObject {
  */
 class WallObject extends SceneObject {
   /**
-   * The constructor for floor objects.
+   * The constructor for wall objects.
    * @param {{ id: string, shape: string, color: string, x: number, y: number, width: number, height: number, collide?: function|undefined, rot?: number|undefined, customProperties?: Map|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
@@ -678,7 +678,34 @@ class WallObject extends SceneObject {
      */
     this.collide = (comp) => {
       if((settings.target && settings.target.some(type => is(comp, type))) || is(comp, Character)) {
-        if(comp.x + comp.width > this.x) comp.x = this.x - comp.width; 
+        // left vs right penetration
+        const ovrXL = comp.x + comp.width - this.x;
+        const ovrXR = this.x + this.width - comp.x;
+        const minOvrX = Math.min(ovrXL, ovrXR);
+        // top vs bottom penetration
+        const ovrYT = comp.y + comp.height - this.y;
+        const ovrYB = this.y + this.height - comp.y;
+        const minOvrY = Math.min(ovrYT, ovrYB);
+        // push out on path of least resistence
+        const compC = comp.getCenter();
+        const wallC = this.getCenter();
+        if(minOvrX < minOvrY) {
+          if(compC.x < wallC.x) {
+            // push left
+            comp.x = this.x - comp.width;
+          } else {
+            // push right
+            comp.x = this.x + this.width;
+          }
+        } else {
+          if(compC.y < wallC.y) {
+            // push up
+            comp.y = this.y - comp.height;
+          } else {
+            // push down
+            comp.y = this.y + this.height;
+          }
+        }
       }
     }
   }
@@ -1749,4 +1776,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, FloorObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };
