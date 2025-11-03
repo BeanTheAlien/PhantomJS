@@ -1,6 +1,6 @@
 import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio } from "/phantom.js";
 
-// Phantom2D v0.0.6
+// Phantom2D v0.0.7
 /**
  * The root class for all Phantom2D entities.
  * @class
