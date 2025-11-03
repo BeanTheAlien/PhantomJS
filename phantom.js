@@ -38,4 +38,32 @@ function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export { expect, findMissing, random, is, wait };
+async function getRemoteImg(url) {
+  try {
+    const res = await fetch(url);
+    const blob = res.blob();
+    return URL.createObjectURL(blob);
+  } catch(err) {
+    console.error("An error occured: " + err);
+    return null;
+  }
+}
+
+async function getRemoteAudio(url) {
+  const ctx = new window.AudioContext();
+  try {
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("An HTTP error occured: " + res.status);
+    const arrBuffer = await res.arrayBuffer();
+    const audBuffer = await ctx.decodeAudioData(arrBuffer);
+    const source = ctx.createBufferSource();
+    source.buffer = audBuffer;
+    source.connect(ctx.destination);
+    return source;
+  } catch(err) {
+    console.error("An error occured: " + err);
+    return null;
+  }
+}
+
+export { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio };
