@@ -204,6 +204,15 @@ const npc = new phantom.NonPlayableCharacter({
 });
 scene.add(npc);
 
+const homer = new phantom.HomingBulletObject({
+    id: "homer", shape: "rect", color: "#d9ff00ff",
+    clampLeft: 0, clampRight: canvas.width, clampUp: 0, clampDown: canvas.height,
+    speed: 1, dir: 1, scene, target: playerWithBinds, x: 100, y: 10,
+    width: 20, height: 10,
+    focus: [playerWithBinds]
+});
+scene.add(homer);
+
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)

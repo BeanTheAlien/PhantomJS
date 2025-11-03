@@ -630,6 +630,52 @@ class BulletObject extends SceneObject {
   }
 }
 /**
+ * Homing bullet that chases something. Destroyed on reaching extent or hitting something.
+ * @extends BulletObject
+ * @class
+ */
+class HomingBulletObject extends BulletObject {
+  /**
+   * The constructor for homing bullet objects.
+   * @param {{ id: string, shape: string, color: string, clampLeft: number, clampRight: number, clampUp: number, clampDown: number, speed: number, dir: number, scene: Scene, target: Phantom2DEntity, focus?: Phantom2DEntity[]|undefined, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
+   */
+  constructor(settings) {
+    if(!expect(settings, ["target"])) throw new Error(`Missing key(s) in homing bullet object. (missing: ${findMissing(settings, ["target"]).join(", ")}`);
+    super(settings);
+    /**
+     * The target to chase.
+     * @prop
+     * @type {Phantom2DEntity}
+     */
+    this.target = settings.target;
+    /**
+     * The items to target.
+     * @prop
+     * @type {Phantom2DEntity[]}
+     */
+    this.focus = settings.focus ?? [];
+    /**
+     * The function to fire when colliding.
+     * @prop
+     * @type {function}
+     */
+    this.collide = (col) => {
+      if(this.focus.length && !this.focus.includes(col)) return;
+      col.collide(this);
+      this.scene.remove(this);
+    }
+  }
+  update() {
+    // face the target
+    this.dir = this.scene.getRotTo(this, this.target);
+    const { x, y } = this.target;
+    if(this.x < x) this.x += this.speed;
+    else if(this.x > x) this.x -= this.speed;
+    if(this.y < y) this.y += this.speed;
+    else if(this.y > y) this.y -= this.speed;
+  }
+}
+/**
  * A simple object that pushes others upwards.
  * @extends SceneObject
  * @class
@@ -1817,4 +1863,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, GameTools, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait };
