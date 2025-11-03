@@ -66,4 +66,23 @@ async function getRemoteAudio(url) {
   }
 }
 
-export { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio };
+/**
+ * A function to download content.
+ * @param {string} cont - The content to be downloaded.
+ * @param {string} type - The file type.
+ * @param {string} name - The filename.
+ * @param {string} ext - The file extension.
+ */
+function download(cont, type, name, ext) {
+  const blob = new Blob([cont], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  document.body.appendChild(a);
+  a.href = url;
+  a.download = `${name}.${ext}`;
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download };

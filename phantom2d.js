@@ -1,4 +1,4 @@
-import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio } from "/phantom.js";
+import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download } from "/phantom.js";
 
 // Phantom2D v0.0.7
 /**
@@ -1830,16 +1830,8 @@ class Scene {
    * @param {string} name - The filename.
    */
   download(name) {
-    const json = this.#components.map(component => JSON.stringify(component, null, 4)).join("\n");
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = name + ".json";
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const json = JSON.stringify(this.#components, null, 4);
+    download(json, "application/json", name, "json");
   }
   /**
    * Saves a new level.
@@ -1877,16 +1869,8 @@ class Scene {
    * @param {string} name - The filename.
    */
   saveLevelCache(name) {
-    const json = this.#levels.map(lvl => JSON.stringify(lvl, null, 4)).join("\n");
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = name + ".json";
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const json = JSON.stringify(this.#levels, null, 4);
+    download(json, "application/json", name, "json");
   }
   /**
    * Loads a level into the components cache.
@@ -1944,4 +1928,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download };
