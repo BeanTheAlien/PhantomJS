@@ -730,7 +730,7 @@ class Character extends Phantom2DEntity {
    * The constructor for the character class.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
-   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, width?: number|undefined, height?: number|undefined, custom?: Map|undefined, pushOthers: boolean|undefined }} settings - The characteristics of the entity. 
    */
   constructor(expects, objname, settings) {
     super(expects, `${objname} character`, settings);
@@ -748,6 +748,19 @@ class Character extends Phantom2DEntity {
      * @type {number}
      */
     this.strength = settings.strength ?? 0;
+    /**
+     * A boolean whether to push other characters out of the way.
+     * @prop
+     * @type {boolean}
+    */
+    this.pushOthers = settings.pushOthers ?? true;
+    if(this.pushOthers) {
+      const collide = this.collide;
+      this.collide = (col) => {
+        collide.call(this, col);
+        this.pushCollide(col);
+      };
+    }
   }
   /**
    * A function that applies a new gravity speed.
@@ -764,6 +777,40 @@ class Character extends Phantom2DEntity {
    */
   jump(height) {
     this.gravspd = -(height);
+  }
+  /**
+   * A function to push other characters.
+   * @param {Phantom2DEntity} comp - The colliding entity.
+   */
+  pushCollide(comp) {
+    if(!is(comp, Character)) return;
+    // left vs right penetration
+    const ovrXL = comp.x + comp.width - this.x;
+    const ovrXR = this.x + this.width - comp.x;
+    const minOvrX = Math.min(ovrXL, ovrXR);
+    // top vs bottom penetration
+    const ovrYT = comp.y + comp.height - this.y;
+    const ovrYB = this.y + this.height - comp.y;
+    const minOvrY = Math.min(ovrYT, ovrYB);
+    // push out on path of least resistence
+    if(minOvrY <= minOvrX) {
+      if(this.y < comp.y) {
+        // stand on top
+        this.y = comp.y - this.height;
+        this.gravspd = 0;
+      } else {
+        // stay below
+        this.y = comp.y + comp.height;
+      }
+    } else {
+      if(this.x < comp.x) {
+        // push left
+        this.x = comp.x - this.width;
+      } else {
+        // push right
+        this.x = comp.x + comp.width;
+      }
+    }
   }
 }
 /**
@@ -786,7 +833,7 @@ class PlayableCharacter extends Character {
   #keys;
   /**
    * The constructor for playable characters.
-   * @param {{ id: string, shape: string, color: string, width: number, height: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined }} settings - The characteristics of the entity. 
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, collide?: function|undefined, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined, pushOthers: boolean|undefined }} settings - The characteristics of the entity. 
    */
   constructor(settings) {
     super(["width", "height"], "playable", settings);
