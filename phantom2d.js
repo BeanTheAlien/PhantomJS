@@ -1816,6 +1816,12 @@ class Scene {
     }
     runAnim();
   }
+  download() {
+    const json = this.#components.map(component => JSON.stringify(component, null, 4)).join("\n");
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+  }
 }
 /**
  * A function to check if there is a collision between two entities.
