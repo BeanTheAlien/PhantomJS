@@ -1816,11 +1816,21 @@ class Scene {
     }
     runAnim();
   }
-  download() {
+  /**
+   * Downloads the components into a JSON file.
+   * @param {string} name - The filename.
+   */
+  download(name) {
     const json = this.#components.map(component => JSON.stringify(component, null, 4)).join("\n");
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.href = url;
+    a.download = name + ".json";
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }
 /**
