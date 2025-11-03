@@ -1,4 +1,4 @@
-import { expect, findMissing, random, is, wait } from "/phantom.js";
+import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio } from "/phantom.js";
 
 // Phantom2D v0.0.6
 /**
@@ -1879,4 +1879,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio };
