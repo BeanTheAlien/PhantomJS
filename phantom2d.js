@@ -1284,6 +1284,14 @@ class Scene {
    */
   #anims;
   /**
+   * A set of different objects stored as a level.
+   * 
+   * Levels can be loaded instead of having everything in the main cache.
+   * @prop
+   * @type {Map<string, Phantom2DEntity[]>}
+   */
+  #levels;
+  /**
    * The constructor for the Scene.
    * @param {HTMLCanvasElement} canvas - The canvas to use.
    * @param {number} width - The literal width of the canvas.
@@ -1332,6 +1340,7 @@ class Scene {
     this.#focusTarget = null;
     // this.scaleFactor = 1;
     this.#anims = {};
+    this.#levels = {};
   }
   /**
    * A function to add new components to this components.
@@ -1831,6 +1840,62 @@ class Scene {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+  /**
+   * Saves a new level.
+   * @param {string} name - The name of the level.
+   * @param {Phantom2DEntity[]|undefined} content - The content to be saved. Defaults to the current components.
+   */
+  saveLevel(name, content = this.#components) {
+    this.#levels[name] = content;
+  }
+  /**
+   * Removes a saved level.
+   * @param {string} name - The name of the level.
+   */
+  deleteLevel(name) {
+    delete this.#levels[name];
+  }
+  /**
+   * Returns whether a level with that name already exists.
+   * @param {string} name - The name of the level.
+   * @returns {boolean} If the level exists.
+   */
+  levelExists(name) {
+    return this.#levels[name] != undefined;
+  }
+  /**
+   * Returns the data associated with a level.
+   * @param {string} name - The level to find.
+   * @returns {Phantom2DEntity[]|undefined} The data of the level.
+   */
+  getLevel(name) {
+    return this.#levels[name];
+  }
+  /**
+   * Downloads the levels cache into a JSON file.
+   * @param {string} name - The filename.
+   */
+  saveLevelCache(name) {
+    const json = this.#levels.map(lvl => JSON.stringify(lvl, null, 4)).join("\n");
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.href = url;
+    a.download = name + ".json";
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  /**
+   * Loads a level into the components cache.
+   * 
+   * Overwrites the current component cache.
+   * @param {string} name - The level to load.
+   */
+  loadLevel(name) {
+    this.#components = this.#levels[name];
   }
 }
 /**
