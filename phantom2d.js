@@ -7,6 +7,12 @@ import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, do
 */
 class Phantom2DEntity {
   /**
+   * An event cache.
+   * @prop
+   * @type {Map<string, function>}
+   */
+  #events;
+  /**
    * The Phantom2DEntity constructor.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
@@ -75,6 +81,7 @@ class Phantom2DEntity {
         this[key] = value;
       }
     }
+    this.#events = {};
   }
   /**
    * A utility function to set the position.
@@ -305,6 +312,29 @@ class Phantom2DEntity {
   rotLeft(deg) {
     this.rot -= deg;
     if(this.rot < 0) this.rot += 360;
+  }
+  #register(name, exec) {
+    if(!this.#events[name]) this.#events[name] = [];
+    if(!Array.isArray(this.#events[name])) this.#events[name] = [this.#events[name]];
+    this.#events[name].push(exec);
+  }
+  #deregister(name) {
+    delete this.#events[name];
+  }
+  addEvent(name, exec) {
+    this.#register(name, exec);
+    this.addEventListener(name, exec);
+  }
+  remEvent(name, exec = null) {
+    this.#deregister(name);
+    if(exec) {
+      this.removeEventListener(name, exec);
+    } else {
+      this.#events[name].forEach(e => this.removeEventListener(name, e));
+    }
+  }
+  getEvent(name) {
+    return this.#events[name];
   }
 }
 /**
