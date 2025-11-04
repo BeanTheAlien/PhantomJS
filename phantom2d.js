@@ -1,4 +1,4 @@
-import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download } from "/phantom.js";
+import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download, downloadJSON } from "/phantom.js";
 
 // Phantom2D v0.0.7
 /**
@@ -798,15 +798,17 @@ class Character extends Phantom2DEntity {
      * A boolean whether to push other characters out of the way.
      * @prop
      * @type {boolean}
+     * @deprecated Saved for another version.
     */
     this.pushOthers = settings.pushOthers ?? true;
-    if(this.pushOthers) {
-      const collide = this.collide;
-      this.collide = (col) => {
-        collide.call(this, col);
-        this.pushCollide(col);
-      };
-    }
+    this.onGround = false;
+    // if(this.pushOthers) {
+    //   const collide = this.collide;
+    //   this.collide = (col) => {
+    //     collide.call(this, col);
+    //     this.pushCollide(col);
+    //   };
+    // }
   }
   /**
    * A function that applies a new gravity speed.
@@ -827,33 +829,52 @@ class Character extends Phantom2DEntity {
   /**
    * A function to push other characters.
    * @param {Phantom2DEntity} comp - The colliding entity.
+   * @deprecated Part of an unfinished collection.
    */
   pushCollide(comp) {
     if(!is(comp, Character)) return;
+
+    // if the other guy doesn't push others, treat him like a platform
+    if (comp.pushOthers === false) {
+      // only land if you're falling and near his top surface
+      const topOverlap = (this.y + this.height) - comp.y;
+      if (this.gravspd >= 0 && topOverlap > 0 && topOverlap < this.height) {
+        this.y = comp.y - this.height; // lock onto his head
+        this.gravspd = 0;
+        this.onGround = true;
+      }
+      return; // skip rest of collision
+    }
+
     // left vs right penetration
     const ovrXL = comp.x + comp.width - this.x;
     const ovrXR = this.x + this.width - comp.x;
     const minOvrX = Math.min(ovrXL, ovrXR);
+
     // top vs bottom penetration
     const ovrYT = comp.y + comp.height - this.y;
     const ovrYB = this.y + this.height - comp.y;
     const minOvrY = Math.min(ovrYT, ovrYB);
-    // push out on path of least resistence
-    if(minOvrY <= minOvrX) {
-      if(this.y < comp.y) {
-        // stand on top
+
+    // push out on path of least resistance
+    if (minOvrY <= minOvrX) {
+      if (this.y < comp.y) {
+        // you're above → land
         this.y = comp.y - this.height;
         this.gravspd = 0;
+        this.onGround = true;
       } else {
-        // stay below
-        this.y = comp.y + comp.height;
+        // bumping head
+        if (this.gravspd < 0) {
+          this.y = comp.y + comp.height;
+          this.gravspd = 0;
+        }
       }
     } else {
-      if(this.x < comp.x) {
-        // push left
+      // horizontal
+      if (this.x < comp.x) {
         this.x = comp.x - this.width;
       } else {
-        // push right
         this.x = comp.x + comp.width;
       }
     }
@@ -1928,4 +1949,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };

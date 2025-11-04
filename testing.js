@@ -67,8 +67,7 @@ const playerWithBinds = new phantom.PlayableCharacter({
     collide: null,
     custom: {
         speed: 0.5
-    },
-    pushOthers: true
+    }
 });
 
 // you can change with setBind, get with getBind
@@ -199,7 +198,7 @@ scene.add(bulletsummoner);
 
 const npc = new phantom.NonPlayableCharacter({
     id: "a", shape: "rect", color: "#fe0d0dff", states: {},
-    strength: 0.01, width: 10, height: 20, pushOthers: false,
+    strength: 0.01, width: 10, height: 20,
     x: 50
 });
 scene.add(npc);

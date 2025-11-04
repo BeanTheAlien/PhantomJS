@@ -85,4 +85,8 @@ function download(cont, type, name, ext) {
   URL.revokeObjectURL(url);
 }
 
-export { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download };
+function downloadJSON(cont, name, space = 4) {
+  download(JSON.stringify(cont, null, space), "application/json", name, "json");
+}
+
+export { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };
