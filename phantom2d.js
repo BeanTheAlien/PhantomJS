@@ -13,6 +13,12 @@ class Phantom2DEntity {
    */
   #events;
   /**
+   * A number to track lerp progress.
+   * @prop
+   * @type {number}
+   */
+  #lerpProgress;
+  /**
    * The Phantom2DEntity constructor.
    * @param {string[]} expects - Keys that are required within settings.
    * @param {string} objname - The name of the constructing class.
@@ -82,6 +88,7 @@ class Phantom2DEntity {
       }
     }
     this.#events = {};
+    this.#lerpProgress = 0;
   }
   /**
    * A utility function to set the position.
@@ -336,6 +343,39 @@ class Phantom2DEntity {
   getEvent(name) {
     return this.#events[name];
   }
+  #lerp(start, end, alpha) {
+    return start + (end - start) * alpha;
+  }
+  #applyLerp(apply) {
+    function anim() {
+      this.#lerpProgress += 0.01;
+      if(this.#lerpProgress > 1) this.#lerpProgress = 1;
+      apply();
+      const nextX = this.#lerp(this.x, pos.x, this.#lerpProgress);
+      const nextY = this.#lerp(this.y, pos.y, this.#lerpProgress);
+      this.x += nextX;
+      this.y += nextY;
+      if(this.#lerpProgress < 1) requestAnimationFrame(anim);
+    }
+  }
+  #applyXLerp(target) {
+    this.#applyLerp(() => {
+      this.x += this.#lerp(this.x, target, this.#lerpProgress);
+    });
+  }
+  lerpPos(pos) {
+    function anim() {
+      this.#lerpProgress += 0.01;
+      if(this.#lerpProgress > 1) this.#lerpProgress = 1;
+      const nextX = this.#lerp(this.x, pos.x, this.#lerpProgress);
+      const nextY = this.#lerp(this.y, pos.y, this.#lerpProgress);
+      this.x += nextX;
+      this.y += nextY;
+      if(this.#lerpProgress < 1) requestAnimationFrame(anim);
+    }
+    anim();
+  }
+  lerpX(pos) {}
 }
 /**
  * A class to define scenery.
