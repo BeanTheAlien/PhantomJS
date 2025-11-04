@@ -790,6 +790,25 @@ class WallObject extends SceneObject {
   }
   update() {}
 }
+class ButtonObject extends SceneObject {
+  constructor(settings) {
+    super(["action", "scene"], "button object", settings);
+    this.action = settings.action;
+    this.scene = settings.scene;
+    this.onCanvasClick = (event) => {
+      const rect = this.scene.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+    }
+    this.exec = (e) => {
+      if(!this.onCanvasClick(e)) return;
+      this.action();
+    }
+    this.scene.addEvent("click", this.exec);
+  }
+  update() {}
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -1979,4 +1998,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };

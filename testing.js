@@ -212,6 +212,13 @@ const homer = new phantom.HomingBulletObject({
 });
 scene.add(homer);
 
+const btn = new phantom.ButtonObject({
+    id: "btn", shape: "rect", color: "#349f26ff",
+    x: 35, y: 35, width: 20, height: 20, action: () => {console.log("hello")},
+    scene
+});
+scene.add(btn);
+
 // render loop
 // scene.update updates each component's logic
 // scene.clear clears the canvas (removes artifacts)
