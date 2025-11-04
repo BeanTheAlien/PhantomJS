@@ -351,10 +351,6 @@ class Phantom2DEntity {
       this.#lerpProgress += 0.01;
       if(this.#lerpProgress > 1) this.#lerpProgress = 1;
       apply();
-      const nextX = this.#lerp(this.x, pos.x, this.#lerpProgress);
-      const nextY = this.#lerp(this.y, pos.y, this.#lerpProgress);
-      this.x += nextX;
-      this.y += nextY;
       if(this.#lerpProgress < 1) requestAnimationFrame(anim);
     }
   }
@@ -363,19 +359,21 @@ class Phantom2DEntity {
       this.x += this.#lerp(this.x, target, this.#lerpProgress);
     });
   }
-  lerpPos(pos) {
-    function anim() {
-      this.#lerpProgress += 0.01;
-      if(this.#lerpProgress > 1) this.#lerpProgress = 1;
-      const nextX = this.#lerp(this.x, pos.x, this.#lerpProgress);
-      const nextY = this.#lerp(this.y, pos.y, this.#lerpProgress);
-      this.x += nextX;
-      this.y += nextY;
-      if(this.#lerpProgress < 1) requestAnimationFrame(anim);
-    }
-    anim();
+  #applyYLerp(target) {
+    this.#applyLerp(() => {
+      this.y += this.#lerp(this.y, target, this.#lerpProgress);
+    });
   }
-  lerpX(pos) {}
+  lerpPos(pos) {
+    this.#applyXLerp(pos.x);
+    this.#applyYLerp(pos.y);
+  }
+  lerpX(pos) {
+    this.#applyXLerp(pos);
+  }
+  lerpY(pos) {
+    this.#applyYLerp(pos);
+  }
 }
 /**
  * A class to define scenery.
