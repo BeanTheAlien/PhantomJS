@@ -847,6 +847,33 @@ class ButtonObject extends SceneObject {
   }
   update() {}
 }
+class TextObject extends SceneObject {
+  constructor(settings) {
+    settings.shape = "text";
+    super([], "text", settings);
+    this.text = settings.text ?? "";
+    this.font = settings.font ?? "serif";
+    this.size = settings.size ?? "12px";
+  }
+  getText() {
+    return this.text;
+  }
+  setText(txt) {
+    this.text = txt;
+  }
+  getFont() {
+    return this.font;
+  }
+  getSize() {
+    return this.size;
+  }
+  setFont(f) {
+    this.font = f;
+  }
+  setSize(s) {
+    this.size = s;
+  }
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -1545,7 +1572,8 @@ class Scene {
       // Rotate the canvas
       this.ctx.rotate(component.rot);
       // Draw the rectangle at the new origin (its center)
-      this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
+      if(component.shape == "text") this.ctx.fillText(component.text, -component.width / 2, -component.height / 2);
+      else this.ctx.fillRect(-component.width / 2, -component.height / 2, component.width, component.height);
       // Restore the canvas to its original state
       this.ctx.restore();
     });
@@ -1989,6 +2017,25 @@ class Scene {
   loadLevel(name) {
     this.#components = this.#levels[name];
   }
+  getPixel(x, y) {
+    const { data } = this.ctx.getImageData(x, y, 1, 1);
+    return {
+      r: data[0],
+      g: data[1],
+      b: data[2],
+      a: data[3]
+    };
+  }
+  setPixel(rgba, x, y) {
+    if(!expect(rgba, "r", "g", "b", "a")) throw new Error(`Missing keys in set pixel rgba settings. (missing: ${findMissing(rgba, "r", "g", "b", "a").join(", ")})`);
+    const { data } = this.ctx.getImageData(x, y, 1, 1);
+    const { r, g, b, a } = rgba;
+    data[0] = r;
+    data[1] = g;
+    data[2] = b;
+    data[3] = a;
+    this.ctx.putImageData(data, x, y);
+  }
 }
 /**
  * A function to check if there is a collision between two entities.
@@ -2036,4 +2083,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON };
