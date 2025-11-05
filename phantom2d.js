@@ -952,7 +952,7 @@ class Character extends Phantom2DEntity {
     if (comp.pushOthers === false) {
       // only land if you're falling and near his top surface
       const topOverlap = (this.y + this.height) - comp.y;
-      if (this.gravspd >= 0 && topOverlap > 0 && topOverlap < this.height) {
+      if (this.gravspd > 0 && this.y + this.height - this.gravspd <= comp.y) {
         this.y = comp.y - this.height; // lock onto his head
         this.gravspd = 0;
         this.onGround = true;
