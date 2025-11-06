@@ -2074,18 +2074,48 @@ function rayIntersectsRect(rayOrigin, rayDir, rect) {
   return tmin >= 0 ? tmin : tmax; // Nearest intersection distance
 }
 
+/**
+ * Assorted game tools for development.
+ */
 const GameTools = {
+  /**
+   * Applies a WASD movement set to a playable character.
+   * @param {PlayableCharacter} character - The character to apply to.
+   * @param {number} speed - The speed to apply.
+   */
   useWASD: (character, speed) => {
     if(!is(character, PlayableCharacter)) throw new Error("Cannot apply keybinds to non-playable character.");
     character.setBind("w", character.jump(speed));
     character.setBind("a", character.moveX(-speed));
     character.setBind("d", character.moveX(speed));
   },
+  /**
+   * Applies health values to an entity.
+   * @param {Phantom2DEntity} ent - The entity to apply to.
+   * @param {number} hp - The amount of health to start with.
+   * @param {number} maxHP - The maximum amount of health point.
+   * @param {function} onDeath - A function to run when the component dies.
+   */
   useHealth: (ent, hp, maxHP, onDeath) => {
     if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
+    /**
+     * The entities health.
+     * @prop
+     * @type {number}
+     */
     ent.hp = hp;
+    /**
+     * The maximum health the entity can have.
+     * @prop
+     * @type {number}
+     */
     ent.maxHP = maxHP;
+    /**
+     * A function that returns the amount of health the entity currently has.
+     * @returns {number} The current health points.
+     */
     ent.getHP = () => ent.hp;
+    
     ent.setHP = (nhp) => ent.hp = nhp;
     ent.getMaxHP = () => ent.maxHP;
     ent.setMaxHP = (nmhp) => ent.maxHP = nmhp;
@@ -2097,7 +2127,16 @@ const GameTools = {
     ent.die = () => {
       ent.onDeath();
     }
+    ent.heal = (h) => {
+      ent.hp += h;
+      ent.hp = Math.min(ent.hp, ent.maxHP);
+    }
   },
+  /**
+   * Applies an inventory to a character.
+   * @param {Character} character - The character to apply to.
+   * @param {Map<string, Object>} items - The items to start with.
+   */
   useInv: (character, items = {}) => {
     if(!is(character, PlayableCharacter)) throw new Error("Cannot apply inventory component to non-character.");
     ent.inv = items;
