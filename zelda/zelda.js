@@ -2,6 +2,21 @@ import * as phantom from "./../phantom2d.js";
 
 const canvas = document.getElementById("zelda");
 
+class Enemy extends phantom.NonPlayableCharacter {
+    constructor(s) {
+        s.shape = "rect";
+        s.strength = 0;
+        s.states = {};
+        s.custom.sprite = s.sprite;
+        s.custom.spd = s.spd;
+        super(s);
+        scene.loadImg(this.sprite);
+        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead, s.hurt ?? (() => {}));
+        scene.add(this);
+    }
+    update() {}
+}
+
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const c = new phantom.StaticObject({
     id: "1", shape: "rect", color: "#00f7ffff", x: 5, y: 5, width: 30, height: 40
@@ -33,9 +48,15 @@ phantom.GameTools.useHealth(player, 5, 5, () => {
 });
 phantom.GameTools.useInv(player);
 
+const BigBad = new Enemy({
+    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1,
+    width: 10, height: 10, sprite: "missing_content.png",
+    hp: 5, dead: () => scene.remove(this)
+});
+
 function Sword() {
     const slash = new phantom.StaticObject({
-        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20
+        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => {}
     });
     scene.add(slash);
     setTimeout(() => scene.remove(slash), 150);
