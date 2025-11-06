@@ -2096,7 +2096,7 @@ const GameTools = {
    * @param {number} maxHP - The maximum amount of health point.
    * @param {function} onDeath - A function to run when the component dies.
    */
-  useHealth: (ent, hp, maxHP, onDeath) => {
+  useHealth: (ent, hp, maxHP, onDeath, onHurt = () => {}) => {
     if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
     /**
      * The entities health.
@@ -2115,18 +2115,66 @@ const GameTools = {
      * @returns {number} The current health points.
      */
     ent.getHP = () => ent.hp;
-    
+    /**
+     * A function that sets the amount of health the entity currently has.
+     * 
+     * Does not trigger health update check.
+     * @param {number} nhp - The new health points
+     * @returns {number} The new health the entity has.
+     */
     ent.setHP = (nhp) => ent.hp = nhp;
+    /**
+     * A function to return the maximum health points an entity has.
+     * @returns {number} The maximum health the entity has.
+     */
     ent.getMaxHP = () => ent.maxHP;
+    /**
+     * A function to set the maximum health the entity has.
+     * 
+     * Does not clamp health to within new range.
+     * @param {number} nmhp - The new maximum health.
+     * @returns {number} The new maximum health.
+     */
     ent.setMaxHP = (nmhp) => ent.maxHP = nmhp;
+    /**
+     * The function to be called when the entity dies.
+     * @prop
+     * @type {function}
+     */
     ent.onDeath = onDeath;
+    /**
+     * A function to be called when the entity is hurt.
+     * @prop
+     * @type {function}
+     */
+    ent.onHurt = onHurt;
+    /**
+     * A function that injures the entity, removing health.
+     * 
+     * If the entity's health falls below zero after being hurt,the entity is killed.
+     * 
+     * Runs the entity's onHurt.
+     * @param {number} d - The injury health to apply.
+     */
     ent.hurt = (d) => {
       ent.hp -= d;
+      ent.onHurt();
       if(ent.hp <= 0) ent.die();
     }
+    /**
+     * A function that kills the entity.
+     * 
+     * Runs the entity's onDeath.
+     */
     ent.die = () => {
       ent.onDeath();
     }
+    /**
+     * Applies healing to the entity.
+     * 
+     * Clamps health to maximum health points.
+     * @param {number} h - The healing to add.
+     */
     ent.heal = (h) => {
       ent.hp += h;
       ent.hp = Math.min(ent.hp, ent.maxHP);
@@ -2139,11 +2187,41 @@ const GameTools = {
    */
   useInv: (character, items = {}) => {
     if(!is(character, PlayableCharacter)) throw new Error("Cannot apply inventory component to non-character.");
+    /**
+     * The character's inventory.
+     * @prop
+     * @type {Map<string, Object>}
+     */
     ent.inv = items;
+    /**
+     * Returns the value of an inventory item.
+     * @param {string} key - The name of the item.
+     * @returns {Object|undefined} The item.
+     */
     ent.invGet = (key) => ent.inv[key];
+    /**
+     * Sets the value of an inventory item.
+     * @param {string} key - The name of the item.
+     * @param {Object} value - The item.
+     * @returns {Object} The new value of the inventory slot.
+     */
     ent.invSet = (key, value) => ent.inv[key] = value;
+    /**
+     * Returns whether the inventory already has the item slot.
+     * @param {string} key - The name of the item.
+     * @returns {boolean} Whether it is contained or not.
+     */
     ent.invHas = (key) => Object.keys(ent.inv).includes(key);
+    /**
+     * Removes an inventory slot.
+     * @param {string} key - The name of the item.
+     * @returns {undefined} The now empty missing slot.
+     */
     ent.invRem = (key) => delete ent.inv[key];
+    /**
+     * Reuturns the size of the inventory.
+     * @returns {number} The size of the inventory.
+     */
     ent.invSize = () => Object.entries(ent.inv).length;
   }
 };
