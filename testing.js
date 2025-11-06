@@ -4,7 +4,7 @@ window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno
 
 const canvas = document.getElementById("phantom-2d-canvas");
 
-const scene = new phantom.Scene(canvas, 500, 500);
+const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 // scene.rect(1, 1, 20, 20, "blue");
 // StaticObject is a static shape (it doesn't do anything, has collision)
 const staticObject = new phantom.StaticObject({
