@@ -2081,7 +2081,7 @@ const GameTools = {
     character.setBind("a", character.moveX(-speed));
     character.setBind("d", character.moveX(speed));
   },
-  useHealth: (ent, hp, maxHP) => {
+  useHealth: (ent, hp, maxHP, onDeath) => {
     if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
     ent.hp = hp;
     ent.maxHP = maxHP;
@@ -2089,13 +2089,23 @@ const GameTools = {
     ent.setHP = (nhp) => ent.hp = nhp;
     ent.getMaxHP = () => ent.maxHP;
     ent.setMaxHP = (nmhp) => ent.maxHP = nmhp;
+    ent.onDeath = onDeath;
     ent.hurt = (d) => {
       ent.hp -= d;
-      if(ent.hp <= 0) {}
+      if(ent.hp <= 0) ent.die();
     }
-    ent.die = (scene) => {
-      if(!is(scene, Scene)) throw new Error("Need reference to Scene; invalid reference provided.");
+    ent.die = () => {
+      ent.onDeath();
     }
+  },
+  useInv: (character, items = {}) => {
+    if(!is(character, PlayableCharacter)) throw new Error("Cannot apply inventory component to non-character.");
+    ent.inv = items;
+    ent.invGet = (key) => ent.inv[key];
+    ent.invSet = (key, value) => ent.inv[key] = value;
+    ent.invHas = (key) => Object.keys(ent.inv).includes(key);
+    ent.invRem = (key) => delete ent.inv[key];
+    ent.invSize = () => Object.entries(ent.inv).length;
   }
 };
 
