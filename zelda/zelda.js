@@ -17,10 +17,7 @@ const player = new phantom.PlayableCharacter({
     x: 20,
     y: 30,
     custom: {
-        hearts: 5,
-        health: 5,
         spd: 1,
-        inv: [],
         cur: Sword
     },
     binds: {
@@ -31,6 +28,10 @@ const player = new phantom.PlayableCharacter({
     }
 });
 scene.add(player);
+phantom.GameTools.useHealth(player, 5, 5, () => {
+    alert("You Died");
+});
+phantom.GameTools.useInv(player);
 
 function Sword() {
     const slash = new phantom.StaticObject({
