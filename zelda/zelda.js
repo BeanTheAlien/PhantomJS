@@ -11,7 +11,7 @@ class Enemy extends phantom.NonPlayableCharacter {
         s.custom.spd = s.spd;
         super(s);
         scene.loadImg(this.sprite);
-        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead, s.hurt ?? (() => {}));
+        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? () => scene.remove(this), s.hurt ?? (() => {}));
         scene.add(this);
     }
     update() {}
@@ -49,9 +49,7 @@ phantom.GameTools.useHealth(player, 5, 5, () => {
 phantom.GameTools.useInv(player);
 
 const BigBad = new Enemy({
-    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1,
-    width: 10, height: 10, sprite: "missing_content.png",
-    hp: 5, dead: () => scene.remove(this)
+    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1, width: 10, height: 10, sprite: "missing_content.png", hp: 5
 });
 
 function Sword() {
