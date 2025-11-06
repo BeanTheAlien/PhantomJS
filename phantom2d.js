@@ -2080,6 +2080,22 @@ const GameTools = {
     character.setBind("w", character.jump(speed));
     character.setBind("a", character.moveX(-speed));
     character.setBind("d", character.moveX(speed));
+  },
+  useHealth: (ent, hp, maxHP) => {
+    if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
+    ent.hp = hp;
+    ent.maxHP = maxHP;
+    ent.getHP = () => ent.hp;
+    ent.setHP = (nhp) => ent.hp = nhp;
+    ent.getMaxHP = () => ent.maxHP;
+    ent.setMaxHP = (nmhp) => ent.maxHP = nmhp;
+    ent.hurt = (d) => {
+      ent.hp -= d;
+      if(ent.hp <= 0) {}
+    }
+    ent.die = (scene) => {
+      if(!is(scene, Scene)) throw new Error("Need reference to Scene; invalid reference provided.");
+    }
   }
 };
 
