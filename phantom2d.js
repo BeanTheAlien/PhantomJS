@@ -374,6 +374,9 @@ class Phantom2DEntity {
   lerpY(pos) {
     this.#applyYLerp(pos);
   }
+  expire(scene, time) {
+    setInterval(() => scene.remove(this), time);
+  }
 }
 /**
  * A class to define scenery.

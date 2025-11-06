@@ -11,7 +11,7 @@ class Enemy extends phantom.NonPlayableCharacter {
         s.custom.spd = s.spd;
         super(s);
         scene.loadImg(this.sprite);
-        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? () => scene.remove(this), s.hurt ?? (() => {}));
+        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
         scene.add(this);
     }
     update() {}
@@ -49,12 +49,17 @@ phantom.GameTools.useHealth(player, 5, 5, () => {
 phantom.GameTools.useInv(player);
 
 const BigBad = new Enemy({
-    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1, width: 10, height: 10, sprite: "missing_content.png", hp: 5
+    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1, width: 10,
+    height: 10, sprite: "missing_content.png", hp: 5
 });
 
 function Sword() {
     const slash = new phantom.StaticObject({
-        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => {}
+        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => {
+            if(!phantom.is(col, Enemy)) return;
+            col.hurt(1);
+            scene.remove(slash);
+        }
     });
     scene.add(slash);
     setTimeout(() => scene.remove(slash), 150);
