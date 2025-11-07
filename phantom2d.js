@@ -1932,7 +1932,7 @@ class Scene {
   }
   /**
    * Renders an image as the background.
-   * @param {string} path 
+   * @param {string} path - The image path.
    */
   imgBg(path) {
     this.img(0, 0, this.canvas.width, this.canvas.height, path);
@@ -2164,6 +2164,7 @@ const GameTools = {
    * @param {number} hp - The amount of health to start with.
    * @param {number} maxHP - The maximum amount of health point.
    * @param {function} onDeath - A function to run when the component dies.
+   * @param {function} onHurt - A function to run when the component dies.
    */
   useHealth: (ent, hp, maxHP, onDeath, onHurt = () => {}) => {
     if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
@@ -2220,7 +2221,7 @@ const GameTools = {
     /**
      * A function that injures the entity, removing health.
      * 
-     * If the entity's health falls below zero after being hurt,the entity is killed.
+     * If the entity's health falls below zero after being hurt, the entity is killed.
      * 
      * Runs the entity's onHurt.
      * @param {number} d - The injury health to apply.
