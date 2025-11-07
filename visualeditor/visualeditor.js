@@ -18,10 +18,14 @@ const mkP = (p = {}) => mk("p", p);
 const mkBtn = (p = {}) => mk("button", p);
 const mkSpan = (p = {}) => mk("span", p);
 const mkInput = (p = {}) => mk("input", p);
+const mkSelect = (p = {}) => mk("select", p);
+const mkOption = (p = {}) => mk("option", p);
+const add = (parent, child) => parent.appendChild(child);
+const rem = (parent, child) => parent.removeChild(child);
 
 const types = {
     id: { type: "text", placeholder: "Enter ID..." },
-    shape: { type: "select", opts: [{ name: "rect", value: "rect" }] },
+    shape: { type: "select", opts: [{ text: "Rectangle", value: "rect" }] },
     color: { type: "color" },
     x: { type: "number", min: 0 },
     y: { type: "number", min: 0 },
@@ -38,11 +42,27 @@ function gen(obj) {
         if(!k) return;
         switch(k.type) {
             case "text":
-                mkInput({
+                project.push(mkInput({
+                    type: "text",
                     placeholder: k.placeholder ?? ""
-                });
+                }));
                 break;
-            case "":
+            case "number":
+                project.push(mkInput({
+                    type: "number",
+                    min: k.min ?? -Infinity,
+                    max: k.max ?? Infinity
+                }));
+                break;
+            case "color":
+                project.push(mkInput({
+                    type: "color"
+                }));
+                break;
+            case "select":
+                const s = mkSelect();
+                for(const opt of k.opts) add(s, mkOption({ textContent: opt.text, value: opt.value }));
+                proj.push(s);
                 break;
         }
     }
