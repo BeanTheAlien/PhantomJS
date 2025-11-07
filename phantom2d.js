@@ -320,18 +320,37 @@ class Phantom2DEntity {
     this.rot -= deg;
     if(this.rot < 0) this.rot += 360;
   }
+  /**
+   * Registers a new event.
+   * @param {string} name - The event name.
+   * @param {function} exec - The event execution.
+   */
   #register(name, exec) {
     if(!this.#events[name]) this.#events[name] = [];
     if(!Array.isArray(this.#events[name])) this.#events[name] = [this.#events[name]];
     this.#events[name].push(exec);
   }
+  /**
+   * Removes an event.
+   * @param {string} name - The event name.
+   */
   #deregister(name) {
     delete this.#events[name];
   }
+  /**
+   * Adds a new event listener.
+   * @param {string} name - The event name.
+   * @param {function} exec - The event execution.
+   */
   addEvent(name, exec) {
     this.#register(name, exec);
     this.addEventListener(name, exec);
   }
+  /**
+   * Removes an event listener, all associated listenrs if exec is null.
+   * @param {string} name - The event name.
+   * @param {function|null} exec - The event execution.
+   */
   remEvent(name, exec = null) {
     this.#deregister(name);
     if(exec) {
@@ -340,12 +359,28 @@ class Phantom2DEntity {
       this.#events[name].forEach(e => this.removeEventListener(name, e));
     }
   }
+  /**
+   * Returns the associated execution for an event.
+   * @param {string} name - The event name.
+   * @returns {function|undefined} The executor for an event.
+   */
   getEvent(name) {
     return this.#events[name];
   }
+  /**
+   * Applies a linear Interpolation.
+   * @param {number} start - The starting number.
+   * @param {number} end - The ending number.
+   * @param {number} alpha - The alpha value.
+   * @returns {number} The resulting value for the next frame.
+   */
   #lerp(start, end, alpha) {
     return start + (end - start) * alpha;
   }
+  /**
+   * Applies a lerp function.
+   * @param {function} apply - The updater function.
+   */
   #applyLerp(apply) {
     function anim() {
       this.#lerpProgress += 0.01;
@@ -353,29 +388,55 @@ class Phantom2DEntity {
       apply();
       if(this.#lerpProgress < 1) requestAnimationFrame(anim);
     }
+    anim();
   }
+  /**
+   * Applies an x-axis lerp.
+   * @param {number} target - The end position.
+   */
   #applyXLerp(target) {
     this.#applyLerp(() => {
       this.x += this.#lerp(this.x, target, this.#lerpProgress);
     });
   }
+  /**
+   * Applies an y-axis lerp.
+   * @param {number} target - The end position.
+   */
   #applyYLerp(target) {
     this.#applyLerp(() => {
       this.y += this.#lerp(this.y, target, this.#lerpProgress);
     });
   }
+  /**
+   * Applies a lerp on x-axis and y-axis.
+   * @param {{ x: number, y: number }} pos - The target position.
+   */
   lerpPos(pos) {
     this.#applyXLerp(pos.x);
     this.#applyYLerp(pos.y);
   }
+  /**
+   * Applies a lerp on the x-axis.
+   * @param {number} pos - THe target position.
+   */
   lerpX(pos) {
     this.#applyXLerp(pos);
   }
+  /**
+   * Applies a lerp on the y-axis.
+   * @param {number} pos - The target position.
+   */
   lerpY(pos) {
     this.#applyYLerp(pos);
   }
+  /**
+   * Creates a timeout to remove this object from the scene.
+   * @param {Scene} scene - The scene.
+   * @param {number} time - The millisecond delay.
+   */
   expire(scene, time) {
-    setInterval(() => scene.remove(this), time);
+    setTimeout(() => scene.remove(this), time);
   }
 }
 /**

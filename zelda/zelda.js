@@ -8,11 +8,13 @@ class Enemy extends phantom.NonPlayableCharacter {
     constructor(s) {
         s.shape = "rect";
         s.strength = 0;
+        s.color = "rgba(0, 0, 0, 0)";
         s.states = {};
         s.custom = {};
         s.custom.sprite = s.sprite;
         s.custom.spd = s.spd;
         super(s);
+        this.sprite = scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
         scene.add(this);
     }
@@ -51,22 +53,25 @@ phantom.GameTools.useHealth(player, 5, 5, () => {
     alert("You Died");
 });
 phantom.GameTools.useInv(player);
+player.invSet("sword", Sword);
 
 const BigBad = new Enemy({
-    id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1, width: 10,
-    height: 10, sprite: "../missing_content.png", hp: 5, x: 30, y: 30
+    id: "bigbad", spd: 1, width: 10, height: 10,
+    sprite: "../missing_content.png", hp: 5, x: 30, y: 30
 });
+
+function wpCol(self, dmg, col) {
+    if(!col.hp) return;
+    col.hurt(dmg);
+    scene.remove(self);
+}
 
 function Sword() {
     const slash = new phantom.StaticObject({
-        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => {
-            if(!phantom.is(col, Enemy)) return;
-            col.hurt(1);
-            scene.remove(slash);
-        }
+        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => wpCol(slash, 1, col)
     });
     scene.add(slash);
-    setTimeout(() => scene.remove(slash), 150);
+    slash.expire(scene, 150);
 }
 
 function attack() {
