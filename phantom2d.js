@@ -1474,7 +1474,7 @@ class Scene {
      * @type {Map<string, function>}
      */
     this._events = {};
-    this.#imgCache = new Map();
+    this.#imgCache = {};
     this.#focusTarget = null;
     // this.scaleFactor = 1;
     this.#anims = {};
@@ -1521,7 +1521,11 @@ class Scene {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
   /**
-   * A function to generate a new image.
+   * A function to draw an image.
+   * 
+   * Gets an HTMLImageElement from the image cache.
+   * 
+   * Applies an onload
    * @param {number} x - The x-position.
    * @param {number} y - The y-position.
    * @param {number} w - The width.
@@ -1529,7 +1533,8 @@ class Scene {
    * @param {string} path - The path to the image.
    */
   img(x, y, w, h, path) {
-    const img = this.loadImg(path);
+    const img = this.#imgCache[path];
+    if(!img) throw new Error("Image not found in image cache.");
     if(img.complete) {
       this.ctx.drawImage(img, x, y, w, h);
     } else {
@@ -1539,13 +1544,13 @@ class Scene {
   /**
    * Loads an image, fetches the image cache for the path.
    * @param {string} path - The image path.
-   * @returns {HTMLImageElement} The image.
+   * @returns {HTMLImageElement} The created image.
    */
   loadImg(path) {
-    if(this.#imgCache.has(path)) return this.#imgCache.get(path);
+    if(Object.hasOwn(this.#imgCache, path)) return this.#imgCache[path];
     const img = new Image();
     img.src = path;
-    this.#imgCache.set(path, img);
+    this.#imgCache[path] = img;
     return img;
   }
   /**
