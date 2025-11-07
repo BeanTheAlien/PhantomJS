@@ -10,6 +10,26 @@ projectDiv.className = "ve-pdiv";
 document.body.appendChild(projectDiv);
 var project = [];
 
+// collide, custom
+
+const mk = (n, p = {}) => Object.assign(document.createElement(n), p);
+const mkDiv = (p = {}) => mk("div", p);
+const mkP = (p = {}) => mk("p", p);
+const mkBtn = (p = {}) => mk("button", p);
+const mkSpan = (p = {}) => mk("span", p);
+const mkInput = (p = {}) => mk("input", p);
+
+const types = {
+    id: { type: "text", placeholder: "Enter ID..." },
+    shape: { type: "select", opts: [{ name: "rect", value: "rect" }] },
+    color: { type: "color" },
+    x: { type: "number", min: 0 },
+    y: { type: "number", min: 0 },
+    rot: { type: "number", min: 0, max: 360 },
+    width: { type: "number", min: 0 },
+    height: { type: "number", min: 0 }
+};
+
 // function ActionList(e) {
 //     e.preventDefault();
 //     actionList.style.display = "block";
