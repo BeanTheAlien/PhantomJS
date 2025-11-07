@@ -2195,37 +2195,37 @@ const GameTools = {
      * @prop
      * @type {Map<string, Object>}
      */
-    ent.inv = items;
+    character.inv = items;
     /**
      * Returns the value of an inventory item.
      * @param {string} key - The name of the item.
      * @returns {Object|undefined} The item.
      */
-    ent.invGet = (key) => ent.inv[key];
+    character.invGet = (key) => character.inv[key];
     /**
      * Sets the value of an inventory item.
      * @param {string} key - The name of the item.
      * @param {Object} value - The item.
      * @returns {Object} The new value of the inventory slot.
      */
-    ent.invSet = (key, value) => ent.inv[key] = value;
+    character.invSet = (key, value) => character.inv[key] = value;
     /**
      * Returns whether the inventory already has the item slot.
      * @param {string} key - The name of the item.
      * @returns {boolean} Whether it is contained or not.
      */
-    ent.invHas = (key) => Object.keys(ent.inv).includes(key);
+    character.invHas = (key) => Object.hasOwn(character.inv, key);
     /**
      * Removes an inventory slot.
      * @param {string} key - The name of the item.
      * @returns {undefined} The now empty missing slot.
      */
-    ent.invRem = (key) => delete ent.inv[key];
+    character.invRem = (key) => delete character.inv[key];
     /**
      * Reuturns the size of the inventory.
      * @returns {number} The size of the inventory.
      */
-    ent.invSize = () => Object.entries(ent.inv).length;
+    character.invSize = () => Object.entries(character.inv).length;
   }
 };
 
