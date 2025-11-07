@@ -22,6 +22,31 @@ class Enemy extends phantom.NonPlayableCharacter {
         scene.img(this.x, this.y, this.width, this.height, this.sprite);
     }
 }
+class Weap {
+    constructor({ dmg, w, h, cd, expr, ent, colour }) {
+        this.dmg = dmg;
+        this.w = w;
+        this.h = h;
+        this.cd = cd;
+        this.expr = expr;
+        this.ent = ent;
+        this.colour = colour;
+        this.ready = true;
+    }
+    fire() {
+        if(!this.ready) return;
+        this.ready = false;
+        const wp = new this.ent({
+            id: "", shape: "rect", color: this.colour,
+            collide: (col) => wpCol(this, this.dmg, col),
+            x: player.getPosX(), y: player.getPosY(),
+            rot: player.rot, width: this.w, height: this.h
+        });
+        scene.add(wp);
+        wp.expire(scene, this.expr);
+        setTimeout(() => this.ready = true, this.cd);
+    }
+}
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const c = new phantom.StaticObject({
@@ -66,16 +91,10 @@ function wpCol(self, dmg, col) {
     scene.remove(self);
 }
 
-function Sword() {
-    const slash = new phantom.StaticObject({
-        id: "slash", shape: "rect", color: "#555555ff", x: player.getPosX(), y: player.getPosY(), rot: player.rot, width: 5, height: 20, collide: (col) => wpCol(slash, 1, col)
-    });
-    scene.add(slash);
-    slash.expire(scene, 150);
-}
+const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
 
 function attack() {
-    if(player.cur) player.cur();
+    if(player.cur) player.cur.fire();
 }
 scene.addEvent("click", attack);
 
