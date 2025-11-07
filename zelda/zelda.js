@@ -1,5 +1,7 @@
 import * as phantom from "./../phantom2d.js";
 
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
+
 const canvas = document.getElementById("zelda");
 
 class Enemy extends phantom.NonPlayableCharacter {
@@ -7,14 +9,16 @@ class Enemy extends phantom.NonPlayableCharacter {
         s.shape = "rect";
         s.strength = 0;
         s.states = {};
+        s.custom = {};
         s.custom.sprite = s.sprite;
         s.custom.spd = s.spd;
         super(s);
-        scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
         scene.add(this);
     }
-    update() {}
+    update() {
+        scene.img(this.x, this.y, this.width, this.height, this.sprite);
+    }
 }
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
@@ -50,7 +54,7 @@ phantom.GameTools.useInv(player);
 
 const BigBad = new Enemy({
     id: "bigbad", color: "rgba(195, 30, 8, 1)", spd: 1, width: 10,
-    height: 10, sprite: "missing_content.png", hp: 5
+    height: 10, sprite: "../missing_content.png", hp: 5, x: 30, y: 30
 });
 
 function Sword() {
