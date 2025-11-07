@@ -30,6 +30,24 @@ const types = {
     height: { type: "number", min: 0 }
 };
 
+function gen(obj) {
+    const keys = Object.keys(obj);
+    let els = [];
+    for(let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        if(!k) return;
+        switch(k.type) {
+            case "text":
+                mkInput({
+                    placeholder: k.placeholder ?? ""
+                });
+                break;
+            case "":
+                break;
+        }
+    }
+}
+
 // function ActionList(e) {
 //     e.preventDefault();
 //     actionList.style.display = "block";
