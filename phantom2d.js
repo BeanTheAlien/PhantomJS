@@ -2296,4 +2296,4 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is };
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, Phantom2DEntity, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is };
