@@ -1,0 +1,27 @@
+{
+  "name": "@beanthealien/phantomjs",
+  "version": "1.0.0",
+  "description": "Phantom.js is a web API to simplify the webgame development proccess.\r Phantom.js supports both 2D and 3D games with readable and simple scripting!",
+  "main": "phantom.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeanTheAlien/PhantomJS.git"
+  },
+  "keywords": [],
+  "author": "BeanTheAlien",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/BeanTheAlien/PhantomJS/issues"
+  },
+  "homepage": "https://github.com/BeanTheAlien/PhantomJS#readme",
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
