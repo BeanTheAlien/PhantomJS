@@ -941,6 +941,145 @@ class TextObject extends SceneObject {
     this.size = s;
   }
 }
+/**
+ * A class that generates a trigger area.
+ * @class
+ */
+class Trigger extends SceneObject {
+  /**
+   * The constructor for triggers.
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, onTriggered: function, scene: Scene, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, refresh?: number|undefined, noColRef?: boolean|undefined }} settings - The characteristics of the entity. 
+   */
+  constructor(settings) {
+    super(["width", "height", "onTriggered", "scene"], "trigger object", settings);
+    /**
+     * Objects to ignore.
+     * @prop
+     * @type {Phantom2DEntity[]}
+     */
+    this.ignore = settings.ignore ?? [];
+    /**
+     * Object classes to ignore
+     * @prop
+     * @type {class[]}
+     */
+    this.ignoreByType = settings.ignoreByType ?? [];
+    /**
+     * A function to be triggered when the trigger is collided with.
+     * @prop
+     * @type {function}
+     */
+    this.onTriggered = settings.onTriggered;
+    /**
+     * The refresh rate for the collision listener.
+     * @prop
+     * @type {number}
+     */
+    this.refresh = settings.refresh ?? 0;
+    /**
+     * Determines whether the trigger should wait for the colliding component to leave the collision area before continuing the standard interval.
+     */
+    this.noColRef = settings.noColRef ?? true;
+    this.interval = null;
+    this.scene = settings.scene;
+  }
+  /**
+   * Enables the trigger colliding listener.
+   */
+  enable() {
+    if(this.interval) return;
+    this.interval = setInterval(() => {
+      this.collide = async (col) => {
+        if((this.ignore.length && !this.ignore.some(i => i == col)) || (this.ignoreByType.length && !this.ignoreByType.some(i => is(col, i)))) return;
+        this.onTriggered(col);
+        if(this.noColRef) {
+          this.collide = () => {};
+          while(this.scene.collides(this)) await wait(10);
+        } else this.collide = () => {};
+      }
+    }, this.refresh);
+  }
+  /**
+   * Disables the trigger colliding listener.
+   */
+  disable() {
+    if(!this.interval) return;
+    clearInterval(this.interval);
+    this.collide = () => {};
+  }
+  /**
+   * Retrieves the function fired when the trigger is collided with.
+   * @returns {function} The function associated.
+   */
+  getOnTrigger() {
+    return this.onTriggered;
+  }
+  /**
+   * Sets the function fired when the trigger is collided with.
+   * @param {function} trig - The new function.
+   */
+  setOnTrigger(trig) {
+    this.onTriggered = trig;
+  }
+}
+/**
+ * A class that implements a health component check within a trigger.
+ * @class
+ * @extends Trigger
+ */
+class TriggerHurt extends Trigger {
+  /**
+   * The constructor for triggers.
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, onTriggered: function, scene: Scene, dmg: number, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, refresh?: number|undefined, noColRef?: boolean|undefined }} settings - The characteristics of the entity. 
+   */
+  constructor(settings) {
+    if(!expect(settings, ["dmg"])) throw new Error(`Missing key(s) in trigger hurt settings. (missing: ${findMissing(settings, ["dmg"]).join(", ")})`);
+    super(settings);
+    this.dmg = settings.dmg;
+  }
+  enable() {
+    if(this.interval) return;
+    this.interval = setInterval(() => {
+      this.collide = async (col) => {
+        if((this.ignore.length && !this.ignore.some(i => i == col)) || (this.ignoreByType.length && !this.ignoreByType.some(i => is(col, i)))) return;
+        if(col.hp) col.hurt(this.dmg);
+        this.onTriggered(col);
+        if(this.noColRef) {
+          this.collide = () => {};
+          while(this.scene.collides(this)) await wait(10);
+        } else this.collide = () => {};
+      }
+    }, this.refresh);
+  }
+}
+/**
+ * A class that implements a health component check within a trigger.
+ * @class
+ * @extends Trigger
+ */
+class TriggerKill extends Trigger {
+  /**
+   * The constructor for triggers.
+   * @param {{ id: string, shape: string, color: string, width: number, height: number, onTriggered: function, scene: Scene, x?: number|undefined, y?: number|undefined, rot?: number|undefined, custom?: Map|undefined, ignore?: Phantom2DEntity[]|undefined, ignoreByType?: class[]|undefined, refresh?: number|undefined, noColRef?: boolean|undefined }} settings - The characteristics of the entity. 
+   */
+  constructor(settings) {
+    super(settings);
+  }
+  enable() {
+    if(this.interval) return;
+    this.interval = setInterval(() => {
+      this.collide = async (col) => {
+        if((this.ignore.length && !this.ignore.some(i => i == col)) || (this.ignoreByType.length && !this.ignoreByType.some(i => is(col, i)))) return;
+        if(col.hp) col.die();
+        this.onTriggered(col);
+        if(this.noColRef) {
+          this.collide = () => {};
+          while(this.scene.collides(this)) await wait(10);
+        } else this.collide = () => {};
+      }
+    }, this.refresh);
+  }
+}
 class Vector {
   constructor(x, y) {
     this.x = x;
@@ -2111,6 +2250,9 @@ class Scene {
   seralize() {
     return JSON.stringify(this.#components);
   }
+  collides(ent) {
+    return this.#components.some(component => isColliding(ent, component) && ent != component);
+  }
 }
 /**
  * Creates a local LAN server.
@@ -2383,10 +2525,5 @@ const GameTools = {
   }
 };
 
-export {
-  Scene,
-  SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject,
-  Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject,
-  Phantom2DEntity,
-  GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, Phantom2DEntity, Trigger, TriggerHurt, TriggerKill, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is
 };
