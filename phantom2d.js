@@ -1862,7 +1862,7 @@ class Scene {
    * @param {Phantom2DEntity} item - The item to look for.
    * @returns {boolean} If it contains it.
    */
-  hasItem(item) {
+  has(item) {
     return this.#components.includes(item);
   }
   /**
@@ -1870,7 +1870,7 @@ class Scene {
    * @param {string} id - The id.
    * @returns {boolean} Whether it contains it or not.
    */
-  hasItemWithId(id) {
+  hasWithId(id) {
     return this.#components.some(component => component.id == id);
   }
   /**
@@ -1879,7 +1879,7 @@ class Scene {
    * @param {Object} value - The value to match.
    * @returns {boolean} Whether a component was found.
    */
-  hasItemWithAttr(attr, value) {
+  hasWithAttr(attr, value) {
     return this.#components.some(component => component[attr] == value);
   }
   /**
