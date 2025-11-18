@@ -3,7 +3,7 @@ import * as p2d from "./../../phantom2d.js";
 const canvas = document.getElementById("phantom-canvas");
 const scene = new p2d.Scene(canvas, 500, 500, "100vw", "100vh");
 const player = new p2d.PlayableCharacter({
-    id: "doodle", shape: "rect", color: "#009625ff", width: 20, height: 40, strength: 3, binds: {
+    id: "doodle", shape: "rect", color: "#009625ff", width: 20, height: 40, strength: 0.02, binds: {
         "w": () => player.jump(5)
     }
 });
