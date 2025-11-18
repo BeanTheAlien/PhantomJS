@@ -6,7 +6,24 @@
     <title>Phantom Examples</title>
 </head>
 <body>
+    <select id="s">
+        <optgroup label="Phantom2D">
+            <option value="phnatom2d/doodlejump.js">Doodle Jump</option>
+        </optgroup>
+    </select>
+    <button id="b">Load</button>
     <canvas id="phantom-canvas"></canvas>
-    <script src="/examples/phantom2d/platformer.js" type="module"></script>
+    <script>
+        const s = document.getElementById("s");
+        const b = document.getElementById("b");
+        b.addEventListener("click", () => {
+            const script = document.createElement("script");
+            script.src = s.value;
+            script.type = "module";
+            document.body.appendChild(script);
+            document.body.removeChild(s);
+            document.body.removeChild(b);
+        });
+    </script>
 </body>
 </html>
