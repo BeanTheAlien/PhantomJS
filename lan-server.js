@@ -1,7 +1,10 @@
 import * as p2d from "./phantom2d.js";
-const socket = new WebSocket("ws://localhost:3000");
+import { Server } from "./phantom2d-server.js";
 const canvas = document.getElementById("canvas");
-const scene = new p2d.Scene(canvas, 500, 500);
+const scene = new p2d.Scene(canvas, 1000, 1000, "100vw", "100vh");
+const socket = new WebSocket("ws://localhost:3000"); // or change to IP if you're not the host
+const server = new Server({ hostname: "0.0.0.0", port: 3000, scene, serve: "lan-server.html" });
+server.listen();
 
 function game() {
     scene.clear();
@@ -12,7 +15,7 @@ function game() {
 game();
 
 const player = new p2d.PlayableCharacter({
-    id: "ws_player", shape: "rect", color: "blue",
+    id: "player", shape: "rect", color: "#3bef47ff",
     width: 10, height: 30, x: 50, y: 50, strength: 0,
     binds: {
         "w": () => {

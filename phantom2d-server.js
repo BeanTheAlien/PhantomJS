@@ -8,13 +8,42 @@ const WebSocket = require("ws");
  * @class
  */
 class Server {
+  /**
+   * The constructor for the LAN server.
+   * @param {{ serve: string, scene: Scene, hostname?: string, port?: int }} settings - The server settings.
+   */
   constructor(settings) {
     const serverSettings = ["serve", "scene"];
     if(!expect(settings, serverSettings)) throw new Error(`Missing key(s) in server settings. (missing: ${findMissing(settings, serverSettings).join(", ")})`);
+    /**
+     * The name of the host.
+     * @prop
+     * @type {string}
+     */
     this.hostname = settings.hostname ?? "0.0.0.0";
+    /**
+     * The port that the server connects on.
+     * @prop
+     * @type {int}
+     */
     this.port = 3000;
+    /**
+     * The file to be served.
+     * @prop
+     * @type {string}
+     */
     this.serve = settings.serve;
+    /**
+     * A reference to the literal scene.
+     * @prop
+     * @type {Scene}
+     */
     this.scene = settings.scene;
+    /**
+     * The local LAN server.
+     * @prop
+     * @type {http.Server}
+     */
     this.server = http.createServer((req, res) => {
       // Set CORS headers to allow requests from other origins on the LAN
       res.setHeader("Access-Control-Allow-Origin", "*");
@@ -36,6 +65,11 @@ class Server {
         res.end(data);
       });
     });
+    /**
+     * The WebSocket Server connection.
+     * @prop
+     * @type {WebSocket.Server}
+     */
     this.wss = new WebSocket.Server({ port: this.port });
     this.wss.on("connection", (ws) => {
       let date = new Date();
@@ -58,6 +92,10 @@ class Server {
       })
     });
   }
+  /**
+   * 
+   * @returns {string|null} The fetched IP address.
+   */
   async fetchIPv4() {
     try {
       const res = await fetch("https://api.ipify.org?format=json");
@@ -75,10 +113,15 @@ class Server {
       console.log(`LAN connection avalible at: http://${this.fetchIPv4()}:${this.port}`);
     });
   }
+  close() {
+    this.server.close((err) => {
+      if(err) throw err;
+      console.log(`Closed server at ${this.port}`);
+    });
+  }
   launch() {
-    const ip = this.fetchIPv4();
-    window.open(`http://${ip}:${this.port}`, "_blank");
+    window.open(`http://localhost:${this.port}`, "_blank");
   }
 }
 
-module.exports = { server };
+module.exports = { Server };
