@@ -2016,18 +2016,60 @@ class Scene {
     }
   }
   /**
-   * Returns the width of the canvas.
+   * GET the width of the canvas.
    * @returns {number} The width of the canvas.
    */
-  width() {
+  get width() {
     return this.canvas.width;
   }
   /**
-   * Returns the height of the canvas.
+   * SET the width of the canvas.
+   * @param {number} w - The new width of the canvas.
+   */
+  set width(w) {
+    this.canvas.width = w;
+  }
+  /**
+   * GET the height of the canvas.
    * @returns {number} The height of the canvas.
    */
-  height() {
+  get height() {
     return this.canvas.height;
+  }
+  /**
+   * SET the height of the canvas.
+   * @param {number} h - The new height of the canvas.
+   */
+  set height(h) {
+    this.canvas.height = h;
+  }
+  /**
+   * GET the CSS width of the canvas.
+   * @returns {number} The CSS width of the canvas.
+   */
+  get cssWidth() {
+    return this.canvas.style.width;
+  }
+  /**
+   * SET the CSS width of the canvas.
+   * @param {number} w - The new CSS width of the canvas.
+   */
+  set cssWidth(w) {
+    this.canvas.style.width = w;
+  }
+  /**
+   * GET the CSS height of the canvas.
+   * @returns {number} The CSS height of the canvas.
+   */
+  get cssHeight() {
+    return this.canvas.style.height;
+  }
+  /**
+   * SET the CSS height of the canvas.
+   * @param {number} h - The new CSS height of the canvas.
+   */
+  set cssHeight(h) {
+    this.canvas.style.height = h;
   }
   /**
    * Generates a raycast.
