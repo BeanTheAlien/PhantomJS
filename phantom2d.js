@@ -1731,10 +1731,10 @@ class Scene {
    * @param {number} y - The y-position.
    * @param {number} w - The width.
    * @param {number} h - The height.
-   * @param {HTMLImageElement} image - The image to be loaded.
+   * @param {string} path - The path to the image.
    */
-  img(x, y, w, h, image) {
-    const img = this.#imgCache[image];
+  img(x, y, w, h, path) {
+    const img = this.#imgCache[path];
     if(!img) throw new Error("Image not found in image cache.");
     if(img.complete) {
       this.ctx.drawImage(img, x, y, w, h);

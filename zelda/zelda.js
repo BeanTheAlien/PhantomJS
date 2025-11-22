@@ -10,13 +10,11 @@ class Enemy extends phantom.NonPlayableCharacter {
         s.strength = 0;
         s.color = "rgba(0, 0, 0, 0)";
         s.states = {};
-        s.custom = {};
-        s.custom.sprite = s.sprite;
-        s.custom.spd = s.spd;
+        s.custom = { sprite: s.sprite, spd: s.spd };
         super(s);
         scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
-        scene.add(this);
+        scene.add(this);        
     }
     update() {
         scene.img(this.x, this.y, this.width, this.height, this.sprite);
@@ -51,10 +49,6 @@ class Weap {
 const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
-const c = new phantom.StaticObject({
-    id: "1", shape: "rect", color: "#00f7ffff", x: 5, y: 5, width: 30, height: 40
-});
-scene.add(c);
 const player = new phantom.PlayableCharacter({
     id: "player",
     shape: "rect",
@@ -84,11 +78,12 @@ player.invSet("sword", Sword);
 
 const BigBad = new Enemy({
     id: "bigbad", spd: 1, width: 10, height: 10,
-    sprite: "./../missing_content.png", hp: 5, x: 30, y: 30
+    sprite: "../missing_content.png", hp: 5, x: 30, y: 30
 });
 
 function wpCol(self, dmg, col) {
     if(!col.hp) return;
+    if(col == player) return;
     col.hurt(dmg);
     scene.remove(self);
 }
@@ -100,8 +95,8 @@ scene.addEvent("click", attack);
 
 function render() {
     scene.update();
-    player.clampPosX(0, scene.width());
-    player.clampPosY(0, scene.height());
+    player.clampPosX(0, scene.width);
+    player.clampPosY(0, scene.height);
     scene.clear();
     scene.render();
     requestAnimationFrame(render);

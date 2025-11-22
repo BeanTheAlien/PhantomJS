@@ -154,7 +154,7 @@ function generateBullet() {
         collide: null,
         color: "yellow",
         clampLeft: 0,
-        clampRight: scene.width(),
+        clampRight: scene.width,
         clampUp: -Infinity,
         clampDown: Infinity,
         speed: 1,
@@ -219,7 +219,7 @@ scene.add(homer);
 function render() {
     scene.clear();
     scene.update();
-    playerWithBinds.clampPosX(0, canvas.width);
+    playerWithBinds.clampPosX(0, scene.width);
     // playerWithBinds.clampPosY(0, 300);
     // playerWithBinds.debugRay({ angle: scene.getRotToMouse(playerWithBinds), dist: 200, color: "red", scene });
     // filled bg
