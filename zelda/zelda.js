@@ -1,6 +1,6 @@
 import * as phantom from "./../phantom2d.js";
 
-window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
+// window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
 
 const canvas = document.getElementById("zelda");
 
@@ -14,7 +14,7 @@ class Enemy extends phantom.NonPlayableCharacter {
         s.custom.sprite = s.sprite;
         s.custom.spd = s.spd;
         super(s);
-        this.sprite = scene.loadImg(this.sprite);
+        scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
         scene.add(this);
     }
@@ -47,6 +47,8 @@ class Weap {
         setTimeout(() => this.ready = true, this.cd);
     }
 }
+
+const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const c = new phantom.StaticObject({
@@ -82,7 +84,7 @@ player.invSet("sword", Sword);
 
 const BigBad = new Enemy({
     id: "bigbad", spd: 1, width: 10, height: 10,
-    sprite: "../missing_content.png", hp: 5, x: 30, y: 30
+    sprite: "./../missing_content.png", hp: 5, x: 30, y: 30
 });
 
 function wpCol(self, dmg, col) {
@@ -90,8 +92,6 @@ function wpCol(self, dmg, col) {
     col.hurt(dmg);
     scene.remove(self);
 }
-
-const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
 
 function attack() {
     if(player.cur) player.cur.fire();

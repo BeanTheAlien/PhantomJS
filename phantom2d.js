@@ -1727,16 +1727,14 @@ class Scene {
    * A function to draw an image.
    * 
    * Gets an HTMLImageElement from the image cache.
-   * 
-   * Applies an onload
    * @param {number} x - The x-position.
    * @param {number} y - The y-position.
    * @param {number} w - The width.
    * @param {number} h - The height.
-   * @param {string} path - The path to the image.
+   * @param {HTMLImageElement} image - The image to be loaded.
    */
-  img(x, y, w, h, path) {
-    const img = this.#imgCache[path];
+  img(x, y, w, h, image) {
+    const img = this.#imgCache[image];
     if(!img) throw new Error("Image not found in image cache.");
     if(img.complete) {
       this.ctx.drawImage(img, x, y, w, h);
