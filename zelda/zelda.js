@@ -1,6 +1,16 @@
 import * as phantom from "./../phantom2d.js";
 
-// window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
+
+const titleScreen = document.createElement("div");
+document.body.appendChild(titleScreen);
+titleScreen.className = "titlescreen";
+const title = document.createElement("h1");
+title.textContent = "Legend of Seth";
+titleScreen.appendChild(title);
+const start = document.createElement("button");
+start.textContent = "Start";
+titleScreen.appendChild(start);
 
 const canvas = document.getElementById("zelda");
 
