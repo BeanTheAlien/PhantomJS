@@ -2351,8 +2351,8 @@ const GameTools = {
    * @param {Phantom2DEntity} ent - The entity to apply to.
    * @param {number} hp - The amount of health to start with.
    * @param {number} maxHP - The maximum amount of health point.
-   * @param {function} onDeath - A function to run when the component dies.
-   * @param {function} onHurt - A function to run when the component dies.
+   * @param {function} onDeath - A function to run when the entity dies.
+   * @param {function} onHurt - A function to run when the entity is hurt.
    */
   useHealth: (ent, hp, maxHP, onDeath, onHurt = () => {}) => {
     if(!is(ent, Phantom2DEntity)) throw new Error("Cannot apply health component to non-Phantom2DEntity.");
