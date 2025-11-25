@@ -1889,6 +1889,14 @@ class Scene {
     return this.#components.indexOf(component);
   }
   /**
+   * Applies a filter to this components.
+   * @param {function} callback - The callback function to determine if the element should be added to the resulting array.
+   * @returns {Phantom2DEntity[]} The filtered array.
+   */
+  filter(callback) {
+    return this.#components.filter(callback);
+  }
+  /**
    * Returns the components length.
    * @returns {number} The length.
    */
@@ -2255,7 +2263,7 @@ class Scene {
    * Downloads the levels cache into a JSON file.
    * @param {string} name - The filename.
    */
-  saveLevelCache(name) {
+  saveLevels(name) {
     const json = JSON.stringify(this.#levels, null, 4);
     download(json, "application/json", name, "json");
   }

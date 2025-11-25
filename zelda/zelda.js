@@ -6,11 +6,18 @@ const titleScreen = document.createElement("div");
 document.body.appendChild(titleScreen);
 titleScreen.className = "titlescreen";
 const title = document.createElement("h1");
-title.textContent = "Legend of Seth";
+title.textContent = "The Legend of Seth";
 titleScreen.appendChild(title);
 const start = document.createElement("button");
 start.textContent = "Start";
 titleScreen.appendChild(start);
+start.addEventListener("click", init);
+const cont = document.createElement("button");
+cont.textContent = "Continue";
+if(localStorage.getItem("saved_game")) {
+    titleScreen.appendChild(cont);
+    cont.addEventListener("click", initLoad);
+}
 
 const canvas = document.getElementById("zelda");
 
@@ -18,16 +25,17 @@ class Enemy extends phantom.NonPlayableCharacter {
     constructor(s) {
         s.shape = "rect";
         s.strength = 0;
-        s.color = "rgba(0, 0, 0, 0)";
+        // tempfix
+        //s.color = "rgba(0, 0, 0, 0)";
         s.states = {};
-        s.custom = { sprite: s.sprite, spd: s.spd };
+        s.custom = { sprite: s.sprite, spd: s.spd, tags: ["enemy", ...s.tags], atk: s.atk };
         super(s);
-        scene.loadImg(this.sprite);
-        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));
-        scene.add(this);        
+        //scene.loadImg(this.sprite);
+        phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));        
     }
     update() {
-        scene.img(this.x, this.y, this.width, this.height, this.sprite);
+        super.update();
+        //scene.img(this.x, this.y, this.width, this.height, this.sprite);
     }
 }
 class Weap {
@@ -79,20 +87,20 @@ const player = new phantom.PlayableCharacter({
         "d": () => player.moveX(player.spd)
     }
 });
-scene.add(player);
 phantom.GameTools.useHealth(player, 5, 5, () => {
     alert("You Died");
-});
+}, () => {});
 phantom.GameTools.useInv(player);
 player.invSet("sword", Sword);
 
 const BigBad = new Enemy({
     id: "bigbad", spd: 1, width: 10, height: 10,
-    sprite: "../missing_content.png", hp: 5, x: 30, y: 30
+    sprite: "../missing_content.png", hp: 5, x: 30, y: 30,
+    color: "#ff0000ff", atk: () => {}
 });
 
 function wpCol(self, dmg, col) {
-    if(!col.hp) return;
+    if(!col?.hp) return;
     if(col == player) return;
     col.hurt(dmg);
     scene.remove(self);
@@ -101,7 +109,44 @@ function wpCol(self, dmg, col) {
 function attack() {
     if(player.cur) player.cur.fire();
 }
-scene.addEvent("click", attack);
+
+function initCore() {
+    document.body.removeChild(titleScreen);
+    scene.add(player);
+    scene.addEvent("click", attack);
+}
+function init() {
+    initCore();
+    scene.add(BigBad);
+    render();
+    autosave();
+}
+function initLoad() {
+    initCore();
+    const save = localStorage.getItem("saved_game");
+    if(!save) throw new Error("Cannot find saved game.");
+    const { x, y, cur, hp, maxhp, inv, enemies } = JSON.parse(save);
+    player.setPos(parseFloat(x), parseFloat(y));
+    player.cur = cur;
+    player.hp = hp;
+    player.maxHP = maxhp;
+    player.inv = inv;
+    for(const e of enemies) scene.add(e);
+    autosave();
+}
+function autosave() {
+    setInterval(() => {
+        localStorage.setItem(JSON.stringify({
+            "x": player.getPosX(),
+            "y": player.getPosY(),
+            "cur": player.cur,
+            "hp": player.hp,
+            "maxhp": player.maxHP,
+            "inv": player.inv,
+            "enemies": scene.filter(c => c.tags.includes("enemy"))
+        }), "saved_game");
+    }, 180000);
+}
 
 function render() {
     scene.update();
@@ -111,4 +156,3 @@ function render() {
     scene.render();
     requestAnimationFrame(render);
 }
-render();
