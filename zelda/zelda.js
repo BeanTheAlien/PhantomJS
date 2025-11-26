@@ -12,12 +12,12 @@ const start = document.createElement("button");
 start.textContent = "Start";
 titleScreen.appendChild(start);
 start.addEventListener("click", init);
-const cont = document.createElement("button");
-cont.textContent = "Continue";
-if(Object.hasOwn(localStorage, "saved_game")) {
-    titleScreen.appendChild(cont);
-    cont.addEventListener("click", initLoad);
-} else console.log(localStorage);
+// const cont = document.createElement("button");
+// cont.textContent = "Continue";
+// if(Object.hasOwn(localStorage, "saved_game")) {
+//     titleScreen.appendChild(cont);
+//     cont.addEventListener("click", initLoad);
+// } else console.log(localStorage);
 
 const canvas = document.getElementById("zelda");
 
@@ -29,6 +29,10 @@ class Enemy extends phantom.NonPlayableCharacter {
         //s.color = "rgba(0, 0, 0, 0)";
         s.states = {};
         s.custom = { sprite: s.sprite, spd: s.spd, tags: ["enemy", ...s.tags ?? []], atk: s.atk };
+        s.collide = (c) => {
+            if(c != player) return;
+            player.hurt(1);
+        }
         super(s);
         //scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));        
@@ -48,15 +52,19 @@ class Weap {
         this.ent = ent;
         this.colour = colour;
         this.ready = true;
+        // this.entName = entName;
     }
     fire() {
         if(!this.ready) return;
         this.ready = false;
+        console.log(player.dir);
+        const ofs = { 1: [0, -this.h], 2: [player.width, 0], 3: [0, player.height], 4: [this.width, 0] }[player.dir];
+        const swapWH = { 1: false, 2: true, 3: false, 4: true }[player.dir];
         const wp = new this.ent({
             id: "", shape: "rect", color: this.colour,
             collide: (col) => wpCol(this, this.dmg, col),
-            x: player.getPosX(), y: player.getPosY(),
-            rot: player.rot, width: this.w, height: this.h
+            x: player.getPosX() + ofs[0], y: player.getPosY() + ofs[1],
+            rot: player.rot, width: !swapWH ? this.w : this.h, height: !swapWH ? this.h : this.w
         });
         scene.add(wp);
         wp.expire(scene, this.expr);
@@ -67,7 +75,8 @@ class Weap {
 const ents = {
     "StaticObject": phantom.StaticObject
 };
-const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff", entName: "StaticObject" });
+const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
+// , entName: "StaticObject"
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const player = new phantom.PlayableCharacter({
@@ -76,23 +85,41 @@ const player = new phantom.PlayableCharacter({
     strength: 0,
     color: "#009414ff",
     width: 5,
-    height: 10,
+    height: 5,
     x: 20,
     y: 30,
     custom: {
         spd: 1,
-        cur: Sword
+        cur: Sword,
+        dir: -1
     },
     binds: {
-        "w": () => player.moveY(-player.spd),
-        "a": () => player.moveX(-player.spd),
-        "s": () => player.moveY(player.spd),
-        "d": () => player.moveX(player.spd)
+        "w": () => {
+            player.moveY(-player.spd);
+            player.dir = 1;
+        },
+        "a": () => {
+            player.moveX(-player.spd);
+            player.dir = 4;
+        },
+        "s": () => {
+            player.moveY(player.spd);
+            player.dir = 3;
+        },
+        "d": () => {
+            player.moveX(player.spd);
+            player.dir = 2;
+        }
     }
 });
 phantom.GameTools.useHealth(player, 5, 5, () => {
+    cancelAnimationFrame(rend);
     alert("You Died");
-}, () => {});
+    scene.remove(player);
+}, () => {
+    player.color = "#df0e0eff";
+    setTimeout(() => player.color = "#009414ff", 30);
+});
 phantom.GameTools.useInv(player);
 player.invSet("sword", Sword);
 
@@ -122,16 +149,20 @@ function init() {
     initCore();
     scene.add(BigBad);
     render();
-    autosave();
+    // autosave();
 }
 function initLoad() {
     initCore();
-    console.log(scene.seralize());
     const save = localStorage.getItem("saved_game");
     if(!save) throw new Error("Cannot find saved game.");
     const { x, y, cur, hp, maxhp, inv, enemies } = JSON.parse(save);
+    console.log(`x: ${x}\ny: ${y}\ncur: ${JSON.stringify(cur)}\nhp: ${hp}\nmaxhp: ${maxhp}\ninv: ${JSON.stringify(inv)}\nenemies: ${JSON.stringify(enemies)}`);
     player.setPos(parseFloat(x), parseFloat(y));
-    player.cur = new Weap({ ...cur, ent: ents[cur.entName] });
+    console.log(cur.entName);
+    const wp = new Weap({ dmg: cur.dmg, w: cur.w, h: cur.h, cd: cur.cd, expr: cur.expr, entName: cur.entName, ent: null });
+    wp.ent = ents[cur.entName];
+    player.cur = wp;
+    console.log(player.cur);
     player.hp = hp;
     player.maxHP = maxhp;
     player.inv = inv;
@@ -152,11 +183,13 @@ function autosave() {
     }, 60000);
 }
 
+var rend;
+
 function render() {
     scene.update();
     player.clampPosX(0, scene.width);
     player.clampPosY(0, scene.height);
     scene.clear();
     scene.render();
-    requestAnimationFrame(render);
+    rend = requestAnimationFrame(render);
 }
