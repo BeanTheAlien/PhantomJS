@@ -1,6 +1,6 @@
 import * as phantom from "./../phantom2d.js";
 
-window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
+// window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.linno}`));
 
 const titleScreen = document.createElement("div");
 document.body.appendChild(titleScreen);
@@ -14,10 +14,10 @@ titleScreen.appendChild(start);
 start.addEventListener("click", init);
 const cont = document.createElement("button");
 cont.textContent = "Continue";
-if(localStorage.getItem("saved_game")) {
+if(Object.hasOwn(localStorage, "saved_game")) {
     titleScreen.appendChild(cont);
     cont.addEventListener("click", initLoad);
-}
+} else console.log(localStorage);
 
 const canvas = document.getElementById("zelda");
 
@@ -28,7 +28,7 @@ class Enemy extends phantom.NonPlayableCharacter {
         // tempfix
         //s.color = "rgba(0, 0, 0, 0)";
         s.states = {};
-        s.custom = { sprite: s.sprite, spd: s.spd, tags: ["enemy", ...s.tags], atk: s.atk };
+        s.custom = { sprite: s.sprite, spd: s.spd, tags: ["enemy", ...s.tags ?? []], atk: s.atk };
         super(s);
         //scene.loadImg(this.sprite);
         phantom.GameTools.useHealth(this, s.hp, s.hp, s.dead ?? (() => scene.remove(this)), s.hurt ?? (() => {}));        
@@ -64,7 +64,10 @@ class Weap {
     }
 }
 
-const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff" });
+const ents = {
+    "StaticObject": phantom.StaticObject
+};
+const Sword = new Weap({ dmg: 1, w: 5, h: 20, cd: 150, expr: 150, ent: phantom.StaticObject, colour: "#585858ff", entName: "StaticObject" });
 
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const player = new phantom.PlayableCharacter({
@@ -123,29 +126,30 @@ function init() {
 }
 function initLoad() {
     initCore();
+    console.log(scene.seralize());
     const save = localStorage.getItem("saved_game");
     if(!save) throw new Error("Cannot find saved game.");
     const { x, y, cur, hp, maxhp, inv, enemies } = JSON.parse(save);
     player.setPos(parseFloat(x), parseFloat(y));
-    player.cur = cur;
+    player.cur = new Weap({ ...cur, ent: ents[cur.entName] });
     player.hp = hp;
     player.maxHP = maxhp;
     player.inv = inv;
-    for(const e of enemies) scene.add(e);
+    for(const e of enemies) scene.add(new Enemy(e));
     autosave();
 }
 function autosave() {
     setInterval(() => {
-        localStorage.setItem(JSON.stringify({
+        localStorage.setItem("saved_game", JSON.stringify({
             "x": player.getPosX(),
             "y": player.getPosY(),
             "cur": player.cur,
             "hp": player.hp,
             "maxhp": player.maxHP,
             "inv": player.inv,
-            "enemies": scene.filter(c => c.tags.includes("enemy"))
-        }), "saved_game");
-    }, 180000);
+            "enemies": scene.filter(c => c.tags?.includes("enemy"))
+        }));
+    }, 60000);
 }
 
 function render() {
