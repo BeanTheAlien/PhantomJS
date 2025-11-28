@@ -57,14 +57,17 @@ class Weap {
     fire() {
         if(!this.ready) return;
         this.ready = false;
-        console.log(player.dir);
-        const ofs = { 1: [0, -this.h], 2: [player.width, 0], 3: [0, player.height], 4: [this.width, 0] }[player.dir];
-        const swapWH = { 1: false, 2: true, 3: false, 4: true }[player.dir];
-        const wp = new this.ent({
+        const angle = { 1: -Math.PI/2, 2: 0, 3: Math.PI/2, 4: Math.PI }[player.dir];
+        const ofsDist = 6; // how far from player center the sword originates
+        const wp = new phantom.StaticObject({
             id: "", shape: "rect", color: this.colour,
             collide: (col) => wpCol(this, this.dmg, col),
-            x: player.getPosX() + ofs[0], y: player.getPosY() + ofs[1],
-            rot: player.rot, width: !swapWH ? this.w : this.h, height: !swapWH ? this.h : this.w
+            // put sword center on player center + directional offset
+            x: player.getPosX() + player.width/2 + Math.cos(angle) * ofsDist - (this.w/2),
+            y: player.getPosY() + player.height/2 + Math.sin(angle) * ofsDist - (this.h/2),
+            rot: angle,
+            width: this.w,
+            height: this.h
         });
         scene.add(wp);
         wp.expire(scene, this.expr);
