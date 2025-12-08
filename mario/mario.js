@@ -24,10 +24,18 @@ scene.add(flur);
 class Barrel extends phantom.Phantom2DEntity {
     constructor(spd) {
         super([], "", {
-            id: "", shape: "rect", color: "#d3950fff", collide: (c) => {
+            id: "", shape: "rect", color: "#cf8112ff", collide: (c) => {
                 if(c == mario) cancelAnimationFrame(frame);
-            }, x: 0, y: 0, width: 10, height: 5, custom: { spd }
+            }, x: 0, y: 0, width: 10, height: 5, custom: { spd, level: 0 }
         });
+    }
+    update() {
+        if(this.level % 2 == 0) this.moveX(this.spd);
+        else this.moveX(-this.spd);
+        if(this.x >= scene.width * 0.75) {
+            this.level++;
+            this.moveY(10);
+        }
     }
 }
 const b = new Barrel(1);
