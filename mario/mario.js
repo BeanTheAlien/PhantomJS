@@ -8,14 +8,14 @@ const mario = new phantom.PlayableCharacter({
     width: 5, height: 10, x: 10, y: 10, strength: 0.03,
     binds: {
         w: () => {
-            if(phantom.isColliding(mario, flur)) mario.jump(1.5);
+            if(flure.some(f => phantom.isColliding(mario, f))) mario.jump(1.5);
         },
         a: () => mario.moveX(-1),
         d: () => mario.moveX(1)
     },
     collide: (c) => {
         if(c instanceof Barrel) {
-            throw new Error("game over");
+            gameOver = 1;
         }
     },
     upd: () => {
@@ -27,8 +27,8 @@ const mario = new phantom.PlayableCharacter({
     }
 });
 class Flur extends phantom.WallObject {
-    constructor(y) {
-        super({ id: "flur", shape: "rect", color: "#680f0fff", x: 0, y, width: scene.width, height: 10 });
+    constructor(y, width = scene.width) {
+        super({ id: "flur", shape: "rect", color: "#680f0fff", x: 0, y, width, height: 10 });
     }
 }
 scene.add(mario);
@@ -41,8 +41,8 @@ const flure = [flur, flur2];
 class Barrel extends phantom.Phantom2DEntity {
     constructor(spd) {
         super([], "", {
-            id: "", shape: "rect", color: "#cf8112ff", collide: (c) => {
-                if(c.id == mario.id) throw new Error("game over");
+            id: "barrel", shape: "rect", color: "#cf8112ff", collide: (c) => {
+                if(c.id == mario.id) gameOver = 1;
             }, x: 0, y: 0, width: 15, height: 10, custom: { spd, level: 0 }
         });
     }
@@ -53,8 +53,7 @@ class Barrel extends phantom.Phantom2DEntity {
                 this.level++;
                 this.moveY(10);
             }
-        }
-        else {
+        } else {
             this.moveX(-this.spd);
             if(this.x <= scene.width * 0.25) {
                 this.level++;
@@ -66,7 +65,11 @@ class Barrel extends phantom.Phantom2DEntity {
 const b = new Barrel(5);
 scene.add(b);
 
+var gameOver = 0;
 function render() {
+    if(gameOver == 1) {
+        return;
+    }
     scene.clear();
     scene.update();
     scene.render();
