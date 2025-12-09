@@ -19,19 +19,24 @@ const mario = new phantom.PlayableCharacter({
         }
     },
     upd: () => {
-        if(phantom.isColliding(mario, flur)) {
-            phantom.resolveYCol(mario, flur);
+        if(flure.some(f => phantom.isColliding(mario, f))) {
+            phantom.resolveYCol(mario, flure.find(f => phantom.isColliding(mario, f)));
             return;
         }
         mario.strength = 0.03;
     }
 });
+class Flur extends phantom.WallObject {
+    constructor(y) {
+        super({ id: "flur", shape: "rect", color: "#680f0fff", x: 0, y, width: scene.width, height: 10 });
+    }
+}
 scene.add(mario);
-const flur = new phantom.WallObject({
-    id: "flur", shape: "rect", color: "#680f0fff", x: 0, y: 100,
-    width: scene.width, height: 10
-});
+const flur = new Flur(100);
 scene.add(flur);
+const flur2 = new Flur(50);
+scene.add(flur2);
+const flure = [flur, flur2];
 
 class Barrel extends phantom.Phantom2DEntity {
     constructor(spd) {
@@ -56,11 +61,6 @@ class Barrel extends phantom.Phantom2DEntity {
                 this.moveY(10);
             }
         }
-    }
-}
-class Flur extends phantom.WallObject {
-    constructor(y) {
-        super({ id: "flur", shape: "rect", color: "#680f0fff", x: 0, y: 100, width: scene.width, height: 10 });
     }
 }
 const b = new Barrel(5);
