@@ -92,6 +92,12 @@ class Phantom2DEntity {
     }
     this.#events = {};
     this.#lerpProgress = 0;
+    /**
+     * A updater to be ran in the default `upd`.
+     * @prop
+     * @type {function}
+     */
+    this.upd = settings.upd ?? (() => {});
   }
   /**
    * A utility function to set the position.
@@ -470,7 +476,9 @@ class StaticObject extends SceneObject {
   constructor(settings) {
     super([], "static", settings);
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 /**
  * A scenery object that also has phyiscs.
@@ -502,6 +510,7 @@ class PhysicsObject extends SceneObject {
   update() {
     this.gravspd += this.strength;
     this.y += this.gravspd;
+    this.upd();
   }
 }
 /**
@@ -607,6 +616,7 @@ class MovingObject extends SceneObject {
         this.y += this.speed;
       }
     }
+    this.upd();
   }
 }
 /**
@@ -674,7 +684,9 @@ class BouncyObject extends SceneObject {
       }
     }
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 /**
  * A scene object that moves in a single direction and destroys itself upon reaching extent.
@@ -762,6 +774,7 @@ class BulletObject extends SceneObject {
       this.onDestroyed();
       this.scene.remove(this);
     }
+    this.upd();
   }
 }
 /**
@@ -808,6 +821,7 @@ class HomingBulletObject extends BulletObject {
     else if(this.x > x) this.x -= this.speed;
     if(this.y < y) this.y += this.speed;
     else if(this.y > y) this.y -= this.speed;
+    this.upd();
   }
 }
 /**
@@ -838,7 +852,9 @@ class FloorObject extends SceneObject {
       }
     }
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 /**
  * A simple object that blocks others movement.
@@ -893,7 +909,9 @@ class WallObject extends SceneObject {
       }
     }
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 class ButtonObject extends SceneObject {
   constructor(settings) {
@@ -912,7 +930,9 @@ class ButtonObject extends SceneObject {
     }
     this.scene.addEvent("click", this.exec);
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 class TextObject extends SceneObject {
   constructor(settings) {
@@ -1258,6 +1278,7 @@ class PlayableCharacter extends Character {
     for(const [name, action] of Object.entries(this.#binds)) {
       if(this.#keys[name]) action();
     }
+    this.upd();
   }
 }
 /**
@@ -1384,6 +1405,7 @@ class NonPlayableCharacter extends Character {
   update() {
     this.gravspd += this.strength;
     this.y += this.gravspd;
+    this.upd();
   }
 }
 // class Light extends Phantom2DEntity {
@@ -1591,7 +1613,9 @@ class Spawner extends Phantom2DEntity {
   stop() {
     clearInterval(this.interval);
   }
-  update() {}
+  update() {
+    this.upd();
+  }
 }
 /**
  * The root canvas manager.
@@ -2320,6 +2344,17 @@ function isColliding(object1, object2) {
   return obj2X < obj1X + obj1W && obj2X + obj2W > obj1X && obj2Y < obj1Y + obj1H && obj2Y + obj2H > obj1Y;
 }
 /**
+ * Resolves the vertical (y-axis) collision for entities.
+ * @param {Phantom2DEntity} obj - The entity to resolve.
+ * @param {Phantom2DEntity} plat - The entity to test against.
+ */
+function resolveYCol(obj, plat) {
+    if(obj.y + obj.height > plat.y && obj.y < plat.y) {
+        obj.y = plat.y - obj.height;
+        obj.strength = 0; // cancel gravity
+    }
+}
+/**
  * Returns whether an intersection occurs with a rectangle with a ray.
  * @param {{ x: number, y: number }} rayOrigin - The origin of the raycast.
  * @param {number} rayDir - The direction the ray is travelling in.
@@ -2492,5 +2527,5 @@ const GameTools = {
   }
 };
 
-export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, Phantom2DEntity, Trigger, TriggerHurt, TriggerKill, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is
+export { Scene, SceneObject, StaticObject, PhysicsObject, MovingObject, BouncyObject, BulletObject, WallObject, TextObject, Vector, PlayableCharacter, NonPlayableCharacter, Audio, Spawner, HomingBulletObject, ButtonObject, Phantom2DEntity, Trigger, TriggerHurt, TriggerKill, GameTools, random, isColliding, wait, getRemoteImg, getRemoteAudio, download, downloadJSON, is, resolveYCol
 };
