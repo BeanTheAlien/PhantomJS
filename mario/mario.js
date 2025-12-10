@@ -27,14 +27,14 @@ const mario = new phantom.PlayableCharacter({
     }
 });
 class Flur extends phantom.WallObject {
-    constructor(y, width = scene.width) {
-        super({ id: "flur", shape: "rect", color: "#680f0fff", x: 0, y, width, height: 10 });
+    constructor(x, y, width) {
+        super({ id: "flur", shape: "rect", color: "#680f0fff", x, y, width, height: 10 });
     }
 }
 scene.add(mario);
-const flur = new Flur(100);
+const flur = new Flur(0, 50, 0.75 * scene.width);
 scene.add(flur);
-const flur2 = new Flur(50);
+const flur2 = new Flur(scene.width * 0.25, 100, 0.75 * scene.width);
 scene.add(flur2);
 const flure = [flur, flur2];
 
