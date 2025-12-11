@@ -8,7 +8,11 @@ const mario = new phantom.PlayableCharacter({
     width: 5, height: 10, x: 10, y: 10, strength: 0.04,
     binds: {
         w: () => {
-            if(flure.some(f => phantom.isColliding(mario, f))) mario.jump(1.5);
+            if(lCol()) {
+                mario.y++;
+                mario.strength = 0;
+            }
+            else if(fCol()) mario.jump(1.5);
         },
         a: () => mario.moveX(-mario.spd),
         d: () => mario.moveX(mario.spd)
@@ -19,11 +23,12 @@ const mario = new phantom.PlayableCharacter({
         }
     },
     upd: () => {
-        if(flure.some(f => phantom.isColliding(mario, f))) {
+        if(lCol()) return;
+        if(fCol()) {
             phantom.resolveYCol(mario, flure.find(f => phantom.isColliding(mario, f)));
             return;
         }
-        mario.strength = 0.04
+        mario.strength = 0.04;
     },
     custom: { spd: 1.5 }
 });
@@ -32,15 +37,31 @@ class Flur extends phantom.WallObject {
         super({ id: "flur", shape: "rect", color: "#680f0fff", x, y, width, height: 10 });
     }
 }
+class Ladder extends phantom.Phantom2DEntity {
+    constructor(x, y, height) {
+        super([], "", {
+            id: "ladder", shape: "rect", color: "#970d0bff", x, y, height, width: "10px"
+        });
+    }
+}
 function wp(p) {
     return scene.width * p;
+}
+function fCol() {
+    return flure.some(f => phantom.isColliding(mario, f));
+}
+function lCol() {
+    return ldrs.some(l => phantom.isColliding(mario, l));
 }
 scene.add(mario);
 const flur = new Flur(0, 50, wp(0.75));
 const flur2 = new Flur(wp(0.25), 100, wp(0.75));
 const flur3 = new Flur(0, scene.height, wp(0.75));
 scene.add(flur, flur2, flur3);
-const flure = [flur, flur2];
+const flure = [flur, flur2, flur3];
+const ldr = new Ladder(10, 50, 10);
+scene.add(ldr);
+const ldrs = [ldr];
 
 class Barrel extends phantom.Phantom2DEntity {
     constructor(y, spd = 5) {
