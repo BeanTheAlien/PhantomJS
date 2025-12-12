@@ -85,32 +85,35 @@ class Barrel extends phantom.Phantom2DEntity {
         });
     }
     async update() {
-        const lerp = (start, end, effect) => start + (end - start) * effect;
-        const tY = this.y + 60;
-        const yLerp = () => {
-            return new Promise((resolve) => {
-                const anim = () => {
-                    this.y = lerp(this.y, tY, 0.1);
-                    if(Math.abs(tY - this.y) > 0.001) requestAnimationFrame(anim);
-                    else {
-                        this.y = tY;
-                        resolve();
-                    }
-                }
-                anim();
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const lerpOverTime = (start, end, duration) => {
+            return new Promise(resolve => {
+                const startTime = performance.now();
+
+                const anim = time => {
+                    const elapsed = time - startTime;
+                    const t = Math.min(elapsed / duration, 1);
+
+                    this.y = lerp(start, end, t);
+
+                    if (t < 1) requestAnimationFrame(anim);
+                    else resolve();
+                };
+
+                requestAnimationFrame(anim);
             });
         }
         if(this.level % 2 == 0) {
             this.moveX(this.spd);
             if(this.x >= scene.width * 0.85) {
                 this.level++;
-                await yLerp();
+                await lerpOverTime(this.y, this.y + 60, 300);
             }
         } else {
             this.moveX(-this.spd);
             if(this.x <= scene.width * 0.15) {
                 this.level++;
-                await yLerp();
+                await lerpOverTime(this.y, this.y + 60, 300);
             }
         }
     }
