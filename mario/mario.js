@@ -5,14 +5,14 @@ const canvas = document.getElementById("p2d-canvas");
 const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
 const mario = new phantom.PlayableCharacter({
     id: "mario", shape: "rect", color: "#be1414ff",
-    width: 5, height: 10, x: 10, y: scene.height - 35, strength: 0.04,
+    width: 5, height: 20, x: 10, y: scene.height - 35, strength: 0.04,
     binds: {
         w: () => {
             if(lCol()) {
                 mario.moveY(-1);
                 mario.setGravSpd(0);
             }
-            else if(fCol()) mario.jump(1.5);
+            else if(fCol()) mario.jump(2);
         },
         a: () => mario.moveX(-mario.spd),
         s: () => {
@@ -23,6 +23,12 @@ const mario = new phantom.PlayableCharacter({
     collide: (c) => {
         if(c instanceof Barrel) {
             gameOver = 1;
+            return;
+        }
+        if(c.id == "pauline") {
+            const herz = new phantom.StaticObject({
+                id: "herz", shape: "rect", color: "#ff0000ff"
+            });
         }
     },
     upd: () => {
@@ -70,11 +76,22 @@ const flur4 = new Flur(wp(0.25), flur3.getPosY() - 60, wp(0.75));
 const flur5 = new Flur(0, flur4.getPosY() - 60, wp(0.75));
 const flur6 = new Flur(wp(0.25), flur5.getPosY() - 60, wp(0.75));
 const flur7 = new Flur(0, flur6.getPosY() - 60, wp(0.75));
-scene.add(flur, flur1, flur2, flur3, flur4, flur5, flur6, flur7);
-const flure = [flur, flur1, flur2, flur3, flur4, flur5, flur6, flur7];
+const plat = new Flur(150, flur6.getPosY() - 90, 36);
+scene.add(flur, flur1, flur2, flur3, flur4, flur5, flur6, flur7, plat);
+const flure = [flur, flur1, flur2, flur3, flur4, flur5, flur6, flur7, plat];
 const ldr = new Ladder(50, 20, 30);
 scene.add(ldr);
 const ldrs = [ldr];
+const dk = new phantom.StaticObject({
+    id: "dk", shape: "rect", color: "#ac6802ff", width: 30, height: 40,
+    x: 40, y: flur6.getPosY() - 100
+});
+scene.add(dk);
+const paul = new phantom.StaticObject({
+    id: "pauline", shape: "rect", color: "#e404c6ff", width: mario.width, height: mario.height,
+    x: plat.getCenter().x, y: plat.getPosY() - mario.height
+});
+scene.add(paul);
 
 class Barrel extends phantom.Phantom2DEntity {
     constructor(y = flur7.getPosY() - 10, spd = 5) {
