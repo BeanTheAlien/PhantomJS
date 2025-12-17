@@ -45,7 +45,17 @@ class PhysicsV2 {
         this.x += this.vx * d;
         this.y += this.vy * d;
     }
-    impulse(dir, amount) {
-        if(dir == "x" || dir == 0) this.vx *=
+    #dir(inputDir) {
+        return inputDir == "x" || inputDir == 0 ? 0 : inputDir == "y" || inputDir == 1 ? 1 : null;
+    }
+    addImpulse(dir, amount) {
+        const d = this.#dir(dir);
+        if(d == 0) this.ax += amount;
+        else if(d == 1) this.ay += amount;
+    }
+    applyImpulse(dir, amount) {
+        const d = this.#dir(dir);
+        if(d == 0) this.ax *= amount;
+        else if(d == 1) this.ay *= amount;
     }
 }
