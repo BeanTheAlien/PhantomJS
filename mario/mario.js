@@ -27,8 +27,10 @@ const mario = new phantom.PlayableCharacter({
         }
         if(c.id == "pauline") {
             const herz = new phantom.StaticObject({
-                id: "herz", shape: "rect", color: "#ff0000ff"
+                id: "herz", shape: "rect", color: "#ff0000ff", x: c.getPosX(), y: c.getPosY() - 10, width: 5, height: 5
             });
+            scene.add(herz);
+            herz.expire(scene, 500);
         }
     },
     upd: () => {
