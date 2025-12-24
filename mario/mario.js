@@ -1,8 +1,8 @@
-window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+//window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 import * as phantom from "../phantom2d.js";
 const canvas = document.getElementById("p2d-canvas");
-const scene = new phantom.Scene(canvas, 500, 500, "100vw", "100vh");
+const scene = new phantom.Scene(canvas, 500, 500, "100vw", "95vh");
 const mario = new phantom.PlayableCharacter({
     id: "mario", shape: "rect", color: "#be1414ff",
     width: 5, height: 20, x: 10, y: scene.height - 35, strength: 0.04,
@@ -26,11 +26,14 @@ const mario = new phantom.PlayableCharacter({
             return;
         }
         if(c.id == "pauline") {
+            scene.focus(mario);
+            mario.unbindAll();
             const herz = new phantom.StaticObject({
                 id: "herz", shape: "rect", color: "#ff0000ff", x: c.getPosX(), y: c.getPosY() - 10, width: 5, height: 5
             });
             scene.add(herz);
             herz.expire(scene, 500);
+            mario.moveX(1);
         }
     },
     upd: () => {

@@ -273,22 +273,22 @@ class Phantom2DEntity {
    * @param {string|number} axis - The axis to inverse on.
    */
   inverse(scene, axis) {
-    if(axis == "x" || axis == 0) this.x = scene.width() - this.x;
-    else if(axis == "y" || axis == 1) this.y = scene.height() - this.y;
+    if(axis == "x" || axis == 0) this.x = scene.width - this.x;
+    else if(axis == "y" || axis == 1) this.y = scene.height - this.y;
   }
   /**
    * A function that inverses the x-coordinate.
    * @param {Scene} scene - The scene.
    */
   inverseX(scene) {
-    this.x = scene.width() - this.x;
+    this.x = scene.width - this.x;
   }
   /**
    * A function that inverses the y-coordinate.
    * @param {Scene} scene - The scene.
    */
   inverseY(scene) {
-    this.y = scene.height() - this.y;
+    this.y = scene.height - this.y;
   }
   /**
    * A function that reflects the current position on the axis on the line of reflection.
@@ -1793,8 +1793,8 @@ class Scene {
     if(this.#focusTarget) {
       const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
       const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
-      offsetX = this.width() / 2 - focusCenterX;
-      offsetY = this.height() / 2 - focusCenterY;
+      offsetX = this.width / 2 - focusCenterX;
+      offsetY = this.height / 2 - focusCenterY;
     }
     this.#components.forEach(component => {
       this.ctx.fillStyle = component.color;
@@ -1962,8 +1962,8 @@ class Scene {
     if(this.#focusTarget) {
       const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
       const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
-      offsetX = this.width() / 2 - focusCenterX;
-      offsetY = this.height() / 2 - focusCenterY;
+      offsetX = this.width / 2 - focusCenterX;
+      offsetY = this.height / 2 - focusCenterY;
     }
     return { x: pos.x + offsetX, y: pos.y + offsetY };
   }
@@ -1978,8 +1978,8 @@ class Scene {
     if(this.#focusTarget) {
       const focusCenterX = this.#focusTarget.x + this.#focusTarget.width / 2;
       const focusCenterY = this.#focusTarget.y + this.#focusTarget.height / 2;
-      offsetX = this.width() / 2 - focusCenterX;
-      offsetY = this.height() / 2 - focusCenterY;
+      offsetX = this.width / 2 - focusCenterX;
+      offsetY = this.height / 2 - focusCenterY;
     }
     return { x: pos.x - offsetX, y: pos.y - offsetY };
   }
