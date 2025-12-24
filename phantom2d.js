@@ -1272,6 +1272,9 @@ class PlayableCharacter extends Character {
   unbind(key) {
     delete this.#binds[key];
   }
+  unbindAll() {
+    this.#binds = {};
+  }
   update() {
     this.gravspd += this.strength;
     this.y += this.gravspd;
