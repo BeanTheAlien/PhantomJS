@@ -1,6 +1,7 @@
 # PhantomJS
-Phantom.js is a web API to simplify the webgame development proccess.
-Phantom.js supports both 2D and 3D games with readable and simple scripting!
+Phantom.js is a web API to simplify the webgame development proccess.\
+Phantom.js supports both 2D and 3D games with readable and simple scripting!\
+Phantom.js is a side project, most of my focus is directed to [GhostScript](https://github.com/BeanTheAlien/GhostScript), so sorry for lack of attention on this. <3
 
 # Warning
 Hi guys. For those using `Server`, it has been removed until further notice due to dependency issues.\
