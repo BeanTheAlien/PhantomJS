@@ -12,7 +12,9 @@ Avalible with `npm`!
 npm install @beanthealien/phantomjs
 ```
 
-# Phantom 2D v0.0.7
+# Phantom 2D v1.0.1
+## 1.0.1
+- Added PlayableCharacter.unbindAll().
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
 # Phantom 3D v0.0.0
