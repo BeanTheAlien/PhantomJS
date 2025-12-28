@@ -15,4 +15,19 @@ class PhantomElement {
             left: this.left
         });
     }
+    #enforceEl(item) {
+        if(!is(item, HTMLElement)) throw new Error("Received non-HTMLElement.");
+    }
+    addTo(parent = document.body) {
+        this.#enforceEl(parent);
+        parent.appendChild(this.#root);
+    }
+    addChild(child) {
+        this.#enforceEl(child);
+        this.#root.appendChild(child);
+    }
+    rmFrom(parent) {
+        this.#enforceEl(parent);
+        parent.removeChild(this);
+    }
 }
