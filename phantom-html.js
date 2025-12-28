@@ -30,4 +30,8 @@ class PhantomElement {
         this.#enforceEl(parent);
         parent.removeChild(this);
     }
+    rmChild(child) {
+        this.#enforceEl(child);
+        this.#root.removeChild(child);
+    }
 }
