@@ -2,18 +2,25 @@ import { expect, findMissing, random, is, wait, getRemoteImg, getRemoteAudio, do
 
 class PhantomElement {
     #root;
+    /**
+     * The PhantomElement constructor.
+     * @param {string[]} expects - Keys that are required within settings.
+     * @param {string} objname - The name of the constructing class.
+     * @param {{ x?: number, y?: number }} settings - The characteristics of the entity.
+     */
     constructor(expects, objname, settings) {
         //if(!expect(settings, [...base, ...expects])) throw new Error(`Missing keys(s) in ${objname} settings. (missing: ${findMissing(settings, [...base, ...expects]).join(", ")})`);
         this.#root = document.createElement("div");
-        this.left = settings.left ?? 0;
-        this.top = settings.top ?? 0;
-        this.right = settings.right ?? 0;
-        this.bottom = settings.bottom ?? 0;
+        this.x = settings.x ?? 0;
+        this.y = settings.y ?? 0;
     }
     #genStyles() {
         Object.assign(this.#root.style, {
-            left: this.left
+            left: this.x, top: this.y
         });
+    }
+    gen() {
+        this.#genStyles();
     }
     #enforceEl(item) {
         if(!is(item, HTMLElement)) throw new Error("Received non-HTMLElement.");
@@ -35,3 +42,11 @@ class PhantomElement {
         this.#root.removeChild(child);
     }
 }
+class LayeredElement extends PhantomElement {
+    consturctor(settings) {
+        super(["layer"], "layered element", settings);
+        this.layer = settings.layer;
+    }
+}
+
+export { PhantomElement };
