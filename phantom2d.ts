@@ -1,6 +1,8 @@
 type Custom = { any?: any };
 type Axis = "x" | "y" | 0 | 1;
 type Dir = 0 | 1;
+type EventHandle = (e: Event) => void;
+type EventType = keyof HTMLElementEventMap;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -208,10 +210,39 @@ class Vector {
         this.y = y;
     }
 }
+class Items {
+    items: Phantom2dEntity[];
+    constructor() {
+        this.items = [];
+    }
+    add(...items: Phantom2dEntity[]) {
+        this.items.push(...items);
+    }
+    rm(...items: Phantom2dEntity[]) {
+        for(const item of items) {
+            if(this.has(item)) {
+                this.items.splice(this.idxOf(item), 1);
+            }
+        }
+    }
+    has(...items: Phantom2dEntity[]): boolean {
+        return items.every(i => this.items.includes(i));
+    }
+    idxOf(item: Phantom2dEntity): number {
+        return this.items.indexOf(item);
+    }
+    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+        return this.items.filter(cb);
+    }
+    forEach(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => void) {
+        this.items.forEach(cb);
+    }
+}
 class Scene {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    items: Phantom2dEntity[];
+    items: Items;
+    evStore: Store<EventType, EventHandle>;
     constructor(opts: SceneOptions) {
         this.canvas = opts.canvas;
         this.canvas.width = opts.w ?? 0;
@@ -221,7 +252,8 @@ class Scene {
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
-        this.items = [];
+        this.items = new Items();
+        this.evStore = new Store();
     }
     get width(): number {
         return this.canvas.width;
@@ -248,25 +280,50 @@ class Scene {
         this.canvas.style.height = h;
     }
     add(...items: Phantom2dEntity[]) {
-        this.items.push(...items);
+        this.items.add(...items);
     }
     rm(...items: Phantom2dEntity[]) {
-        for(const item of items) {
-            if(this.has(item)) {
-                this.items.splice(this.idxOf(item), 1);
-            }
-        }
+        this.items.rm(...items);
     }
     has(...items: Phantom2dEntity[]): boolean {
-        return items.every(i => this.items.includes(i));
+        return this.items.has(...items);
     }
     idxOf(item: Phantom2dEntity): number {
-        return this.items.indexOf(item);
+        return this.items.idxOf(item);
     }
     filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
+    on(name: EventType, handle: EventHandle) {
+        this.evStore.set(name, handle);
+        this.canvas.addEventListener(name, handle);
+    }
+    off(name: EventType, handle: EventHandle) {
+        this.evStore.set(name, handle);
+        this.canvas.removeEventListener(name, handle);
+    }
     update() {
         this.items.forEach(i => i.update());
+    }
+}
+class Level {
+    items: Items;
+    constructor() {
+        this.items = new Items();
+    }
+    add(...items: Phantom2dEntity[]) {
+        this.items.add(...items);
+    }
+    rm(...items: Phantom2dEntity[]) {
+        this.items.rm(...items);
+    }
+    has(...items: Phantom2dEntity[]): boolean {
+        return this.items.has(...items);
+    }
+    idxOf(item: Phantom2dEntity): number {
+        return this.items.idxOf(item);
+    }
+    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+        return this.items.filter(cb);
     }
 }
