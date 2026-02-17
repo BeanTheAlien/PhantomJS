@@ -26,6 +26,9 @@ class Store<TI, TO> {
     has(key: TI): boolean {
         return this.store.has(key);
     }
+    del(key: TI): boolean {
+        return this.store.delete(key);
+    }
 }
 
 interface Phantom2dOptions {
@@ -298,9 +301,9 @@ class Scene {
         this.evStore.set(name, handle);
         this.canvas.addEventListener(name, handle);
     }
-    off(name: EventType, handle: EventHandle) {
-        this.evStore.set(name, handle);
-        this.canvas.removeEventListener(name, handle);
+    off(name: EventType, handle: EventHandle | undefined) {
+        if(handle) this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
+        this.evStore.del(name);
     }
     update() {
         this.items.forEach(i => i.update());
