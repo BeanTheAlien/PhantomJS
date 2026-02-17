@@ -1,6 +1,31 @@
 type Custom = { any?: any };
 type Axis = "x" | "y" | 0 | 1;
+type Dir = 0 | 1;
 const NoFunc: Function = (() => {});
+
+class NoContextError extends Error {
+    constructor() {
+        super("Cannot get context 2D.");
+        this.name = "NoContextError";
+    }
+}
+
+class Store<TI, TO> {
+    store: Map<TI, TO>;
+    constructor() {
+        this.store = new Map();
+    }
+    get(key: TI): TO | undefined {
+        return this.store.get(key);
+    }
+    set(key: TI, value: TO) {
+        this.store.set(key, value);
+    }
+    has(key: TI): boolean {
+        return this.store.has(key);
+    }
+}
+
 interface Phantom2dOptions {
     collide?: Function;
     x?: number;
@@ -17,6 +42,23 @@ interface StaticObjectOptions extends Phantom2dOptions {
 }
 interface PhysicsObjectOptions extends Phantom2dOptions {
     strength: number;
+}
+interface MovingObjectOptions extends Phantom2dOptions {
+    dirX: Dir;
+    dirY: Dir;
+    bouncy: boolean;
+    extLeft: number;
+    extRight: number;
+    extBtm: number;
+    extTop: number;
+    spd: number;
+}
+interface SceneOptions {
+    canvas: HTMLCanvasElement;
+    w?: number;
+    h?: number;
+    cssW?: string;
+    cssH?: string;
 }
 
 class Phantom2dEntity {
@@ -117,10 +159,114 @@ class PhysicsObject extends Phantom2dEntity {
         super.update();
     }
 }
+class MovingObject extends Phantom2dEntity {
+    dirX: Dir; dirY: Dir;
+    extLeft: number; extRight: number; extBtm: number; extTop: number;
+    spd: number;
+    bouncy: boolean;
+    constructor(opts: MovingObjectOptions) {
+        super(opts);
+        this.dirX = opts.dirX;
+        this.dirY = opts.dirY;
+        this.extLeft = opts.extLeft;
+        this.extRight = opts.extRight;
+        this.extBtm = opts.extBtm;
+        this.extTop = opts.extTop;
+        this.spd = opts.spd;
+        this.bouncy = opts.bouncy;
+    }
+    update() {
+        if(this.extLeft >= this.x && this.bouncy && this.dirX == 0) {
+            this.x += this.spd;
+            this.dirX = 1;
+        } else if(this.extRight <= this.x && this.bouncy && this.dirX == 1) {
+            this.x -= this.spd;
+            this.dirX = 0;
+        } else if(this.extLeft < this.x && !this.bouncy && this.dirX == 0) {
+            this.x -= this.spd;
+        } else if(this.extRight > this.x && this.bouncy && this.dirX == 1) {
+            this.x += this.spd;
+        }
+        if(this.extBtm >= this.y && this.bouncy && this.dirY == 0) {
+            this.y += this.spd;
+            this.dirY = 1;
+        } else if(this.extBtm <= this.y && this.bouncy && this.dirY == 1) {
+            this.y -= this.spd;
+            this.dirY = 0;
+        } else if(this.extTop < this.y && !this.bouncy && this.dirY == 0) {
+            this.y -= this.spd;
+        } else if(this.extTop > this.y && !this.bouncy && this.dirY == 1) {
+            this.y += this.spd;
+        }
+        super.update();
+    }
+}
 class Vector {
     x: number; y: number;
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
+    }
+}
+class Scene {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    items: Phantom2dEntity[];
+    constructor(opts: SceneOptions) {
+        this.canvas = opts.canvas;
+        this.canvas.width = opts.w ?? 0;
+        this.canvas.height = opts.h ?? 0;
+        this.canvas.style.width = opts.cssW ?? "0px";
+        this.canvas.style.height = opts.cssH ?? "0px";
+        const ctx = this.canvas.getContext("2d");
+        if(!ctx) throw new NoContextError();
+        this.ctx = ctx;
+        this.items = [];
+    }
+    get width(): number {
+        return this.canvas.width;
+    }
+    set width(w: number) {
+        this.canvas.width = w;
+    }
+    get cssWidth(): string {
+        return this.canvas.style.width;
+    }
+    set cssWidth(w: string) {
+        this.canvas.style.width = w;
+    }
+    get height(): number {
+        return this.canvas.height;
+    }
+    set height(h: number) {
+        this.canvas.height = h;
+    }
+    get cssHeight(): string {
+        return this.canvas.style.height;
+    }
+    set cssHeight(h: string) {
+        this.canvas.style.height = h;
+    }
+    add(...items: Phantom2dEntity[]) {
+        this.items.push(...items);
+    }
+    rm(...items: Phantom2dEntity[]) {
+        for(const item of items) {
+            if(this.has(item)) {
+                this.items.splice(this.idxOf(item), 1);
+            }
+        }
+    }
+    has(...items: Phantom2dEntity[]): boolean {
+        return items.every(i => this.items.includes(i));
+    }
+    idxOf(item: Phantom2dEntity): number {
+        return this.items.indexOf(item);
+    }
+    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+        return this.items.filter(cb);
+    }
+    update() {
+        this.items.forEach(i => i.update());
     }
 }
