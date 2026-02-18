@@ -4,6 +4,7 @@ type Dir = 0 | 1;
 type CompassDir = 0 | 1 | 2 | 3 | number;
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
+type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -250,6 +251,15 @@ class Vector {
         this.y *= factor;
     }
 }
+class Pixel {
+    r: number; g: number; b: number; a: number;
+    constructor(pxl: { r: number, g: number, b: number, a: number }) {
+        this.r = pxl.r;
+        this.g = pxl.g;
+        this.b = pxl.b;
+        this.a = pxl.a;
+    }
+}
 class Items {
     items: Phantom2dEntity[];
     constructor() {
@@ -271,10 +281,10 @@ class Items {
     idxOf(item: Phantom2dEntity): number {
         return this.items.indexOf(item);
     }
-    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+    filter(cb: Callback<unknown>): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
-    forEach(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => void) {
+    forEach(cb: Callback<void>) {
         this.items.forEach(cb);
     }
 }
@@ -333,7 +343,7 @@ class Scene {
     idxOf(item: Phantom2dEntity): number {
         return this.items.idxOf(item);
     }
-    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+    filter(cb: Callback<unknown>): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
     on(name: EventType, handle: EventHandle) {
@@ -365,7 +375,7 @@ class Level {
     idxOf(item: Phantom2dEntity): number {
         return this.items.idxOf(item);
     }
-    filter(cb: (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => unknown): Phantom2dEntity[] {
+    filter(cb: Callback<unknown>): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
 }
