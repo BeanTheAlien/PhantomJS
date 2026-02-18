@@ -1,6 +1,7 @@
 type Custom = { any?: any };
 type Axis = "x" | "y" | 0 | 1;
 type Dir = 0 | 1;
+type CompassDir = 0 | 1 | 2 | 3 | number;
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
 const NoFunc: Function = (() => {});
@@ -48,15 +49,19 @@ interface StaticObjectOptions extends Phantom2dOptions {
 interface PhysicsObjectOptions extends Phantom2dOptions {
     strength: number;
 }
-interface MovingObjectOptions extends Phantom2dOptions {
+interface Extent {
+    extLeft: number; extRight: number;
+    extBtm: number; extTop: number;
+}
+interface MovingObjectOptions extends Phantom2dOptions, Extent {
     dirX: Dir;
     dirY: Dir;
     bouncy: boolean;
-    extLeft: number;
-    extRight: number;
-    extBtm: number;
-    extTop: number;
     spd: number;
+}
+interface BulletObjectOptions extends Phantom2dOptions, Extent {
+    spd: number;
+    dir: CompassDir;
 }
 interface SceneOptions {
     canvas: HTMLCanvasElement;
@@ -206,11 +211,43 @@ class MovingObject extends Phantom2dEntity {
         super.update();
     }
 }
+class BulletObject extends Phantom2dEntity {
+    dir: CompassDir;
+    extLeft: number; extRight: number; extBtm: number; extTop: number;
+    spd: number;
+    constructor(opts: BulletObjectOptions) {
+        super(opts);
+        this.dir = opts.dir;
+        this.extLeft = opts.extLeft;
+        this.extRight = opts.extRight;
+        this.extBtm = opts.extBtm;
+        this.extTop = opts.extTop;
+        this.spd = opts.spd;
+    }
+    update() {
+        switch(this.dir) {
+            case 0: this.y -= this.spd; break;
+            case 1: this.x += this.spd; break;
+            case 2: this.y += this.spd; break;
+            case 3: this.x -= this.spd; break;
+            default:
+                const dx = Math.cos(this.dir);
+                const dy = Math.sin(this.dir);
+                this.x += dx * this.spd;
+                this.y += dy * this.spd;
+                break;
+        }
+    }
+}
 class Vector {
     x: number; y: number;
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
+    }
+    scale(factor: number) {
+        this.x *= factor;
+        this.y *= factor;
     }
 }
 class Items {
@@ -246,6 +283,7 @@ class Scene {
     ctx: CanvasRenderingContext2D;
     items: Items;
     evStore: Store<EventType, EventHandle>;
+    lvlStore: Store<string, Level>;
     constructor(opts: SceneOptions) {
         this.canvas = opts.canvas;
         this.canvas.width = opts.w ?? 0;
@@ -257,6 +295,7 @@ class Scene {
         this.ctx = ctx;
         this.items = new Items();
         this.evStore = new Store();
+        this.lvlStore = new Store();
     }
     get width(): number {
         return this.canvas.width;
