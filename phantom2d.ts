@@ -73,15 +73,22 @@ interface SceneOptions {
     cssH?: string;
 }
 interface PhantomEventMap {
-    alive: PhantomEvent;
+    alive: PhantomAliveEvent;
 }
-class PhantomEvent {}
+class PhantomEvent {
+    name: string;
+    constructor(name: string) {
+        this.name = name;
+    }
+}
+class PhantomAliveEvent extends PhantomEvent { constructor() { super("alive"); } }
 
 class Phantom2dEntity {
     collide: Function; upd: Function;
     x: number; y: number;
     rot: number;
     width: number; height: number;
+    evStore: Store<PhantomEventType, Function>;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
@@ -90,6 +97,7 @@ class Phantom2dEntity {
         this.rot = opts.rot ?? 0;
         this.width = opts.width ?? 0;
         this.height = opts.height ?? 0;
+        this.evStore = new Store();
     }
     setPos(x: number | Vector, y?: number) {
         if (typeof x == "number" && typeof y == "number") {
