@@ -32,6 +32,14 @@ class Store<TI, TO> {
         return this.store.delete(key);
     }
 }
+class PhantomEvent {
+    name: string;
+    scene: Scene;
+    constructor(opts: PhantomEventOptions) {
+        this.name = opts.name;
+        this.scene = opts.scene;
+    }
+}
 
 interface Phantom2dOptions {
     collide?: Function;
@@ -70,6 +78,10 @@ interface SceneOptions {
     h?: number;
     cssW?: string;
     cssH?: string;
+}
+interface PhantomEventOptions {
+    scene: Scene;
+    name: string;
 }
 
 class Phantom2dEntity {
