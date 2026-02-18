@@ -5,6 +5,7 @@ type CompassDir = 0 | 1 | 2 | 3 | number;
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
 type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
+type PhantomEventType = keyof PhantomEventMap;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -30,14 +31,6 @@ class Store<TI, TO> {
     }
     del(key: TI): boolean {
         return this.store.delete(key);
-    }
-}
-class PhantomEvent {
-    name: string;
-    scene: Scene;
-    constructor(opts: PhantomEventOptions) {
-        this.name = opts.name;
-        this.scene = opts.scene;
     }
 }
 
@@ -79,10 +72,10 @@ interface SceneOptions {
     cssW?: string;
     cssH?: string;
 }
-interface PhantomEventOptions {
-    scene: Scene;
-    name: string;
+interface PhantomEventMap {
+    alive: PhantomEvent;
 }
+class PhantomEvent {}
 
 class Phantom2dEntity {
     collide: Function; upd: Function;
