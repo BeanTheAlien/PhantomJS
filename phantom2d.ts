@@ -466,6 +466,13 @@ class Scene {
     delLvl(lvlName: string) {
         this.lvlStore.del(lvlName);
     }
+    img(img: HTMLImageElement, x: number, y: number, w: number, h: number) {
+        this.ctx.drawImage(img, x, y, w, h);
+    }
+    rect(x: number, y: number, w: number, h: number, color: string) {
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(x, y, w, h);
+    }
     update() {
         this.items.forEach(i => i.update());
     }
@@ -533,3 +540,25 @@ function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
+
+export {
+    Custom, Axis, Dir, EventHandle, EventType, Callback, PhantomEventType,
+    PhantomEventHandle, AudioMIME,
+    
+    NoFunc,
+
+    NoContextError,
+
+    Store,
+    
+    Phantom2dOptions, StaticObjectOptions, PhysicsObjectOptions, Extent,
+    MovingObjectOptions, BulletObjectOptions, SceneOptions, PhantomEventMap,
+    SaveOptions, SoundOptions,
+
+    PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
+
+    Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
+    Scene, Save, Sound, Preset, Level, Items, Vector, Pixel,
+
+    isCol
+};

@@ -1,0 +1,1 @@
+import * as p2d from "./phantom2d.ts";
