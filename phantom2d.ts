@@ -111,6 +111,7 @@ interface SoundOptions {
     src: string;
     mime: AudioMIME;
 }
+interface CharacterOptions extends PhysicsObjectOptions {}
 class PhantomEvent {
     name: string;
     constructor(name: string) {
@@ -325,6 +326,22 @@ class BulletObject extends Phantom2dEntity {
         return new BulletObject(opts);
     }
 }
+class Character extends Phantom2dEntity {
+    gspd: number;
+    constructor(opts: CharacterOptions) {
+        super(opts);
+        this.gspd = 0;
+    }
+    setGSpd(spd: number) {
+        this.gspd = spd;
+    }
+    getGSpd(): number {
+        return this.gspd;
+    }
+    jump(h: number) {
+        this.gspd = -(h);
+    }
+}
 class Vector {
     x: number; y: number;
     constructor(x: number, y: number) {
@@ -377,6 +394,13 @@ class Sound {
     }
     get len(): number {
         return this.aud.duration;
+    }
+}
+class Img {
+    img: HTMLImageElement;
+    constructor(src: string) {
+        this.img = new Image();
+        this.img.src = src;
     }
 }
 class Items {
@@ -527,8 +551,8 @@ class Scene {
     set color(color: string) {
         this.ctx.fillStyle = color;
     }
-    img(img: HTMLImageElement, x: number, y: number, w: number, h: number) {
-        this.ctx.drawImage(img, x, y, w, h);
+    img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
+        this.ctx.drawImage(img instanceof HTMLImageElement ? img : img.img, x, y, w, h);
     }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
