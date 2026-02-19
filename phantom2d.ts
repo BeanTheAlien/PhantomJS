@@ -344,6 +344,13 @@ class Pixel {
         this.b = pxl.b;
         this.a = pxl.a;
     }
+    static from(data: ImageData | ImageDataArray): Pixel {
+        if(data instanceof ImageData) {
+            return Pixel.from(data.data);
+        } else {
+            return new Pixel({ r: data[0], g: data[1], b: data[2], a: data[3] });
+        }
+    }
 }
 class Sound {
     src: string; mime: AudioMIME; aud: HTMLAudioElement;
@@ -415,6 +422,7 @@ class Scene {
     evStore: Store<EventType, EventHandle>;
     lvlStore: Store<string, Level>;
     processId: number;
+    mousePos: Vector;
     constructor(opts: SceneOptions) {
         if(!opts.canvas) throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
@@ -429,6 +437,10 @@ class Scene {
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.processId = -1;
+        this.mousePos = new Vector(0, 0);
+        window.addEventListener("mousemove", (e) => {
+            this.mousePos = new Vector(e.clientX, e.clientY);
+        });
     }
     get width(): number {
         return this.canvas.width;
@@ -477,17 +489,22 @@ class Scene {
         if(handle) this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
         this.evStore.del(name);
     }
+    getImgData(pos: Vector): ImageData {
+        return this.ctx.getImageData(pos.x, pos.y, 1, 1);
+    }
+    setImgData(pos: Vector, data: ImageData) {
+        this.ctx.putImageData(data, pos.x, pos.y);
+    }
     getPixel(pos: Vector): Pixel {
-        const { data } = this.ctx.getImageData(pos.x, pos.y, 1, 1);
-        return new Pixel({ r: data[0], g: data[1], b: data[2], a: data[3] });
+        return Pixel.from(this.getImgData(pos));
     }
     setPixel(pos: Vector, rgba: Pixel) {
-        const imgData = this.ctx.getImageData(pos.x, pos.y, 1, 1);
-        imgData.data[0] = rgba.r;
-        imgData.data[1] = rgba.g;
-        imgData.data[2] = rgba.b;
-        imgData.data[3] = rgba.a;
-        this.ctx.putImageData(imgData, pos.x, pos.y);
+        const d = this.getImgData(pos);
+        d.data[0] = rgba.r;
+        d.data[1] = rgba.g;
+        d.data[2] = rgba.b;
+        d.data[3] = rgba.a;
+        this.setImgData(pos, d);
     }
     forEach(cb: Callback<void>) {
         this.items.forEach(cb);
@@ -517,6 +534,12 @@ class Scene {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
     }
+    bg(color: string) {
+        this.rect(0, 0, this.width, this.height, color);
+    }
+    clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+    }
     update() {
         this.forEach(i => i.update());
         this.testCols();
@@ -540,6 +563,7 @@ class Scene {
         if(this.processId != -1) throw new ExistingProcessError();
         const tick = () => {
             this.update();
+            this.clear();
             postUpd();
             this.render();
             this.processId = requestAnimationFrame(tick);
@@ -552,8 +576,8 @@ class Scene {
         this.processId = -1;
     }
     save(file: string) {
-        const save = new SaveJSON(file);
-        save.save(Util.str(this, 4));
+        const s = new SaveJSON(file);
+        s.save(Util.str(this, 4));
     }
     fScrOn() {
         this.canvas.requestFullscreen();
@@ -590,6 +614,10 @@ class Level {
     }
     forEach(cb: Callback<void>) {
         this.items.forEach(cb);
+    }
+    save(file: string) {
+        const s = new SaveJSON(file);
+        s.save(Util.str(this, 4));
     }
 }
 class Save {
