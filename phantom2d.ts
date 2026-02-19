@@ -1,3 +1,9 @@
+class Util {
+    static str(o: any, space?: number): string {
+        return JSON.stringify(o, null, space);
+    }
+}
+
 type Custom = { any?: any };
 type Axis = "x" | "y" | 0 | 1;
 type Dir = 0 | 1;
@@ -8,12 +14,31 @@ type PhantomEventType = keyof PhantomEventMap;
 type PhantomEventHandle = (e: PhantomEvent) => void;
 type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audio/ogg" | "audio/aac" | "audio/aacp" | "audio/x-caf" | "audio/flac" |
                 "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
+type CollisionHandle = (o: Phantom2dEntity) => void;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
     constructor() {
         super("Cannot get context 2D.");
         this.name = "NoContextError";
+    }
+}
+class NoCanvasError extends Error {
+    constructor() {
+        super("Did not receive HTMLCanvasElement or HTMLElement in scene.");
+        this.name = "NoCanvasError";
+    }
+}
+class ExistingProcessError extends Error {
+    constructor() {
+        super("A process already exists, cannot create new process.");
+        this.name = "ExistingProcessError";
+    }
+}
+class NoProcessError extends Error {
+    constructor() {
+        super("A process does not exist.");
+        this.name = "NoProcessError";
     }
 }
 
@@ -37,7 +62,7 @@ class Store<TI, TO> {
 }
 
 interface Phantom2dOptions {
-    collide?: Function;
+    collide?: CollisionHandle;
     x?: number;
     y?: number;
     rot?: number;
@@ -45,6 +70,7 @@ interface Phantom2dOptions {
     height?: number;
     custom?: Custom;
     upd?: Function;
+    color?: string;
 }
 interface StaticObjectOptions extends Phantom2dOptions {
     shape: "rect" | "circle";
@@ -67,7 +93,7 @@ interface BulletObjectOptions extends Phantom2dOptions, Extent {
     spd: number; rot: number;
 }
 interface SceneOptions {
-    canvas: HTMLCanvasElement;
+    canvas: HTMLCanvasElement | HTMLElement | null;
     w?: number;
     h?: number;
     cssW?: string;
@@ -96,13 +122,14 @@ class PhantomAddedEvent extends PhantomEvent { constructor() { super("added"); }
 class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"); } }
 
 class Phantom2dEntity {
-    collide: Function; upd: Function;
+    collide: CollisionHandle; upd: Function;
     x: number; y: number;
     rot: number;
     width: number; height: number;
+    color: string;
     evStore: Store<PhantomEventType, PhantomEventHandle>;
     constructor(opts: Phantom2dOptions) {
-        this.collide = opts.collide ?? NoFunc;
+        this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
         this.upd = opts.upd ?? NoFunc;
         this.x = opts.x ?? 0;
         this.y = opts.y ?? 0;
@@ -110,12 +137,13 @@ class Phantom2dEntity {
         this.width = opts.width ?? 0;
         this.height = opts.height ?? 0;
         this.evStore = new Store();
+        this.color = opts.color ?? "#fff";
     }
     setPos(x: number | Vector, y?: number) {
-        if (typeof x == "number" && typeof y == "number") {
+        if(typeof x == "number" && typeof y == "number") {
             this.x = x;
             this.y = y;
-        } else if (x instanceof Vector) {
+        } else if(x instanceof Vector) {
             this.x = x.x;
             this.y = x.y;
         }
@@ -195,10 +223,13 @@ class Phantom2dEntity {
         this.upd();
     }
     toString(): string {
-        return JSON.stringify(this);
+        return Util.str(this);
     }
     apply(preset: Preset) {
         preset.apply(this);
+    }
+    preset(): Preset {
+        return new Preset(this);
     }
     static from(opts: Phantom2dOptions): Phantom2dEntity {
         return new Phantom2dEntity(opts);
@@ -373,14 +404,20 @@ class Items {
         this.items.forEach(cb);
     }
 }
+/**
+ * The root canvas to display content.
+ * @since v0.0.0
+ */
 class Scene {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     items: Items;
     evStore: Store<EventType, EventHandle>;
     lvlStore: Store<string, Level>;
+    processId: number;
     constructor(opts: SceneOptions) {
-        this.canvas = opts.canvas;
+        if(!opts.canvas) throw new NoCanvasError();
+        this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
         this.canvas.width = opts.w ?? 0;
         this.canvas.height = opts.h ?? 0;
         this.canvas.style.width = opts.cssW ?? "0px";
@@ -391,6 +428,7 @@ class Scene {
         this.items = new Items();
         this.evStore = new Store();
         this.lvlStore = new Store();
+        this.processId = -1;
     }
     get width(): number {
         return this.canvas.width;
@@ -466,15 +504,68 @@ class Scene {
     delLvl(lvlName: string) {
         this.lvlStore.del(lvlName);
     }
+    get color(): string | CanvasGradient | CanvasPattern {
+        return this.ctx.fillStyle;
+    }
+    set color(color: string) {
+        this.ctx.fillStyle = color;
+    }
     img(img: HTMLImageElement, x: number, y: number, w: number, h: number) {
         this.ctx.drawImage(img, x, y, w, h);
     }
     rect(x: number, y: number, w: number, h: number, color: string) {
-        this.ctx.fillStyle = color;
+        this.color = color;
         this.ctx.fillRect(x, y, w, h);
     }
     update() {
-        this.items.forEach(i => i.update());
+        this.forEach(i => i.update());
+        this.testCols();
+    }
+    testCols() {
+        this.forEach(a => {
+            this.forEach(b => {
+                if(a == b) return;
+                if(isCol(a, b)) {
+                    a.collide(b);
+                }
+            });
+        });
+    }
+    render() {
+        this.items.forEach(i => {
+            this.rect(i.x, i.y, i.width, i.height, i.color);
+        });
+    }
+    start(postUpd: Function = NoFunc) {
+        if(this.processId != -1) throw new ExistingProcessError();
+        const tick = () => {
+            this.update();
+            postUpd();
+            this.render();
+            this.processId = requestAnimationFrame(tick);
+        }
+        tick();
+    }
+    stop() {
+        if(this.processId == -1) throw new NoProcessError();
+        cancelAnimationFrame(this.processId);
+        this.processId = -1;
+    }
+    save(file: string) {
+        const save = new SaveJSON(file);
+        save.save(Util.str(this, 4));
+    }
+    fScrOn() {
+        this.canvas.requestFullscreen();
+    }
+    fScrOff() {
+        document.exitFullscreen();
+    }
+    pLockOn() {
+        this.canvas.requestPointerLock();
+    }
+    pLockOff() {
+        document.exitPointerLock();
     }
 }
 class Level {
@@ -520,6 +611,11 @@ class Save {
         URL.revokeObjectURL(url);
     }
 }
+class SaveJSON extends Save {
+    constructor(file: string) {
+        super({ file, mime: "application/json", ext: "json" });
+    }
+}
 class Preset {
     atts: { any?: any };
     constructor(ent: Phantom2dEntity) {
@@ -527,8 +623,8 @@ class Preset {
         Object.assign(this.atts, ent);
     }
     save(out: string) {
-        const s = new Save({ file: out, mime: "application/json", ext: "json" });
-        s.save(JSON.stringify(this.atts, null, 4));
+        const s = new SaveJSON(out);
+        s.save(Util.str(this, 4));
     }
     apply(ent: Phantom2dEntity) {
         Object.assign(ent, this.atts);
@@ -543,13 +639,11 @@ function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
 
 export {
     Custom, Axis, Dir, EventHandle, EventType, Callback, PhantomEventType,
-    PhantomEventHandle, AudioMIME,
+    PhantomEventHandle, AudioMIME, CollisionHandle,
     
     NoFunc,
 
-    NoContextError,
-
-    Store,
+    NoContextError, ExistingProcessError, NoCanvasError, NoProcessError,
     
     Phantom2dOptions, StaticObjectOptions, PhysicsObjectOptions, Extent,
     MovingObjectOptions, BulletObjectOptions, SceneOptions, PhantomEventMap,
@@ -558,7 +652,7 @@ export {
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
     Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
-    Scene, Save, Sound, Preset, Level, Items, Vector, Pixel,
+    Scene, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel,
 
     isCol
 };
