@@ -1,11 +1,13 @@
 type Custom = { any?: any };
 type Axis = "x" | "y" | 0 | 1;
 type Dir = 0 | 1;
-type CompassDir = 0 | 1 | 2 | 3 | number;
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
 type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
 type PhantomEventType = keyof PhantomEventMap;
+type PhantomEventHandle = (e: PhantomEvent) => void;
+type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audio/ogg" | "audio/aac" | "audio/aacp" | "audio/x-caf" | "audio/flac" |
+                "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -62,8 +64,7 @@ interface MovingObjectOptions extends Phantom2dOptions, Extent {
     spd: number;
 }
 interface BulletObjectOptions extends Phantom2dOptions, Extent {
-    spd: number;
-    dir: CompassDir;
+    spd: number; rot: number;
 }
 interface SceneOptions {
     canvas: HTMLCanvasElement;
@@ -73,7 +74,16 @@ interface SceneOptions {
     cssH?: string;
 }
 interface PhantomEventMap {
-    alive: PhantomAliveEvent;
+    alive: PhantomAliveEvent; added: PhantomAddedEvent; removed: PhantomRemovedEvent;
+}
+interface SaveOptions {
+    file: string;
+    mime: string;
+    ext: string;
+}
+interface SoundOptions {
+    src: string;
+    mime: AudioMIME;
 }
 class PhantomEvent {
     name: string;
@@ -82,13 +92,15 @@ class PhantomEvent {
     }
 }
 class PhantomAliveEvent extends PhantomEvent { constructor() { super("alive"); } }
+class PhantomAddedEvent extends PhantomEvent { constructor() { super("added"); } }
+class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"); } }
 
 class Phantom2dEntity {
     collide: Function; upd: Function;
     x: number; y: number;
     rot: number;
     width: number; height: number;
-    evStore: Store<PhantomEventType, Function>;
+    evStore: Store<PhantomEventType, PhantomEventHandle>;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
@@ -161,13 +173,43 @@ class Phantom2dEntity {
     setPosY(y: number) {
         this.y = y;
     }
+    on(event: PhantomEventType, handle: PhantomEventHandle) {
+        this.evStore.set(event, handle);
+    }
+    off(event: PhantomEventType) {
+        this.evStore.del(event);
+    }
+    consume(title: PhantomEventType, event: PhantomEvent) {
+        const handle = this.evStore.get(title);
+        if(handle) {
+            handle(event);
+        }
+    }
+    getWidth(): number {
+        return this.width;
+    }
+    getHeight(): number {
+        return this.height;
+    }
     update() {
         this.upd();
+    }
+    toString(): string {
+        return JSON.stringify(this);
+    }
+    apply(preset: Preset) {
+        preset.apply(this);
+    }
+    static from(opts: Phantom2dOptions): Phantom2dEntity {
+        return new Phantom2dEntity(opts);
     }
 }
 class StaticObject extends Phantom2dEntity {
     constructor(opts: StaticObjectOptions) {
         super(opts);
+    }
+    static from(opts: StaticObjectOptions): StaticObject {
+        return new StaticObject(opts);
     }
 }
 class PhysicsObject extends Phantom2dEntity {
@@ -181,6 +223,9 @@ class PhysicsObject extends Phantom2dEntity {
         this.gravspd += this.strength;
         this.y += this.gravspd;
         super.update();
+    }
+    static from(opts: PhysicsObject): PhysicsObject {
+        return new PhysicsObject(opts);
     }
 }
 class MovingObject extends Phantom2dEntity {
@@ -224,14 +269,16 @@ class MovingObject extends Phantom2dEntity {
         }
         super.update();
     }
+    static from(opts: MovingObjectOptions): MovingObject {
+        return new MovingObject(opts);
+    }
 }
 class BulletObject extends Phantom2dEntity {
-    dir: CompassDir;
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     constructor(opts: BulletObjectOptions) {
         super(opts);
-        this.dir = opts.dir;
+        this.rot = opts.rot;
         this.extLeft = opts.extLeft;
         this.extRight = opts.extRight;
         this.extBtm = opts.extBtm;
@@ -239,18 +286,12 @@ class BulletObject extends Phantom2dEntity {
         this.spd = opts.spd;
     }
     update() {
-        switch(this.dir) {
-            case 0: this.y -= this.spd; break;
-            case 1: this.x += this.spd; break;
-            case 2: this.y += this.spd; break;
-            case 3: this.x -= this.spd; break;
-            default:
-                const dx = Math.cos(this.dir);
-                const dy = Math.sin(this.dir);
-                this.x += dx * this.spd;
-                this.y += dy * this.spd;
-                break;
-        }
+        const fVec = this.getFVec();
+        fVec.scale(this.spd);
+        this.x += fVec.x; this.y += fVec.y;
+    }
+    static from(opts: BulletObjectOptions): BulletObject {
+        return new BulletObject(opts);
     }
 }
 class Vector {
@@ -273,6 +314,33 @@ class Pixel {
         this.a = pxl.a;
     }
 }
+class Sound {
+    src: string; mime: AudioMIME; aud: HTMLAudioElement;
+    constructor(opts: SoundOptions) {
+        this.src = opts.src;
+        this.mime = opts.mime;
+        this.aud = new Audio();
+        const source = document.createElement("source");
+        source.src = this.src;
+        source.type = this.mime.startsWith("audio") ? this.mime : `audio/${this.mime}`;
+        this.aud.appendChild(source);
+    }
+    play() {
+        this.aud.play();
+    }
+    pause() {
+        this.aud.pause();
+    }
+    get time(): number {
+        return this.aud.currentTime;
+    }
+    set time(t: number) {
+        this.aud.currentTime = t;
+    }
+    get len(): number {
+        return this.aud.duration;
+    }
+}
 class Items {
     items: Phantom2dEntity[];
     constructor() {
@@ -280,11 +348,15 @@ class Items {
     }
     add(...items: Phantom2dEntity[]) {
         this.items.push(...items);
+        for(const item of items) {
+            item.consume("added", new PhantomAddedEvent());
+        }
     }
     rm(...items: Phantom2dEntity[]) {
         for(const item of items) {
             if(this.has(item)) {
                 this.items.splice(this.idxOf(item), 1);
+                item.consume("removed", new PhantomRemovedEvent());
             }
         }
     }
@@ -367,6 +439,33 @@ class Scene {
         if(handle) this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
         this.evStore.del(name);
     }
+    getPixel(pos: Vector): Pixel {
+        const { data } = this.ctx.getImageData(pos.x, pos.y, 1, 1);
+        return new Pixel({ r: data[0], g: data[1], b: data[2], a: data[3] });
+    }
+    setPixel(pos: Vector, rgba: Pixel) {
+        const imgData = this.ctx.getImageData(pos.x, pos.y, 1, 1);
+        imgData.data[0] = rgba.r;
+        imgData.data[1] = rgba.g;
+        imgData.data[2] = rgba.b;
+        imgData.data[3] = rgba.a;
+        this.ctx.putImageData(imgData, pos.x, pos.y);
+    }
+    forEach(cb: Callback<void>) {
+        this.items.forEach(cb);
+    }
+    getLvl(lvlName: string): Level | undefined {
+        return this.lvlStore.get(lvlName);
+    }
+    setLvl(lvlName: string, lvl: Level) {
+        this.lvlStore.set(lvlName, lvl);
+    }
+    hasLvl(lvlName: string): boolean {
+        return this.lvlStore.has(lvlName);
+    }
+    delLvl(lvlName: string) {
+        this.lvlStore.del(lvlName);
+    }
     update() {
         this.items.forEach(i => i.update());
     }
@@ -391,4 +490,46 @@ class Level {
     filter(cb: Callback<unknown>): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
+    forEach(cb: Callback<void>) {
+        this.items.forEach(cb);
+    }
+}
+class Save {
+    file: string; mime: string; ext: string;
+    constructor(opts: SaveOptions) {
+        this.file = opts.file;
+        this.mime = opts.mime;
+        this.ext = opts.ext;
+    }
+    save(cont: string) {
+        const blob = new Blob([cont], { type: this.mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        document.body.appendChild(a);
+        a.href = url;
+        a.download = `${this.file}.${this.ext}`;
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+}
+class Preset {
+    atts: { any?: any };
+    constructor(ent: Phantom2dEntity) {
+        this.atts = {};
+        Object.assign(this.atts, ent);
+    }
+    save(out: string) {
+        const s = new Save({ file: out, mime: "application/json", ext: "json" });
+        s.save(JSON.stringify(this.atts, null, 4));
+    }
+    apply(ent: Phantom2dEntity) {
+        Object.assign(ent, this.atts);
+    }
+}
+
+function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
+    const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
+    const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
+    return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
