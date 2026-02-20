@@ -2,6 +2,9 @@ class Util {
     static str(o: any, space?: number): string {
         return JSON.stringify(o, null, space);
     }
+    static clamp(n: number, min: number, max: number): number {
+        return Math.min(Math.max(n, min), max);
+    }
 }
 
 /**
@@ -11,8 +14,23 @@ class Util {
 type Custom = { any?: any };
 /**
  * Represents an axis.
+ * 
+ * Axis Map
+ * 
+ * --------
+ * 
+ * "x", 0 - x-axis
+ * 
+ * "y", 1 - y-axis
  */
 type Axis = "x" | "y" | 0 | 1;
+/**
+ * A simple direction.
+ * 
+ * 0 = x
+ * 
+ * 1 = y
+ */
 type Dir = 0 | 1;
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
@@ -22,6 +40,7 @@ type PhantomEventHandle = (e: PhantomEvent) => void;
 type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audio/ogg" | "audio/aac" | "audio/aacp" | "audio/x-caf" | "audio/flac" |
                 "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
 type CollisionHandle = (o: Phantom2dEntity) => void;
+type Iter<T> = MapIterator<T>;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -66,13 +85,13 @@ class Store<TI, TO> {
     del(key: TI): boolean {
         return this.store.delete(key);
     }
-    keys(): MapIterator<TI> {
+    keys(): Iter<TI> {
         return this.store.keys();
     }
-    values(): MapIterator<TO> {
+    values(): Iter<TO> {
         return this.store.values();
     }
-    items(): MapIterator<[TI, TO]> {
+    items(): Iter<[TI, TO]> {
         return this.store.entries();
     }
 }
@@ -106,7 +125,7 @@ interface MovingObjectOptions extends Phantom2dOptions, Extent {
     spd: number;
 }
 interface BulletObjectOptions extends Phantom2dOptions, Extent {
-    spd: number; rot: number;
+    spd: number; rot: number; scene: Scene;
 }
 interface SceneOptions {
     canvas: HTMLCanvasElement | HTMLElement | null;
@@ -131,6 +150,10 @@ interface CharacterOptions extends PhysicsObjectOptions {}
 interface PlayableCharacterOptions extends CharacterOptions {
     binds?: Store<string, Function>;
 }
+interface RaycastOptions {
+    angle: number;
+    dist: number;
+}
 class PhantomEvent {
     name: string;
     constructor(name: string) {
@@ -148,6 +171,7 @@ class Phantom2dEntity {
     width: number; height: number;
     color: string;
     evStore: Store<PhantomEventType, PhantomEventHandle>;
+    [x: string]: any;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
         this.upd = opts.upd ?? NoFunc;
@@ -158,6 +182,9 @@ class Phantom2dEntity {
         this.height = opts.height ?? 0;
         this.evStore = new Store();
         this.color = opts.color ?? "#fff";
+        if(opts.custom) for(const [k, v] of Object.entries(opts.custom)) {
+            this[k] = v;
+        }
     }
     setPos(x: number | Vector, y?: number) {
         if(typeof x == "number" && typeof y == "number") {
@@ -193,9 +220,8 @@ class Phantom2dEntity {
         this.move(dist, "y");
     }
     clampPos(min: number, max: number, axis: Axis) {
-        const clamp = (n: number): number => Math.min(Math.max(n, min), max);
-        if(axis == "x" || axis == 0) this.x = clamp(this.x);
-        else if(axis == "y" || axis == 1) this.y = clamp(this.y);
+        if(axis == "x" || axis == 0) this.x = Util.clamp(this.x, min, max);
+        else if(axis == "y" || axis == 1) this.y = Util.clamp(this.y, min, max);
     }
     clampPosX(min: number, max: number) {
         this.clampPos(min, max, "x");
@@ -250,6 +276,18 @@ class Phantom2dEntity {
     }
     preset(): Preset {
         return new Preset(this);
+    }
+    center(): Vector {
+        return new Vector(this.x + this.width / 2, this.y + this.height / 2);
+    }
+    scrPos(): Vector {
+        return new Vector(this.x + this.width, this.y + this.height);
+    }
+    scrX(): number {
+        return this.scrPos().x;
+    }
+    scrY(): number {
+        return this.scrPos().y;
     }
     static from(opts: Phantom2dOptions): Phantom2dEntity {
         return new Phantom2dEntity(opts);
@@ -327,6 +365,7 @@ class MovingObject extends Phantom2dEntity {
 class BulletObject extends Phantom2dEntity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
+    scene: Scene;
     constructor(opts: BulletObjectOptions) {
         super(opts);
         this.rot = opts.rot;
@@ -335,11 +374,22 @@ class BulletObject extends Phantom2dEntity {
         this.extBtm = opts.extBtm;
         this.extTop = opts.extTop;
         this.spd = opts.spd;
+        this.scene = opts.scene;
     }
     update() {
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x; this.y += fVec.y;
+        // test if its on-screen
+        // tolerance of 15px
+        const x = this.scrX();
+        const y = this.scrY();
+        const w = this.scene.width;
+        const h = this.scene.height;
+        if(x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
+            // self-destruct if its not
+            this.scene.rm(this);
+        }
     }
     static from(opts: BulletObjectOptions): BulletObject {
         return new BulletObject(opts);
@@ -740,11 +790,40 @@ class Preset {
         Object.assign(ent, this.atts);
     }
 }
+class Raycast {
+    angle: number; dist: number;
+    constructor(opts: RaycastOptions) {
+        this.angle = opts.angle;
+        this.dist = opts.dist;
+    }
+    cast(origin: Vector, scene: Scene): RaycastIntersecton {
+        for(const i of scene.items.items) {
+            //
+        }
+        return new RaycastIntersecton();
+    }
+}
+class RaycastIntersecton {
+    constructor() {}
+}
 
 function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
     const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+}
+function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity) {
+    const t1 = (rect.x - origin.x) / dir.x;
+    const t2 = (rect.x + rect.width - origin.x) / dir.x;
+}
+function uvVec(p: Vector, w: number, h: number): Vector {
+    let u = p.x / (w - 1);
+    let v = p.y / (h - 1);
+    u = u * 2 - 1;
+    v = v * 2 - 1;
+    let aspect = w / h;
+    u *= aspect;
+    return new Vector(u, v);
 }
 
 export {
