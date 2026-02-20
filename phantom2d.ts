@@ -59,6 +59,15 @@ class Store<TI, TO> {
     del(key: TI): boolean {
         return this.store.delete(key);
     }
+    keys(): MapIterator<TI> {
+        return this.store.keys();
+    }
+    values(): MapIterator<TO> {
+        return this.store.values();
+    }
+    items(): MapIterator<[TI, TO]> {
+        return this.store.entries();
+    }
 }
 
 interface Phantom2dOptions {
@@ -112,6 +121,9 @@ interface SoundOptions {
     mime: AudioMIME;
 }
 interface CharacterOptions extends PhysicsObjectOptions {}
+interface PlayableCharacterOptions extends CharacterOptions {
+    binds?: Store<string, Function>;
+}
 class PhantomEvent {
     name: string;
     constructor(name: string) {
@@ -340,6 +352,44 @@ class Character extends Phantom2dEntity {
     }
     jump(h: number) {
         this.gspd = -(h);
+    }
+}
+class PlayableCharacter extends Character {
+    binds: Store<string, Function>;
+    keys: Store<string, boolean>;
+    constructor(opts: PlayableCharacterOptions) {
+        super(opts);
+        this.binds = opts.binds ?? new Store();
+        this.keys = new Store();
+        window.addEventListener("keydown", (e) => {
+            this.keys.set(e.code, true);
+        });
+        window.addEventListener("keyup", (e) => {
+            this.keys.set(e.code, false);
+        });
+    }
+    bind(code: string, exec: Function) {
+        this.binds.set(code, exec);
+    }
+    unbind(code: string) {
+        this.binds.del(code);
+    }
+    isBind(code: string): boolean {
+        return this.binds.has(code);
+    }
+    bindOf(code: string): Function | undefined {
+        return this.binds.get(code);
+    }
+    update() {
+        for(const [k, v] of this.keys.items()) {
+            if(v) {
+                const exec = this.binds.get(k);
+                if(exec) {
+                    exec();
+                }
+            }
+        }
+        super.update();
     }
 }
 class Vector {
@@ -601,7 +651,7 @@ class Scene {
     }
     save(file: string) {
         const s = new SaveJSON(file);
-        s.save(Util.str(this, 4));
+        s.save(this, 4);
     }
     fScrOn() {
         this.canvas.requestFullscreen();
@@ -641,7 +691,7 @@ class Level {
     }
     save(file: string) {
         const s = new SaveJSON(file);
-        s.save(Util.str(this, 4));
+        s.save(this, 4);
     }
 }
 class Save {
@@ -667,6 +717,9 @@ class SaveJSON extends Save {
     constructor(file: string) {
         super({ file, mime: "application/json", ext: "json" });
     }
+    save(cont: any, indent: number = 4) {
+        super.save(Util.str(cont, indent));
+    }
 }
 class Preset {
     atts: { any?: any };
@@ -676,7 +729,7 @@ class Preset {
     }
     save(out: string) {
         const s = new SaveJSON(out);
-        s.save(Util.str(this, 4));
+        s.save(this, 4);
     }
     apply(ent: Phantom2dEntity) {
         Object.assign(ent, this.atts);
@@ -704,7 +757,9 @@ export {
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
     Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
-    Scene, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel,
+    Scene, Character, PlayableCharacter,
+    
+    Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel,
 
     isCol
 };
