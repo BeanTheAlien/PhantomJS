@@ -4,7 +4,14 @@ class Util {
     }
 }
 
+/**
+ * Represents custom properties to
+ * be attached during creation.
+ */
 type Custom = { any?: any };
+/**
+ * Represents an axis.
+ */
 type Axis = "x" | "y" | 0 | 1;
 type Dir = 0 | 1;
 type EventHandle = (e: Event) => void;
@@ -460,9 +467,7 @@ class Items {
     }
     add(...items: Phantom2dEntity[]) {
         this.items.push(...items);
-        for(const item of items) {
-            item.consume("added", new PhantomAddedEvent());
-        }
+        items.forEach(i => i.consume("added", new PhantomAddedEvent()));
     }
     rm(...items: Phantom2dEntity[]) {
         for(const item of items) {
