@@ -687,7 +687,10 @@ class Scene {
     }
     render() {
         this.items.forEach(i => {
-            this.rect(i.x, i.y, i.width, i.height, i.color);
+            this.ctx.save();
+            this.ctx.rotate(i.rot);
+            this.rect(-i.width / 2, -i.height / 2, i.width, i.height, i.color);
+            this.ctx.restore();
         });
     }
     start(postUpd: Function = NoFunc) {

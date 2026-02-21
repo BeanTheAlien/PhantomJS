@@ -583,7 +583,10 @@ class Scene {
     }
     render() {
         this.items.forEach(i => {
-            this.rect(i.x, i.y, i.width, i.height, i.color);
+            this.ctx.save();
+            this.ctx.rotate(i.rot);
+            this.rect(-i.width / 2, -i.height / 2, i.width, i.height, i.color);
+            this.ctx.restore();
         });
     }
     start(postUpd = NoFunc) {
@@ -689,18 +692,30 @@ class Preset {
 }
 class Raycast {
     constructor(opts) {
+        this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
+        this.scene = opts.scene;
     }
-    cast(origin, scene) {
-        for (const i of scene.items.items) {
-            //
+    cast() {
+        let res = null;
+        const dir = new Vector(Math.cos(this.angle), Math.sin(this.angle));
+        for (const i of this.scene.items.items) {
+            const hit = rayInterRect(this.origin, dir, i, this.scene);
+            if (hit) {
+                if (res && hit < res.dist)
+                    res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            }
         }
-        return new RaycastIntersecton();
+        return res;
     }
 }
 class RaycastIntersecton {
-    constructor() { }
+    constructor(dist, obj, point) {
+        this.dist = dist;
+        this.obj = obj;
+        this.point = point;
+    }
 }
 function isCol(a, b) {
     const w1 = a.width;
@@ -713,9 +728,17 @@ function isCol(a, b) {
     const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
-function rayInterRect(origin, dir, rect) {
-    const t1 = (rect.x - origin.x) / dir.x;
-    const t2 = (rect.x + rect.width - origin.x) / dir.x;
+function rayInterRect(origin, dir, rect, scene) {
+    const uv = uvVec(dir, scene.width, scene.height);
+    const t1 = (rect.x - origin.x) / uv.x;
+    const t2 = (rect.scrX() - origin.x) / uv.x;
+    const t3 = (rect.y - origin.y) / uv.y;
+    const t4 = (rect.scrY() - origin.y) / uv.y;
+    const tmin = Math.max(Math.min(t1, t2), Math.min(t3, t4));
+    const tmax = Math.min(Math.max(t1, t2), Math.max(t3, t4));
+    if (tmax < 0 || tmin > tmax)
+        return null;
+    return tmin >= 0 ? tmin : tmax;
 }
 function uvVec(p, w, h) {
     let u = p.x / (w - 1);
@@ -726,4 +749,4 @@ function uvVec(p, w, h) {
     u *= aspect;
     return new Vector(u, v);
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, isCol };
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, isCol, rayInterRect, uvVec };
