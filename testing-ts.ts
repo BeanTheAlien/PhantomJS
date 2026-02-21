@@ -1,4 +1,4 @@
-import * as p2d from "./phantom2d.ts";
+import * as p2d from "./phantom2d-ts.js";
 
 const canvas = document.getElementById("canvas");
 const scene = new p2d.Scene({ canvas: canvas, w: 1000, h: 1000, cssW: "100vw", cssH: "100vh" });

@@ -151,8 +151,10 @@ interface PlayableCharacterOptions extends CharacterOptions {
     binds?: Store<string, Function>;
 }
 interface RaycastOptions {
+    origin: Vector;
     angle: number;
     dist: number;
+    scene: Scene;
 }
 class PhantomEvent {
     name: string;
@@ -791,20 +793,34 @@ class Preset {
     }
 }
 class Raycast {
-    angle: number; dist: number;
+    origin: Vector; angle: number; dist: number; scene: Scene;
     constructor(opts: RaycastOptions) {
+        this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
+        this.scene = opts.scene;
     }
-    cast(origin: Vector, scene: Scene): RaycastIntersecton {
-        for(const i of scene.items.items) {
-            //
+    cast(): RaycastIntersecton | null {
+        let res: RaycastIntersecton | null = null;
+        const dir = new Vector(Math.cos(this.angle), Math.sin(this.angle));
+        for(const i of this.scene.items.items) {
+            const hit = rayInterRect(this.origin, dir, i, this.scene);
+            if(hit) {
+                if(res && hit < res.dist) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            }
         }
-        return new RaycastIntersecton();
+        return res;
     }
 }
 class RaycastIntersecton {
-    constructor() {}
+    dist: number;
+    obj: Phantom2dEntity;
+    point: Vector;
+    constructor(dist: number, obj: Phantom2dEntity, point: Vector) {
+        this.dist = dist;
+        this.obj = obj;
+        this.point = point;
+    }
 }
 
 function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
@@ -812,9 +828,16 @@ function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
-function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity) {
-    const t1 = (rect.x - origin.x) / dir.x;
-    const t2 = (rect.x + rect.width - origin.x) / dir.x;
+function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene: Scene): number | null {
+    const uv = uvVec(dir, scene.width, scene.height);
+    const t1 = (rect.x - origin.x) / uv.x;
+    const t2 = (rect.scrX() - origin.x) / uv.x;
+    const t3 = (rect.y - origin.y) / uv.y;
+    const t4 = (rect.scrY() - origin.y) / uv.y;
+    const tmin = Math.max(Math.min(t1, t2), Math.min(t3, t4));
+    const tmax = Math.min(Math.max(t1, t2), Math.max(t3, t4));
+    if(tmax < 0 || tmin > tmax) return null;
+    return tmin >= 0 ? tmin : tmax;
 }
 function uvVec(p: Vector, w: number, h: number): Vector {
     let u = p.x / (w - 1);
@@ -836,14 +859,15 @@ export {
     
     Phantom2dOptions, StaticObjectOptions, PhysicsObjectOptions, Extent,
     MovingObjectOptions, BulletObjectOptions, SceneOptions, PhantomEventMap,
-    SaveOptions, SoundOptions,
+    SaveOptions, SoundOptions, RaycastOptions,
 
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
     Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter,
     
-    Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel,
+    Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
+    RaycastIntersecton,
 
-    isCol
+    isCol, rayInterRect, uvVec
 };
