@@ -32,6 +32,11 @@ type Axis = "x" | "y" | 0 | 1;
  * 1 = y
  */
 type Dir = 0 | 1;
+/**
+ * A handle for an event.
+ * 
+ * Takes one argument, the event.
+ */
 type EventHandle = (e: Event) => void;
 type EventType = keyof HTMLElementEventMap;
 type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
@@ -233,9 +238,6 @@ class Phantom2dEntity {
     }
     getPos(): Vector {
         return new Vector(this.x, this.y);
-    }
-    getCenter(): Vector {
-        return new Vector(this.x + this.width / 2, this.y + this.height / 2);
     }
     getPosX(): number {
         return this.x;
@@ -554,6 +556,7 @@ class Scene {
     lvlStore: Store<string, Level>;
     processId: number;
     mousePos: Vector;
+    runtime: Runtime;
     constructor(opts: SceneOptions) {
         if(!opts.canvas) throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
@@ -572,6 +575,7 @@ class Scene {
         window.addEventListener("mousemove", (e) => {
             this.mousePos = new Vector(e.clientX, e.clientY);
         });
+        this.runtime = new Runtime();
     }
     get width(): number {
         return this.canvas.width;
@@ -694,24 +698,23 @@ class Scene {
         });
     }
     start(postUpd: Function = NoFunc) {
-        if(this.processId != -1) throw new ExistingProcessError();
-        const tick = () => {
+        this.runtime.start(() => {
             this.update();
             this.clear();
             postUpd();
             this.render();
-            this.processId = requestAnimationFrame(tick);
-        }
-        tick();
+        });
     }
     stop() {
-        if(this.processId == -1) throw new NoProcessError();
-        cancelAnimationFrame(this.processId);
-        this.processId = -1;
+        this.runtime.stop();
     }
     save(file: string) {
         const s = new SaveJSON(file);
         s.save(this, 4);
+    }
+    saveLvl(lvlName: string, file: string) {
+        const s = new SaveJSON(file);
+        s.save(this.getLvl(lvlName), 4);
     }
     fScrOn() {
         this.canvas.requestFullscreen();
@@ -724,6 +727,9 @@ class Scene {
     }
     pLockOff() {
         document.exitPointerLock();
+    }
+    get delta(): number {
+        return this.runtime.delta;
     }
 }
 class Level {
@@ -823,6 +829,27 @@ class RaycastIntersecton {
         this.dist = dist;
         this.obj = obj;
         this.point = point;
+    }
+}
+class Runtime {
+    processId: number; delta: number;
+    constructor() {
+        this.processId = -1;
+        this.delta = 0;
+    }
+    start(fn: Function) {
+        if(this.processId != -1) throw new ExistingProcessError();
+        const out = () => {
+            fn();
+            this.delta++;
+            this.processId = requestAnimationFrame(out);
+        }
+        out();
+    }
+    stop() {
+        if(this.processId == -1) throw new NoProcessError();
+        cancelAnimationFrame(this.processId);
+        this.delta = 0;
     }
 }
 
