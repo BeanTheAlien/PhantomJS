@@ -46,6 +46,7 @@ type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audi
                 "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
 type CollisionHandle = (o: Phantom2dEntity) => void;
 type Iter<T> = MapIterator<T>;
+type PhantomCompType = keyof PhantomCompMap;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -70,6 +71,12 @@ class NoProcessError extends Error {
     constructor() {
         super("A process does not exist.");
         this.name = "NoProcessError";
+    }
+}
+class AlreadyUsingError extends Error {
+    constructor() {
+        super("Already using this component, cannot use again.");
+        this.name = "AlreadyUsingError";
     }
 }
 
@@ -141,6 +148,7 @@ interface SceneOptions {
 }
 interface PhantomEventMap {
     alive: PhantomAliveEvent; added: PhantomAddedEvent; removed: PhantomRemovedEvent;
+    hurt: PhantomHealthCompHurtEvent; die: PhantomHealthCompDieEvent; heal: PhantomHealthCompHealEvent;
 }
 interface SaveOptions {
     file: string;
@@ -161,6 +169,20 @@ interface RaycastOptions {
     dist: number;
     scene: Scene;
 }
+interface PhantomCompMap {
+    health: HealthComp;
+    inv: InvComp;
+}
+interface CompOptions {}
+interface HealthCompOptions extends CompOptions {
+    hp?: number; mhp?: number;
+    onHurt?: PhantomEventHandle;
+    onDie?: PhantomEventHandle;
+    onHeal?: PhantomEventHandle;
+}
+interface InvCompOptions extends CompOptions {
+    size?: number;
+}
 class PhantomEvent {
     name: string;
     constructor(name: string) {
@@ -170,6 +192,79 @@ class PhantomEvent {
 class PhantomAliveEvent extends PhantomEvent { constructor() { super("alive"); } }
 class PhantomAddedEvent extends PhantomEvent { constructor() { super("added"); } }
 class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"); } }
+class PhantomHealthCompHurtEvent extends PhantomEvent { constructor() { super("hurt"); } }
+class PhantomHealthCompDieEvent extends PhantomEvent { constructor() { super("die"); } }
+class PhantomHealthCompHealEvent extends PhantomEvent { constructor() { super("heal"); } }
+class Comp {
+    ent: Phantom2dEntity;
+    constructor(ent: Phantom2dEntity) {
+        this.ent = ent;
+    }
+    consume(k: PhantomEventType, e: PhantomEvent) {
+        this.ent.consume(k, e);
+    }
+}
+class HealthComp extends Comp {
+    hp: number; mhp?: number;
+    onHurt?: PhantomEventHandle;
+    onDie?: PhantomEventHandle;
+    onHeal?: PhantomEventHandle;
+    constructor(ent: Phantom2dEntity, opts: HealthCompOptions) {
+        super(ent);
+        this.hp = opts.hp ?? 0;
+        this.mhp = opts.mhp;
+        this.onHurt = opts.onHurt;
+        this.onDie = opts.onDie;
+        this.onHeal = opts.onHeal;
+    }
+    hurt(dmg: number) {
+        this.hp -= dmg;
+        this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        if(this.hp <= 0) this.die();
+    }
+    die() {
+        this.#consume(this.onDie, "die", new PhantomHealthCompDieEvent());
+    }
+    heal(hp: number) {
+        this.hp += hp;
+        if(this.mhp) this.hp = Math.min(this.hp, this.mhp);
+        this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent());
+    }
+    #consume(fn: PhantomEventHandle | undefined, k: PhantomEventType, e: PhantomEvent) {
+        if(fn) fn(e);
+        else this.consume(k, e);
+    }
+}
+class InvComp extends Comp {
+    size?: number;
+    inv: any[];
+    constructor(ent: Phantom2dEntity, opts: InvCompOptions) {
+        super(ent);
+        this.size = opts.size;
+        this.inv = [];
+    }
+    add(...items: any[]) {
+        for(let i = 0; i < items.length; i++) {
+            if(this.size && this.inv.length >= this.size) continue;
+            this.inv.push(items[i]);
+        }
+    }
+    rm(...items: any[]) {
+        for(const i of items) if(this.has(i)) this.inv.splice(this.idxOf(i), 1);
+    }
+    has(...items: any[]): boolean {
+        return items.every(i => this.inv.includes(i));
+    }
+    idxOf(i: any): number {
+        return this.inv.indexOf(i);
+    }
+    len(): number {
+        return this.inv.length;
+    }
+    at(i: number): any {
+        return this.inv[i];
+    }
+}
 
 class Phantom2dEntity {
     collide: CollisionHandle; upd: Function;
@@ -179,6 +274,7 @@ class Phantom2dEntity {
     color: string;
     evStore: Store<PhantomEventType, PhantomEventHandle>;
     [x: string]: any;
+    comps: Store<PhantomCompType, Comp>;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
         this.upd = opts.upd ?? NoFunc;
@@ -192,6 +288,7 @@ class Phantom2dEntity {
         if(opts.custom) for(const [k, v] of Object.entries(opts.custom)) {
             this[k] = v;
         }
+        this.comps = new Store();
     }
     setPos(x: number | Vector, y?: number) {
         if(typeof x == "number" && typeof y == "number") {
@@ -292,6 +389,20 @@ class Phantom2dEntity {
     }
     scrY(): number {
         return this.scrPos().y;
+    }
+    use(c: PhantomCompType, opts: CompOptions = {}) {
+        if(this.uses(c)) throw new AlreadyUsingError();
+        if(c == "health") this.comps.set(c, new HealthComp(this, opts));
+        if(c == "inv") this.comps.set(c, new InvComp(this, opts));
+    }
+    unuse(c: PhantomCompType) {
+        this.comps.del(c);
+    }
+    uses(c: PhantomCompType): boolean {
+        return this.comps.has(c);
+    }
+    comp(c: PhantomCompType): Comp | undefined {
+        return this.comps.get(c);
     }
     static from(opts: Phantom2dOptions): Phantom2dEntity {
         return new Phantom2dEntity(opts);
@@ -543,6 +654,9 @@ class Items {
     forEach(cb: Callback<void>) {
         this.items.forEach(cb);
     }
+    at(i: number): Phantom2dEntity | undefined {
+        return this.items[i];
+    }
 }
 /**
  * The root canvas to display content.
@@ -554,7 +668,6 @@ class Scene {
     items: Items;
     evStore: Store<EventType, EventHandle>;
     lvlStore: Store<string, Level>;
-    processId: number;
     mousePos: Vector;
     runtime: Runtime;
     constructor(opts: SceneOptions) {
@@ -570,7 +683,6 @@ class Scene {
         this.items = new Items();
         this.evStore = new Store();
         this.lvlStore = new Store();
-        this.processId = -1;
         this.mousePos = new Vector(0, 0);
         window.addEventListener("mousemove", (e) => {
             this.mousePos = new Vector(e.clientX, e.clientY);
