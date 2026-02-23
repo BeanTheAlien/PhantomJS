@@ -1131,27 +1131,63 @@ class Phantom2dEntity {
     setPosY(y: number) {
         this.y = y;
     }
+    /**
+     * Applies a listener for an event.
+     * @param event The event type.
+     * @param handle The handle.
+     * @since v0.0.0
+     */
     on(event: PhantomEventType, handle: PhantomEventHandle) {
         this.evStore.set(event, handle);
     }
+    /**
+     * Removes a listener for an event.
+     * @param event The event type.
+     * @since v0.0.0
+     */
     off(event: PhantomEventType) {
         this.evStore.del(event);
     }
+    /**
+     * Consumes an event.
+     * @param title The event type.
+     * @param event The actual event.
+     * @since v0.0.0
+     */
     consume(title: PhantomEventType, event: PhantomEvent) {
         const handle = this.evStore.get(title);
         if(handle) {
             handle(event);
         }
     }
+    /**
+     * Returns this width.
+     * @returns {number} The width.
+     * @since v0.0.0
+     */
     getWidth(): number {
         return this.width;
     }
+    /**
+     * Returns this height.
+     * @returns {number} The height.
+     * @since v0.0.0
+     */
     getHeight(): number {
         return this.height;
     }
+    /**
+     * Called every frame, calls the update function.
+     * @since v0.0.0
+     */
     update() {
         this.upd();
     }
+    /**
+     * Returns the string representation of this object.
+     * @returns {string} This, as a string.
+     * @since v0.0.0
+     */
     toString(): string {
         return Util.str(this);
     }
