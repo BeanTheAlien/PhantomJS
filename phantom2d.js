@@ -4,6 +4,10 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HealthComp_instances, _HealthComp_consume;
+/**
+ * Various utilities.
+ * @since v0.0.0
+ */
 class Util {
     static str(o, space) {
         return JSON.stringify(o, null, space);
@@ -12,94 +16,289 @@ class Util {
         return Math.min(Math.max(n, min), max);
     }
 }
+class ArrayUtil {
+    static add(arr, ...items) {
+        arr.push(...items);
+    }
+    static rm(arr, ...items) {
+        for (const i of items) {
+            if (ArrayUtil.has(arr, i)) {
+                arr.splice(arr.indexOf(i), 1);
+            }
+        }
+    }
+    static has(arr, ...items) {
+        return items.every(i => arr.includes(i));
+    }
+}
+/**
+ * A simple, no-exec function shorthand.
+ * @since v0.0.0
+ */
 const NoFunc = (() => { });
+/**
+ * Thrown when `CanvasRenderingContext2D` cannot be gotten.
+ * @since v0.0.0
+ */
 class NoContextError extends Error {
     constructor() {
         super("Cannot get context 2D.");
         this.name = "NoContextError";
     }
 }
+/**
+ * Thrown when the `Scene` constructor does not receive an `HTMLCanvasElement` or `HTMLElement`.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const el = document.getElementById("not-exists")
+ * const scene = new Scene({ canvas: el }); // cannot convert undefined to HTMLCanvasElement
+ * ```
+ */
 class NoCanvasError extends Error {
     constructor() {
         super("Did not receive HTMLCanvasElement or HTMLElement in scene.");
         this.name = "NoCanvasError";
     }
 }
+/**
+ * Thrown when attempting to run a process while it's running.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const rt = new Runtime();
+ * rt.start(() => {}); // started process
+ * rt.start(() => {}); // process already started
+ * ```
+ */
 class ExistingProcessError extends Error {
     constructor() {
         super("A process already exists, cannot create new process.");
         this.name = "ExistingProcessError";
     }
 }
+/**
+ * Thrown when attempting to stop a process that does not exist.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const rt = new Runtime();
+ * rt.stop(); // no process has been started
+ * ```
+ */
 class NoProcessError extends Error {
     constructor() {
         super("A process does not exist.");
         this.name = "NoProcessError";
     }
 }
+/**
+ * Thrown by trying to use a component that's already in use.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const ent = new Phantom2dEntity({});
+ * ent.use("health"); // use HealthComp
+ * ent.use("health"); // cannot use again
+ * ```
+ */
 class AlreadyUsingError extends Error {
     constructor() {
         super("Already using this component, cannot use again.");
         this.name = "AlreadyUsingError";
     }
 }
+/**
+ * Thrown when a component requires a reference to the scene, but there is none.
+ *
+ * Only thrown during `Comp.protoype.update`.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const canvas = document.getElementById("canvas");
+ * const scene = new Scene({ canvas });
+ * const ent = new Phantom2dEntity({});
+ * ent.use("sprite", { frames: ["frame0.jpg"] }); // no scene property
+ * scene.add(ent);
+ * scene.start(); // cannot render without scene
+ * ```
+ */
+class NoSceneAvailableError extends Error {
+    constructor() {
+        super("A component requires a scene reference, but none was provided.");
+        this.name = "NoSceneAvailableError";
+    }
+}
+/**
+ * Thrown when attempting to get a crucial value and failed.
+ *
+ * Caused when an index exceeds the length of an array.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const canvas = document.getElementById("canvas");
+ * const scene = new Scene({ canvas });
+ * const ent = new Phantom2dEntity({});
+ * ent.use("sprite", { scene: canvas }); // no frames property
+ * scene.add(ent);
+ * scene.start(); // throws error on first tick of ent
+ * ```
+ */
+class OutOfBoundsError extends Error {
+    constructor() {
+        super("Index exceeds length; could not get crucial value.");
+        this.name = "OutOfBoundsError";
+    }
+}
+/**
+ * A storage for items.
+ * @since v0.0.0
+ */
 class Store {
     constructor() {
         this.store = new Map();
     }
+    /**
+     * Retrieves an entry.
+     * @param key The key to get.
+     * @returns {TO | undefined} The entry or nothing.
+     * @since v0.0.0
+     */
     get(key) {
         return this.store.get(key);
     }
+    /**
+     * Sets an entry.
+     * @param key The key to set.
+     * @param value The value of the new entry.
+     * @since v0.0.0
+     */
     set(key, value) {
         this.store.set(key, value);
     }
+    /**
+     * Returns whether this store contains an item.
+     * @param key The key to get.
+     * @returns {boolean} If this item is contained.
+     * @since v0.0.0
+     */
     has(key) {
         return this.store.has(key);
     }
+    /**
+     * Removes an entry from this storage.
+     * @param key The key to delete.
+     * @returns {boolean} If the key was deleted.
+     * @since v0.0.0
+     */
     del(key) {
         return this.store.delete(key);
     }
+    /**
+     * Returns an iterator for this keys.
+     * @returns {Iter<TI>} The iterator.
+     * @since v0.0.0
+     */
     keys() {
         return this.store.keys();
     }
+    /**
+     * Returns an iterator for this values.
+     * @returns {Iter<TI>} The iterator.
+     * @since v0.0.0
+     */
     values() {
         return this.store.values();
     }
+    /**
+     * Returns an iterator for this entries.
+     * @returns {Iter<[TI, TO]>} The iterator.
+     * @since v0.0.0
+     */
     items() {
         return this.store.entries();
     }
 }
+/**
+ * The synthetic event class.
+ * @since v0.0.0
+ */
 class PhantomEvent {
     constructor(name) {
         this.name = name;
     }
 }
+/**
+ * Fired when this first constructs.
+ * @since v0.0.0
+ */
 class PhantomAliveEvent extends PhantomEvent {
     constructor() { super("alive"); }
 }
+/**
+ * Fired when this ent is added to the scene.
+ * @since v0.0.0
+ */
 class PhantomAddedEvent extends PhantomEvent {
     constructor() { super("added"); }
 }
+/**
+ * Fired when this ent is removed from the scene.
+ * @since v0.0.0
+ */
 class PhantomRemovedEvent extends PhantomEvent {
     constructor() { super("removed"); }
 }
+/**
+ * Fired when this ent takes damage.
+ * @since v0.0.0
+ */
 class PhantomHealthCompHurtEvent extends PhantomEvent {
     constructor() { super("hurt"); }
 }
+/**
+ * Fired when this ent dies.
+ * @since v0.0.0
+ */
 class PhantomHealthCompDieEvent extends PhantomEvent {
     constructor() { super("die"); }
 }
+/**
+ * Fired when this ent heals.
+ * @since v0.0.0
+ */
 class PhantomHealthCompHealEvent extends PhantomEvent {
     constructor() { super("heal"); }
 }
+/**
+ * The component class.
+ * @since v0.0.0
+ */
 class Comp {
     constructor(ent) {
         this.ent = ent;
     }
+    /**
+     * Consumes an event.
+     * @param k The event type.
+     * @param e The event.
+     * @since v0.0.0
+     */
     consume(k, e) {
         this.ent.consume(k, e);
     }
+    /**
+     * The updater for this component.
+     *
+     * Called during `update`.
+     * @since v0.0.0
+     */
+    upd() { }
 }
+/**
+ * A simple health component.
+ * @since v0.0.0
+ */
 class HealthComp extends Comp {
     constructor(ent, opts) {
         var _a;
@@ -111,15 +310,29 @@ class HealthComp extends Comp {
         this.onDie = opts.onDie;
         this.onHeal = opts.onHeal;
     }
+    /**
+     * Hurts this entity.
+     * @param dmg The damage to receive.
+     * @since v0.0.0
+     */
     hurt(dmg) {
         this.hp -= dmg;
         __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
         if (this.hp <= 0)
             this.die();
     }
+    /**
+     * Kills this entity.
+     * @since v0.0.0
+     */
     die() {
         __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onDie, "die", new PhantomHealthCompDieEvent());
     }
+    /**
+     * Heals this entity.
+     * @param hp The health to heal.
+     * @since v0.0.0
+     */
     heal(hp) {
         this.hp += hp;
         if (this.mhp)
@@ -133,12 +346,21 @@ _HealthComp_instances = new WeakSet(), _HealthComp_consume = function _HealthCom
     else
         this.consume(k, e);
 };
+/**
+ * A simple inventory system.
+ * @since v0.0.0
+ */
 class InvComp extends Comp {
     constructor(ent, opts) {
         super(ent);
         this.size = opts.size;
         this.inv = [];
     }
+    /**
+     * Adds new items.
+     * @param items The items to add.
+     * @since v0.0.0
+     */
     add(...items) {
         for (let i = 0; i < items.length; i++) {
             if (this.size && this.inv.length >= this.size)
@@ -146,33 +368,104 @@ class InvComp extends Comp {
             this.inv.push(items[i]);
         }
     }
+    /**
+     * Removes items.
+     * @param items The items to remove.
+     * @since v0.0.0
+     */
     rm(...items) {
-        for (const i of items)
-            if (this.has(i))
-                this.inv.splice(this.idxOf(i), 1);
+        ArrayUtil.rm(this.inv, ...items);
     }
+    /**
+     * Tests if this inventory contains the items passed.
+     * @param items The items to check.
+     * @returns {booelan} If it contains all the items.
+     * @since v0.0.0
+     */
     has(...items) {
-        return items.every(i => this.inv.includes(i));
+        return ArrayUtil.has(this.inv, ...items);
     }
+    /**
+     * Returns the index of an item.
+     * @param i The item.
+     * @returns {number} The index.
+     * @since v0.0.0
+     */
     idxOf(i) {
         return this.inv.indexOf(i);
     }
+    /**
+     * Returns the length of the inventory.
+     * @returns {number} The length.
+     * @since v0.0.0
+     */
     len() {
         return this.inv.length;
     }
+    /**
+     * Returns an item at the index.
+     * @param i The index.
+     * @returns {any} The item.
+     * @since v0.0.0
+     */
     at(i) {
         return this.inv[i];
     }
 }
+class SpriteComp extends Comp {
+    constructor(ent, opts) {
+        var _a;
+        super(ent);
+        this.frames = ((_a = opts.frames) !== null && _a !== void 0 ? _a : []).map(Img.from);
+        this.scene = opts.scene;
+        this.idx = 0;
+    }
+    frame(idx) {
+        this.idx = idx;
+    }
+    at(idx) {
+        return this.frames[idx];
+    }
+    cur() {
+        return this.at(this.idx);
+    }
+    add(...items) {
+        ArrayUtil.add(this.frames, ...items);
+    }
+    rm(...items) {
+        ArrayUtil.rm(this.frames, ...items);
+    }
+    upd() {
+        if (!this.scene)
+            throw new NoSceneAvailableError();
+        const c = this.cur();
+        if (!c)
+            throw new OutOfBoundsError();
+        this.scene.img(c, this.ent.x, this.ent.y, this.ent.width, this.ent.height);
+    }
+}
+/**
+ * The record used to create components.
+ * @since v0.0.0
+ */
 const PhantomCompRecord = {
     health: HealthComp,
-    inv: InvComp
+    inv: InvComp,
+    sprite: SpriteComp
 };
+/**
+ * The class used for creating components for the scene.
+ * @since v0.0.0
+ */
 class SceneComp {
     constructor(scene) {
         this.scene = scene;
     }
 }
+/**
+ * A simple tile display for the scene.
+ * @since v0.0.0
+ */
 class SceneTilesComp extends SceneComp {
     constructor(scene, opts) {
         var _a;
@@ -181,9 +474,17 @@ class SceneTilesComp extends SceneComp {
         this.nth = opts.nth;
     }
 }
+/**
+ * The record used to create scene components.
+ * @since v0.0.0
+ */
 const PhantomSceneCompRecord = {
     tiles: SceneTilesComp
 };
+/**
+ * A map of shorthands to browser keys.
+ * @since v0.0.0
+ */
 const KeyCodeMap = {
     "a": "KeyA", "b": "KeyB", "c": "KeyC", "d": "KeyD", "e": "KeyE", "f": "KeyF",
     "g": "KeyG", "h": "KeyH", "i": "KeyI", "j": "KeyJ", "k": "KeyK", "l": "KeyL",
@@ -210,12 +511,20 @@ const KeyCodeMap = {
     "space": "Space", "arw": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
     "arwl": "ArrowLeft", "arwr": "ArrowRight", "arwu": "ArrowUp", "arwd": "ArrowDown"
 };
+/**
+ * The reverse map of browser keys to shorthands.
+ * @since v0.0.0
+ */
 const KeyCodeMapReverse = {};
 for (const [k, v] of Object.entries(KeyCodeMap)) {
     if (Array.isArray(v))
         continue;
     KeyCodeMapReverse[v] = k;
 }
+/**
+ * The root class of all entities, providing base functionality.
+ * @since v0.0.0
+ */
 class Phantom2dEntity {
     constructor(opts) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -234,6 +543,12 @@ class Phantom2dEntity {
             }
         this.comps = new Store();
     }
+    /**
+     * Sets the position.
+     * @param x The new x pos (or `Vector`).
+     * @param y The new y pos.
+     * @since v0.0.0
+     */
     setPos(x, y) {
         if (typeof x == "number" && typeof y == "number") {
             this.x = x;
@@ -244,119 +559,307 @@ class Phantom2dEntity {
             this.y = x.y;
         }
     }
+    /**
+     * Sets the rotation.
+     * @param rad The new rotation.
+     * @since v0.0.0
+     */
     setRot(rad) {
         this.rot = rad;
     }
+    /**
+     * Sets the width.
+     * @param w The new width.
+     * @since v0.0.0
+     */
     setWidth(w) {
         this.width = w;
     }
+    /**
+     * Sets the height.
+     * @param h The new height.
+     * @since v0.0.0
+     */
     setHeight(h) {
         this.height = h;
     }
+    /**
+     * Returns a `Vector` object of the forward vector.
+     * @returns {Vector} The forward vector.
+     * @since v0.0.0
+     */
     getFVec() {
         const dx = Math.cos(this.rot);
         const dy = Math.sin(this.rot);
         return new Vector(dx, dy);
     }
+    /**
+     * Moves a distance on an axis.
+     * @param dist The distance to move.
+     * @param axis The axis to move on.
+     * @since v0.0.0
+     */
     move(dist, axis) {
         if (axis == "x" || axis == 0)
             this.x += dist;
         else if (axis == "y" || axis == 1)
             this.y += dist;
     }
+    /**
+     * Moves a distance on the x-axis.
+     * @param dist The distance to move.
+     * @since v0.0.0
+     */
     moveX(dist) {
         this.move(dist, "x");
     }
+    /**
+     * Moves a distance on the y-axis.
+     * @param dist The distance to move.
+     * @since v0.0.0
+     */
     moveY(dist) {
         this.move(dist, "y");
     }
+    /**
+     * Clamps this position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @param axis The axis to clamp.
+     * @since v0.0.0
+     */
     clampPos(min, max, axis) {
         if (axis == "x" || axis == 0)
             this.x = Util.clamp(this.x, min, max);
         else if (axis == "y" || axis == 1)
             this.y = Util.clamp(this.y, min, max);
     }
+    /**
+     * Clamps this x position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @since v0.0.0
+     */
     clampPosX(min, max) {
         this.clampPos(min, max, "x");
     }
+    /**
+     * Clamps this y position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @since v0.0.0
+     */
     clampPosY(min, max) {
         this.clampPos(min, max, "y");
     }
+    /**
+     * Returns a `Vector` representing this position.
+     * @returns {Vector} This position.
+     * @since v0.0.0
+     */
     getPos() {
         return new Vector(this.x, this.y);
     }
+    /**
+     * Returns the x-coordinate.
+     * @returns {number} This x-coordinate.
+     * @since v0.0.0
+     */
     getPosX() {
         return this.x;
     }
+    /**
+     * Returns the y-coordinate.
+     * @returns {number} The y-coordinate.
+     * @since v0.0.0
+     */
     getPosY() {
         return this.y;
     }
+    /**
+     * Sets this x-coordinate.
+     * @param x The new x.
+     * @since v0.0.0
+     */
     setPosX(x) {
         this.x = x;
     }
+    /**
+     * Sets this y-coordinate.
+     * @param y The new y.
+     * @since v0.0.0
+     */
     setPosY(y) {
         this.y = y;
     }
+    /**
+     * Applies a listener for an event.
+     * @param event The event type.
+     * @param handle The handle.
+     * @since v0.0.0
+     */
     on(event, handle) {
         this.evStore.set(event, handle);
     }
+    /**
+     * Removes a listener for an event.
+     * @param event The event type.
+     * @since v0.0.0
+     */
     off(event) {
         this.evStore.del(event);
     }
+    /**
+     * Consumes an event.
+     * @param title The event type.
+     * @param event The actual event.
+     * @since v0.0.0
+     */
     consume(title, event) {
         const handle = this.evStore.get(title);
         if (handle) {
             handle(event);
         }
     }
+    /**
+     * Returns this width.
+     * @returns {number} The width.
+     * @since v0.0.0
+     */
     getWidth() {
         return this.width;
     }
+    /**
+     * Returns this height.
+     * @returns {number} The height.
+     * @since v0.0.0
+     */
     getHeight() {
         return this.height;
     }
+    /**
+     * Called every frame, calls the update function.
+     *
+     * Also calls `Comp.prototype.upd` for every component.
+     * @since v0.0.0
+     */
     update() {
         this.upd();
+        for (const c of this.comps.values()) {
+            c.upd();
+        }
     }
+    /**
+     * Returns the string representation of this object.
+     * @returns {string} This, as a string.
+     * @since v0.0.0
+     */
     toString() {
         return Util.str(this);
     }
+    /**
+     * Applies a preset.
+     * @param preset The preset to apply.
+     * @since v0.0.0
+     */
     apply(preset) {
         preset.apply(this);
     }
+    /**
+     * Returns a new `Preset` from this.
+     * @returns {Preset} This, as a `Preset`.
+     * @since v0.0.0
+     */
     preset() {
         return new Preset(this);
     }
+    /**
+     * Returns the center coordinate.
+     * @returns {Vector} The center coordinate.
+     * @since v0.0.0
+     */
     center() {
         return new Vector(this.x + this.width / 2, this.y + this.height / 2);
     }
+    /**
+     * Returns the real screen position (accounting for width and height).
+     * @returns {Vector} The screen position.
+     * @since v0.0.0
+     */
     scrPos() {
         return new Vector(this.x + this.width, this.y + this.height);
     }
+    /**
+     * Returns the real screen x (accounting for width).
+     * @returns {number} The screen x.
+     * @since v0.0.0
+     */
     scrX() {
         return this.scrPos().x;
     }
+    /**
+     * Retunrs the real screen y (accounting for height).
+     * @returns {number} The screen y.
+     * @since v0.0.0
+     */
     scrY() {
         return this.scrPos().y;
     }
+    /**
+     * Uses a component.
+     * @param c The component type.
+     * @param opts The arguments for the component.
+     * @see {@link PhantomCompMap}
+     * @since v0.0.0
+     */
     use(c, opts = {}) {
         if (this.uses(c))
             throw new AlreadyUsingError();
         this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
     }
+    /**
+     * Removes a component.
+     * @param c The component type.
+     * @see {@link PhantomCompMap}
+     * @since v0.0.0
+     */
     unuse(c) {
         this.comps.del(c);
     }
+    /**
+     * Returns whether this uses a component or not.
+     * @param c The component type.
+     * @returns {boolean} If it is in use.
+     * @since v0.0.0
+     */
     uses(c) {
         return this.comps.has(c);
     }
+    /**
+     * Returns a reference to this component.
+     * @param c The component type.
+     * @returns {Comp | undefined} The component (or nothing).
+     * @since v0.0.0
+     */
     comp(c) {
         return this.comps.get(c);
     }
+    /**
+     * Returns a new entity.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
     static from(opts) {
         return new Phantom2dEntity(opts);
     }
 }
+/**
+ * A simple object that is primarily used for scenery.
+ *
+ * This object has no special attributes.
+ * @since v0.0.0
+ */
 class StaticObject extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
@@ -365,6 +868,10 @@ class StaticObject extends Phantom2dEntity {
         return new StaticObject(opts);
     }
 }
+/**
+ * A simple object that uses physics.
+ * @since v0.0.0
+ */
 class PhysicsObject extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
@@ -380,6 +887,12 @@ class PhysicsObject extends Phantom2dEntity {
         return new PhysicsObject(opts);
     }
 }
+/**
+ * An object that moves in both x and y directions.
+ *
+ * Optionally, it can bounce on extent reached.
+ * @since v0.0.0
+ */
 class MovingObject extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
@@ -427,6 +940,12 @@ class MovingObject extends Phantom2dEntity {
         return new MovingObject(opts);
     }
 }
+/**
+ * Similar to a moving object, this will fly across the screen.
+ *
+ * Will automatically destroy itself when reaching an extent.
+ * @since v0.0.0
+ */
 class BulletObject extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
@@ -458,6 +977,12 @@ class BulletObject extends Phantom2dEntity {
         return new BulletObject(opts);
     }
 }
+/**
+ * The root class for other character-like classes.
+ *
+ * Provides functionality for characters; uses physics.
+ * @since v0.0.0
+ */
 class Character extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
@@ -473,6 +998,12 @@ class Character extends Phantom2dEntity {
         this.gspd = -(h);
     }
 }
+/**
+ * A character that also has bindings.
+ *
+ * Automatically listens for `keydown` and `keyup` events.
+ * @since v0.0.0
+ */
 class PlayableCharacter extends Character {
     constructor(opts) {
         var _a;
@@ -510,6 +1041,12 @@ class PlayableCharacter extends Character {
         super.update();
     }
 }
+/**
+ * A 2D vector.
+ *
+ * Part of the broader vector ecosystem.
+ * @since v0.0.0
+ */
 class Vector {
     constructor(x, y) {
         this.x = x;
@@ -520,6 +1057,10 @@ class Vector {
         this.y *= factor;
     }
 }
+/**
+ * A pixel.
+ * @since v0.0.0
+ */
 class Pixel {
     constructor(pxl) {
         this.r = pxl.r;
@@ -536,6 +1077,12 @@ class Pixel {
         }
     }
 }
+/**
+ * An audio source.
+ *
+ * Used to play long-lasting sounds, NOT SFX.
+ * @since v0.0.0
+ */
 class Sound {
     constructor(opts) {
         this.src = opts.src;
@@ -562,12 +1109,26 @@ class Sound {
         return this.aud.duration;
     }
 }
+/**
+ * An image.
+ *
+ * Shorthand for `HTMLImageElement`.
+ * @since v0.0.0
+ */
 class Img {
     constructor(src) {
         this.img = new Image();
         this.img.src = src;
+        document.body.appendChild(this.img);
+    }
+    static from(src) {
+        return new Img(src);
     }
 }
+/**
+ * A component to store various elements.
+ * @since v0.0.0
+ */
 class Items {
     constructor() {
         this.items = [];
@@ -708,6 +1269,11 @@ class Scene {
     delLvl(lvlName) {
         this.lvlStore.del(lvlName);
     }
+    loadLvl(lvlName) {
+        const lvl = this.lvlStore.get(lvlName);
+        if (lvl)
+            this.items = lvl.items;
+    }
     get color() {
         return this.ctx.fillStyle;
     }
@@ -806,6 +1372,12 @@ class Scene {
         return new Vector(e.clientX - rect.left, e.clientY - rect.top);
     }
 }
+/**
+ * A collection of items.
+ *
+ * Can be used as a `Preset` for `Scene`.
+ * @since v0.0.0
+ */
 class Level {
     constructor() {
         this.items = new Items();
@@ -833,6 +1405,10 @@ class Level {
         s.save(this, 4);
     }
 }
+/**
+ * A class for saving content.
+ * @since v0.0.0
+ */
 class Save {
     constructor(opts) {
         this.file = opts.file;
@@ -851,6 +1427,12 @@ class Save {
         URL.revokeObjectURL(url);
     }
 }
+/**
+ * An extension class of `Save`.
+ *
+ * Used for saving specifically JSON files.
+ * @since v0.0.0
+ */
 class SaveJSON extends Save {
     constructor(file) {
         super({ file, mime: "application/json", ext: "json" });
@@ -859,6 +1441,12 @@ class SaveJSON extends Save {
         super.save(Util.str(cont, indent));
     }
 }
+/**
+ * A saved set of attributes for an entity.
+ *
+ * Can be applied to an entity later.
+ * @since v0.0.0
+ */
 class Preset {
     constructor(ent) {
         this.atts = {};
@@ -872,6 +1460,10 @@ class Preset {
         Object.assign(ent, this.atts);
     }
 }
+/**
+ * A ray in the scene space.
+ * @since v0.0.0
+ */
 class Raycast {
     constructor(opts) {
         this.origin = opts.origin;
@@ -892,6 +1484,10 @@ class Raycast {
         return res;
     }
 }
+/**
+ * The intersection returned by a `Raycast` collision.
+ * @since v0.0.0
+ */
 class RaycastIntersecton {
     constructor(dist, obj, point) {
         this.dist = dist;
@@ -899,6 +1495,12 @@ class RaycastIntersecton {
         this.point = point;
     }
 }
+/**
+ * Handler for the `Scene` runtime.
+ *
+ * Controls the state of the `Scene` rendering.
+ * @since v0.0.0
+ */
 class Runtime {
     constructor() {
         this.processId = -1;
@@ -921,17 +1523,36 @@ class Runtime {
         this.delta = 0;
     }
 }
+/**
+ * The geometric object root class.
+ * @since v0.0.0
+ */
 class Geom {
     constructor(name) {
         this.name = name;
     }
 }
+/**
+ * Represents a rectangle.
+ * @since v0.0.0
+ */
 class GeomRect extends Geom {
     constructor() { super("rect"); }
 }
-class GeomCirlce extends Geom {
+/**
+ * Represents a circle.
+ * @since v0.0.0
+ */
+class GeomCircle extends Geom {
     constructor() { super("circle"); }
 }
+/**
+ * Returns whether 2 objects are in collision.
+ * @param a Object 1.
+ * @param b Object 2.
+ * @returns {boolean} If they collide.
+ * @since v0.0.0
+ */
 function isCol(a, b) {
     const w1 = a.width;
     const h1 = a.height;
@@ -943,6 +1564,14 @@ function isCol(a, b) {
     const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
+/**
+ * Returns an intersection distance between a ray and a rect.
+ * @param origin The beginning point.
+ * @param dir The angle to travel at (in vector-angle).
+ * @param rect The rectangle to test.
+ * @param scene The scene.
+ * @returns {number | null} The distance of intersection (if there was one).
+ */
 function rayInterRect(origin, dir, rect, scene) {
     const uv = uvVec(dir, scene.width, scene.height);
     const t1 = (rect.x - origin.x) / uv.x;
@@ -955,6 +1584,15 @@ function rayInterRect(origin, dir, rect, scene) {
         return null;
     return tmin >= 0 ? tmin : tmax;
 }
+/**
+ * Returns a `Vector` relative to screen space.
+ *
+ * Uses UV vector conversion math to map coords to [-1, 1].
+ * @param p The vector.
+ * @param w The scene-space width.
+ * @param h The scene-space height.
+ * @returns {Vector} A new UV `Vector`.
+ */
 function uvVec(p, w, h) {
     let u = p.x / (w - 1);
     let v = p.y / (h - 1);

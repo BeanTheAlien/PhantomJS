@@ -157,8 +157,8 @@ class NoContextError extends Error {
  * @since v0.0.0
  * @example
  * ```
- * const el = document.createElement("div");
- * const scene = new Scene({ canvas: el }); // cannot convert HTMLDivElement to HTMLCanvasElement
+ * const el = document.getElementById("not-exists")
+ * const scene = new Scene({ canvas: el }); // cannot convert undefined to HTMLCanvasElement
  * ```
  */
 class NoCanvasError extends Error {
@@ -219,11 +219,41 @@ class AlreadyUsingError extends Error {
  * 
  * Only thrown during `Comp.protoype.update`.
  * @since v0.0.0
+ * @example
+ * ```
+ * const canvas = document.getElementById("canvas");
+ * const scene = new Scene({ canvas });
+ * const ent = new Phantom2dEntity({});
+ * ent.use("sprite", { frames: ["frame0.jpg"] }); // no scene property
+ * scene.add(ent);
+ * scene.start(); // cannot render without scene
+ * ```
  */
 class NoSceneAvailableError extends Error {
     constructor() {
         super("A component requires a scene reference, but none was provided.");
         this.name = "NoSceneAvailableError";
+    }
+}
+/**
+ * Thrown when attempting to get a crucial value and failed.
+ * 
+ * Caused when an index exceeds the length of an array.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const canvas = document.getElementById("canvas");
+ * const scene = new Scene({ canvas });
+ * const ent = new Phantom2dEntity({});
+ * ent.use("sprite", { scene: canvas }); // no frames property
+ * scene.add(ent);
+ * scene.start(); // throws error on first tick of ent
+ * ```
+ */
+class OutOfBoundsError extends Error {
+    constructor() {
+        super("Index exceeds length; could not get crucial value.");
+        this.name = "OutOfBoundsError";
     }
 }
 
@@ -610,6 +640,12 @@ interface PhantomCompMap {
      * @since v0.0.0
      */
     inv: InvComp;
+    /**
+     * The `SpriteComp`.
+     * @see {@link SpriteComp}
+     * @since v0.0.0
+     */
+    sprite: SpriteComp;
 }
 /**
  * The map for `SceneComp`.
@@ -942,9 +978,10 @@ class SpriteComp extends Comp {
         ArrayUtil.rm(this.frames, ...items);
     }
     upd() {
-        const s = this.scene;
-        if(!s) throw new NoSceneAvailableError();
-        s.img(this.cur(), this.ent.width, this.ent.height);
+        if(!this.scene) throw new NoSceneAvailableError();
+        const c = this.cur();
+        if(!c) throw new OutOfBoundsError();
+        this.scene.img(c, this.ent.x, this.ent.y, this.ent.width, this.ent.height);
     }
 }
 /**
@@ -1250,10 +1287,15 @@ class Phantom2dEntity {
     }
     /**
      * Called every frame, calls the update function.
+     * 
+     * Also calls `Comp.prototype.upd` for every component.
      * @since v0.0.0
      */
     update() {
         this.upd();
+        for(const c of this.comps.values()) {
+            c.upd();
+        }
     }
     /**
      * Returns the string representation of this object.
@@ -1630,6 +1672,7 @@ class Img {
     constructor(src: string) {
         this.img = new Image();
         this.img.src = src;
+        document.body.appendChild(this.img);
     }
     static from(src: string): Img {
         return new Img(src);
