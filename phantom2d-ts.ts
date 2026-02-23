@@ -47,6 +47,8 @@ type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audi
 type CollisionHandle = (o: Phantom2dEntity) => void;
 type Iter<T> = MapIterator<T>;
 type PhantomCompType = keyof PhantomCompMap;
+type PhantomSceneCompType = keyof PhantomSceneCompMap;
+type CompRecord<A, B, C> = Record<string, new (ent: A, opts: B) => C>;
 const NoFunc: Function = (() => {});
 
 class NoContextError extends Error {
@@ -173,6 +175,9 @@ interface PhantomCompMap {
     health: HealthComp;
     inv: InvComp;
 }
+interface PhantomSceneCompMap {
+    tiles: SceneTilesComp;
+}
 interface CompOptions {}
 interface HealthCompOptions extends CompOptions {
     hp?: number; mhp?: number;
@@ -182,6 +187,11 @@ interface HealthCompOptions extends CompOptions {
 }
 interface InvCompOptions extends CompOptions {
     size?: number;
+}
+interface SceneCompOptions {}
+interface SceneTilesCompOptions extends SceneCompOptions {
+    size?: number;
+    nth?: { number?: string };
 }
 class PhantomEvent {
     name: string;
@@ -265,6 +275,28 @@ class InvComp extends Comp {
         return this.inv[i];
     }
 }
+const PhantomCompRecord: CompRecord<Phantom2dEntity, CompOptions, Comp> = {
+    health: HealthComp,
+    inv: InvComp
+};
+class SceneComp {
+    scene: Scene;
+    constructor(scene: Scene) {
+        this.scene = scene;
+    }
+}
+class SceneTilesComp extends SceneComp {
+    size: number;
+    nth?: { number?: string }
+    constructor(scene: Scene, opts: SceneTilesCompOptions) {
+        super(scene);
+        this.size = opts.size ?? 0;
+        this.nth = opts.nth;
+    }
+}
+const PhantomSceneCompRecord: CompRecord<Scene, SceneCompOptions, SceneComp> = {
+    tiles: SceneTilesComp
+};
 
 class Phantom2dEntity {
     collide: CollisionHandle; upd: Function;
@@ -392,8 +424,7 @@ class Phantom2dEntity {
     }
     use(c: PhantomCompType, opts: CompOptions = {}) {
         if(this.uses(c)) throw new AlreadyUsingError();
-        if(c == "health") this.comps.set(c, new HealthComp(this, opts));
-        if(c == "inv") this.comps.set(c, new InvComp(this, opts));
+        this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
     }
     unuse(c: PhantomCompType) {
         this.comps.del(c);
@@ -670,6 +701,7 @@ class Scene {
     lvlStore: Store<string, Level>;
     mousePos: Vector;
     runtime: Runtime;
+    comps: Store<PhantomSceneCompType, SceneComp>;
     constructor(opts: SceneOptions) {
         if(!opts.canvas) throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
@@ -688,6 +720,7 @@ class Scene {
             this.mousePos = new Vector(e.clientX, e.clientY);
         });
         this.runtime = new Runtime();
+        this.comps = new Store();
     }
     get width(): number {
         return this.canvas.width;
@@ -842,6 +875,19 @@ class Scene {
     }
     get delta(): number {
         return this.runtime.delta;
+    }
+    use(c: PhantomSceneCompType, opts: SceneCompOptions = {}) {
+        if(this.uses(c)) throw new AlreadyUsingError();
+        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, opts));
+    }
+    unuse(c: PhantomSceneCompType) {
+        this.comps.del(c);
+    }
+    uses(c: PhantomSceneCompType): boolean {
+        return this.comps.has(c);
+    }
+    comp(c: PhantomSceneCompType): SceneComp | undefined {
+        return this.comps.get(c);
     }
 }
 class Level {
