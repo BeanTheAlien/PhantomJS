@@ -714,6 +714,7 @@ class PhantomAliveEvent extends PhantomEvent { constructor() { super("alive"); }
 class PhantomAddedEvent extends PhantomEvent { constructor() { super("added"); } }
 /**
  * Fired when this ent is removed from the scene.
+ * @since v0.0.0
  */
 class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"); } }
 /**
@@ -744,6 +745,7 @@ class Comp {
      * Consumes an event.
      * @param k The event type.
      * @param e The event.
+     * @since v0.0.0
      */
     consume(k: PhantomEventType, e: PhantomEvent) {
         this.ent.consume(k, e);
@@ -874,16 +876,28 @@ class InvComp extends Comp {
         return this.inv[i];
     }
 }
+/**
+ * The record used to create components.
+ * @since v0.0.0
+ */
 const PhantomCompRecord: CompRecord<Phantom2dEntity, CompOptions, Comp> = {
     health: HealthComp,
     inv: InvComp
 };
+/**
+ * The class used for creating components for the scene.
+ * @since v0.0.0
+ */
 class SceneComp {
     scene: Scene;
     constructor(scene: Scene) {
         this.scene = scene;
     }
 }
+/**
+ * A simple tile display for the scene.
+ * @since v0.0.0
+ */
 class SceneTilesComp extends SceneComp {
     size: number;
     nth?: { number?: string }
@@ -893,9 +907,17 @@ class SceneTilesComp extends SceneComp {
         this.nth = opts.nth;
     }
 }
+/**
+ * The record used to create scene components.
+ * @since v0.0.0
+ */
 const PhantomSceneCompRecord: CompRecord<Scene, SceneCompOptions, SceneComp> = {
     tiles: SceneTilesComp
 };
+/**
+ * A map of shorthands to browser keys.
+ * @since v0.0.0
+ */
 const KeyCodeMap = {
     "a": "KeyA", "b": "KeyB", "c": "KeyC", "d": "KeyD", "e": "KeyE", "f": "KeyF",
     "g": "KeyG", "h": "KeyH", "i": "KeyI", "j": "KeyJ", "k": "KeyK", "l": "KeyL",
@@ -922,14 +944,25 @@ const KeyCodeMap = {
     "space": "Space", "arw": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
     "arwl": "ArrowLeft", "arwr": "ArrowRight", "arwu": "ArrowUp", "arwd": "ArrowDown"
 };
+/**
+ * The reverse map of browser keys to shorthands.
+ * @since v0.0.0
+ */
 const KeyCodeMapReverse: { [k: string]: string } = {};
-for(const [k, v] of Object.entries(KeyCodeMap))
-{
+for(const [k, v] of Object.entries(KeyCodeMap)) {
     if(Array.isArray(v)) continue;
     KeyCodeMapReverse[v] = k;
 }
+/**
+ * A shorthand key.
+ * @since v0.0.0
+ */
 type KeyCode = keyof typeof KeyCodeMap;
 
+/**
+ * The root class of all entities, providing base functionality.
+ * @since v0.0.0
+ */
 class Phantom2dEntity {
     collide: CollisionHandle; upd: Function;
     x: number; y: number;
@@ -954,6 +987,12 @@ class Phantom2dEntity {
         }
         this.comps = new Store();
     }
+    /**
+     * Sets the position.
+     * @param x The new x pos (or `Vector`).
+     * @param y The new y pos.
+     * @since v0.0.0
+     */
     setPos(x: number | Vector, y?: number) {
         if(typeof x == "number" && typeof y == "number") {
             this.x = x;
@@ -963,52 +1002,132 @@ class Phantom2dEntity {
             this.y = x.y;
         }
     }
+    /**
+     * Sets the rotation.
+     * @param rad The new rotation.
+     * @since v0.0.0
+     */
     setRot(rad: number) {
         this.rot = rad;
     }
+    /**
+     * Sets the width.
+     * @param w The new width.
+     * @since v0.0.0
+     */
     setWidth(w: number) {
         this.width = w;
     }
+    /**
+     * Sets the height.
+     * @param h The new height.
+     * @since v0.0.0
+     */
     setHeight(h: number) {
         this.height = h;
     }
+    /**
+     * Returns a `Vector` object of the forward vector.
+     * @returns {Vector} The forward vector.
+     * @since v0.0.0
+     */
     getFVec(): Vector {
         const dx = Math.cos(this.rot);
         const dy = Math.sin(this.rot);
         return new Vector(dx, dy);
     }
+    /**
+     * Moves a distance on an axis.
+     * @param dist The distance to move.
+     * @param axis The axis to move on.
+     * @since v0.0.0
+     */
     move(dist: number, axis: Axis) {
         if(axis == "x" || axis == 0) this.x += dist;
         else if(axis == "y" || axis == 1) this.y += dist;
     }
+    /**
+     * Moves a distance on the x-axis.
+     * @param dist The distance to move.
+     * @since v0.0.0
+     */
     moveX(dist: number) {
         this.move(dist, "x");
     }
+    /**
+     * Moves a distance on the y-axis.
+     * @param dist The distance to move.
+     * @since v0.0.0
+     */
     moveY(dist: number) {
         this.move(dist, "y");
     }
+    /**
+     * Clamps this position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @param axis The axis to clamp.
+     * @since v0.0.0
+     */
     clampPos(min: number, max: number, axis: Axis) {
         if(axis == "x" || axis == 0) this.x = Util.clamp(this.x, min, max);
         else if(axis == "y" || axis == 1) this.y = Util.clamp(this.y, min, max);
     }
+    /**
+     * Clamps this x position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @since v0.0.0
+     */
     clampPosX(min: number, max: number) {
         this.clampPos(min, max, "x");
     }
+    /**
+     * Clamps this y position to a range.
+     * @param min The min value.
+     * @param max The max value.
+     * @since v0.0.0
+     */
     clampPosY(min: number, max: number) {
         this.clampPos(min, max, "y");
     }
+    /**
+     * Returns a `Vector` representing this position.
+     * @returns {Vector} This position.
+     * @since v0.0.0
+     */
     getPos(): Vector {
         return new Vector(this.x, this.y);
     }
+    /**
+     * Returns the x-coordinate.
+     * @returns {number} This x-coordinate.
+     * @since v0.0.0
+     */
     getPosX(): number {
         return this.x;
     }
+    /**
+     * Returns the y-coordinate.
+     * @returns {number} The y-coordinate.
+     * @since v0.0.0
+     */
     getPosY(): number {
         return this.y;
     }
+    /**
+     * Sets this x-coordinate.
+     * @param x The new x.
+     * @since v0.0.0
+     */
     setPosX(x: number) {
         this.x = x;
     }
+    /**
+     * Sets this y-coordinate.
+     * @param y The new y.
+     * @since v0.0.0
+     */
     setPosY(y: number) {
         this.y = y;
     }
