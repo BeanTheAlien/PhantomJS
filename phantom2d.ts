@@ -119,6 +119,8 @@ type GeomType = Key<GeomMap>;
  * @since v0.0.0
  */
 type Key<T> = keyof T;
+type Frame = Img | undefined;
+type Frames = Img[];
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -1559,6 +1561,9 @@ class Img {
         this.img = new Image();
         this.img.src = src;
     }
+    static from(src: string): Img {
+        return new Img(src);
+    }
 }
 /**
  * A component to store various elements.
@@ -1985,6 +1990,23 @@ class GeomRect extends Geom { constructor() { super("rect"); } }
  * @since v0.0.0
  */
 class GeomCircle extends Geom { constructor() { super("circle"); } }
+class Sprite {
+    frames: Frames;
+    idx: number;
+    constructor(frames: string[]) {
+        this.frames = frames.map(Img.from);
+        this.idx = 0;
+    }
+    frame(idx: number) {
+        this.idx = idx;
+    }
+    at(idx: number): Frame {
+        return this.frames[idx];
+    }
+    cur(): Frame {
+        return this.at(this.idx);
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
