@@ -1,3 +1,9 @@
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _HealthComp_instances, _HealthComp_consume;
 class Util {
     static str(o, space) {
         return JSON.stringify(o, null, space);
@@ -29,6 +35,12 @@ class NoProcessError extends Error {
     constructor() {
         super("A process does not exist.");
         this.name = "NoProcessError";
+    }
+}
+class AlreadyUsingError extends Error {
+    constructor() {
+        super("Already using this component, cannot use again.");
+        this.name = "AlreadyUsingError";
     }
 }
 class Store {
@@ -71,6 +83,139 @@ class PhantomAddedEvent extends PhantomEvent {
 class PhantomRemovedEvent extends PhantomEvent {
     constructor() { super("removed"); }
 }
+class PhantomHealthCompHurtEvent extends PhantomEvent {
+    constructor() { super("hurt"); }
+}
+class PhantomHealthCompDieEvent extends PhantomEvent {
+    constructor() { super("die"); }
+}
+class PhantomHealthCompHealEvent extends PhantomEvent {
+    constructor() { super("heal"); }
+}
+class Comp {
+    constructor(ent) {
+        this.ent = ent;
+    }
+    consume(k, e) {
+        this.ent.consume(k, e);
+    }
+}
+class HealthComp extends Comp {
+    constructor(ent, opts) {
+        var _a;
+        super(ent);
+        _HealthComp_instances.add(this);
+        this.hp = (_a = opts.hp) !== null && _a !== void 0 ? _a : 0;
+        this.mhp = opts.mhp;
+        this.onHurt = opts.onHurt;
+        this.onDie = opts.onDie;
+        this.onHeal = opts.onHeal;
+    }
+    hurt(dmg) {
+        this.hp -= dmg;
+        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        if (this.hp <= 0)
+            this.die();
+    }
+    die() {
+        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onDie, "die", new PhantomHealthCompDieEvent());
+    }
+    heal(hp) {
+        this.hp += hp;
+        if (this.mhp)
+            this.hp = Math.min(this.hp, this.mhp);
+        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHeal, "heal", new PhantomHealthCompHealEvent());
+    }
+}
+_HealthComp_instances = new WeakSet(), _HealthComp_consume = function _HealthComp_consume(fn, k, e) {
+    if (fn)
+        fn(e);
+    else
+        this.consume(k, e);
+};
+class InvComp extends Comp {
+    constructor(ent, opts) {
+        super(ent);
+        this.size = opts.size;
+        this.inv = [];
+    }
+    add(...items) {
+        for (let i = 0; i < items.length; i++) {
+            if (this.size && this.inv.length >= this.size)
+                continue;
+            this.inv.push(items[i]);
+        }
+    }
+    rm(...items) {
+        for (const i of items)
+            if (this.has(i))
+                this.inv.splice(this.idxOf(i), 1);
+    }
+    has(...items) {
+        return items.every(i => this.inv.includes(i));
+    }
+    idxOf(i) {
+        return this.inv.indexOf(i);
+    }
+    len() {
+        return this.inv.length;
+    }
+    at(i) {
+        return this.inv[i];
+    }
+}
+const PhantomCompRecord = {
+    health: HealthComp,
+    inv: InvComp
+};
+class SceneComp {
+    constructor(scene) {
+        this.scene = scene;
+    }
+}
+class SceneTilesComp extends SceneComp {
+    constructor(scene, opts) {
+        var _a;
+        super(scene);
+        this.size = (_a = opts.size) !== null && _a !== void 0 ? _a : 0;
+        this.nth = opts.nth;
+    }
+}
+const PhantomSceneCompRecord = {
+    tiles: SceneTilesComp
+};
+const KeyCodeMap = {
+    "a": "KeyA", "b": "KeyB", "c": "KeyC", "d": "KeyD", "e": "KeyE", "f": "KeyF",
+    "g": "KeyG", "h": "KeyH", "i": "KeyI", "j": "KeyJ", "k": "KeyK", "l": "KeyL",
+    "m": "KeyM", "n": "KeyN", "o": "KeyO", "p": "KeyP", "q": "KeyQ", "r": "KeyR",
+    "s": "KeyS", "t": "KeyT", "u": "KeyU", "v": "KeyV", "w": "KeyW", "x": "KeyX",
+    "y": "KeyY", "z": "KeyZ",
+    "1": "Digit1", "2": "Digit2", "3": "Digit3", "4": "Digit4", "5": "Digit5",
+    "6": "Digit6", "7": "Digit7", "8": "Digit8", "9": "Digit9",
+    "shift": ["ShiftLeft", "ShiftRight"], "lshift": "ShiftLeft", "rshift": "ShiftRight",
+    "ctrl": ["ControlLeft", "ControlRight"], "lctrl": "ControlLeft", "rctrl": "ControlRight",
+    "alt": ["AltLeft", "AltRight"], "lalt": "AltLeft", "ralt": "AltRight",
+    "f1": "F1", "f2": "F2", "f3": "F3", "f4": "F4", "f5": "F5", "f6": "F6", "f7": "F7",
+    "f8": "F8", "f9": "F9", "f10": "F10", "f11": "F11", "f12": "F12",
+    "esc": "Escape", "tab": "Tab", "back": "Backspace", "bkquote": "Backquote", "quote": "Quote",
+    "comma": "Comma", "dot": "Period", "fslash": "Slash", "bslash": "Backslash",
+    "caps": "CapsLock", "ctx": "ContextMenu", "meta": ["MetaLeft", "MetaRight"],
+    "lmeta": "MetaLeft", "rmeta": "MetaRight", "ent": "Enter", "ins": "Insert",
+    "del": "Delete", "home": "Home", "pgu": "PageUp", "pgd": "PageDown", "numlk": "NumLock",
+    "end": "End", "pause": "Pause", "scrlk": "ScrollLock", "ndiv": "NumpadDivide",
+    "nmult": "NumpadMultiply", "nsub": "NumpadSubtract", "nadd": "NumpadAdd",
+    "nent": "NumpadEnter", "ndel": "NumpadDecimal",
+    "n7": "Numpad7", "n8": "Numpad8", "n9": "Numpad9", "n4": "Numpad4", "n5": "Numpad5",
+    "n6": "Numpad6", "n1": "Numpad1", "n2": "Numpad2", "n3": "Numpad3", "n0": "Numpad0",
+    "space": "Space", "arw": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+    "arwl": "ArrowLeft", "arwr": "ArrowRight", "arwu": "ArrowUp", "arwd": "ArrowDown"
+};
+const KeyCodeMapReverse = {};
+for (const [k, v] of Object.entries(KeyCodeMap)) {
+    if (Array.isArray(v))
+        continue;
+    KeyCodeMapReverse[v] = k;
+}
 class Phantom2dEntity {
     constructor(opts) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -87,6 +232,7 @@ class Phantom2dEntity {
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
+        this.comps = new Store();
     }
     setPos(x, y) {
         if (typeof x == "number" && typeof y == "number") {
@@ -138,9 +284,6 @@ class Phantom2dEntity {
     }
     getPos() {
         return new Vector(this.x, this.y);
-    }
-    getCenter() {
-        return new Vector(this.x + this.width / 2, this.y + this.height / 2);
     }
     getPosX() {
         return this.x;
@@ -195,6 +338,20 @@ class Phantom2dEntity {
     }
     scrY() {
         return this.scrPos().y;
+    }
+    use(c, opts = {}) {
+        if (this.uses(c))
+            throw new AlreadyUsingError();
+        this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
+    }
+    unuse(c) {
+        this.comps.del(c);
+    }
+    uses(c) {
+        return this.comps.has(c);
+    }
+    comp(c) {
+        return this.comps.get(c);
     }
     static from(opts) {
         return new Phantom2dEntity(opts);
@@ -344,7 +501,7 @@ class PlayableCharacter extends Character {
     update() {
         for (const [k, v] of this.keys.items()) {
             if (v) {
-                const exec = this.binds.get(k);
+                const exec = this.binds.get(KeyCodeMapReverse[k]);
                 if (exec) {
                     exec();
                 }
@@ -439,6 +596,9 @@ class Items {
     forEach(cb) {
         this.items.forEach(cb);
     }
+    at(i) {
+        return this.items[i];
+    }
 }
 /**
  * The root canvas to display content.
@@ -461,11 +621,12 @@ class Scene {
         this.items = new Items();
         this.evStore = new Store();
         this.lvlStore = new Store();
-        this.processId = -1;
         this.mousePos = new Vector(0, 0);
         window.addEventListener("mousemove", (e) => {
             this.mousePos = new Vector(e.clientX, e.clientY);
         });
+        this.runtime = new Runtime();
+        this.comps = new Store();
     }
     get width() {
         return this.canvas.width;
@@ -590,26 +751,23 @@ class Scene {
         });
     }
     start(postUpd = NoFunc) {
-        if (this.processId != -1)
-            throw new ExistingProcessError();
-        const tick = () => {
+        this.runtime.start(() => {
             this.update();
             this.clear();
             postUpd();
             this.render();
-            this.processId = requestAnimationFrame(tick);
-        };
-        tick();
+        });
     }
     stop() {
-        if (this.processId == -1)
-            throw new NoProcessError();
-        cancelAnimationFrame(this.processId);
-        this.processId = -1;
+        this.runtime.stop();
     }
     save(file) {
         const s = new SaveJSON(file);
         s.save(this, 4);
+    }
+    saveLvl(lvlName, file) {
+        const s = new SaveJSON(file);
+        s.save(this.getLvl(lvlName), 4);
     }
     fScrOn() {
         this.canvas.requestFullscreen();
@@ -622,6 +780,30 @@ class Scene {
     }
     pLockOff() {
         document.exitPointerLock();
+    }
+    get delta() {
+        return this.runtime.delta;
+    }
+    use(c, opts = {}) {
+        if (this.uses(c))
+            throw new AlreadyUsingError();
+        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, opts));
+    }
+    unuse(c) {
+        this.comps.del(c);
+    }
+    uses(c) {
+        return this.comps.has(c);
+    }
+    comp(c) {
+        return this.comps.get(c);
+    }
+    bounds() {
+        return this.canvas.getBoundingClientRect();
+    }
+    clickAt(e) {
+        const rect = this.bounds();
+        return new Vector(e.clientX - rect.left, e.clientY - rect.top);
     }
 }
 class Level {
@@ -716,6 +898,39 @@ class RaycastIntersecton {
         this.obj = obj;
         this.point = point;
     }
+}
+class Runtime {
+    constructor() {
+        this.processId = -1;
+        this.delta = 0;
+    }
+    start(fn) {
+        if (this.processId != -1)
+            throw new ExistingProcessError();
+        const out = () => {
+            fn();
+            this.delta++;
+            this.processId = requestAnimationFrame(out);
+        };
+        out();
+    }
+    stop() {
+        if (this.processId == -1)
+            throw new NoProcessError();
+        cancelAnimationFrame(this.processId);
+        this.delta = 0;
+    }
+}
+class Geom {
+    constructor(name) {
+        this.name = name;
+    }
+}
+class GeomRect extends Geom {
+    constructor() { super("rect"); }
+}
+class GeomCirlce extends Geom {
+    constructor() { super("circle"); }
 }
 function isCol(a, b) {
     const w1 = a.width;

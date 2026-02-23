@@ -1,3 +1,7 @@
+/**
+ * Various utilities.
+ * @since v0.0.0
+ */
 class Util {
     static str(o: any, space?: number): string {
         return JSON.stringify(o, null, space);
@@ -10,6 +14,7 @@ class Util {
 /**
  * Represents custom properties to
  * be attached during creation.
+ * @since v0.0.0
  */
 type Custom = { any?: any };
 /**
@@ -22,6 +27,7 @@ type Custom = { any?: any };
  * "x", 0 - x-axis
  * 
  * "y", 1 - y-axis
+ * @since v0.0.0
  */
 type Axis = "x" | "y" | 0 | 1;
 /**
@@ -30,51 +36,161 @@ type Axis = "x" | "y" | 0 | 1;
  * 0 = x
  * 
  * 1 = y
+ * @since v0.0.0
  */
 type Dir = 0 | 1;
 /**
  * A handle for an event.
  * 
  * Takes one argument, the event.
+ * @since v0.0.0
  */
 type EventHandle = (e: Event) => void;
-type EventType = keyof HTMLElementEventMap;
+/**
+ * An event from `HTMLElementEventMap`.
+ * @see {@link HTMLElementEventMap}
+ * @since v0.0.0
+ */
+type EventType = Key<HTMLElementEventMap>;
+/**
+ * The callback used in `Array.prototype.filter` and `Array.prototype.forEach`.
+ * 
+ * The type T represents the return type.
+ * @since v0.0.0
+ */
 type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
-type PhantomEventType = keyof PhantomEventMap;
+/**
+ * An event in the `PhantomEventMap`.
+ * @see {@link PhantomEventMap}
+ * @since v0.0.0
+ */
+type PhantomEventType = Key<PhantomEventMap>;
+/**
+ * A handler for a Phantom Event.
+ * 
+ * Takes one argument, the event.
+ * @since v0.0.0
+ */
 type PhantomEventHandle = (e: PhantomEvent) => void;
+/**
+ * An audio MIME type. With or without the `audio/` prepension.
+ * @since v0.0.0
+ */
 type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audio/ogg" | "audio/aac" | "audio/aacp" | "audio/x-caf" | "audio/flac" |
                 "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
+/**
+ * A handle for collisions between entities.
+ * 
+ * Takes one argument, the colliding object.
+ * @since v0.0.0
+ */
 type CollisionHandle = (o: Phantom2dEntity) => void;
+/**
+ * A shorthand for `MapIterator`.
+ * @see {@link MapIterator}
+ * @since v0.0.0
+ */
 type Iter<T> = MapIterator<T>;
-type PhantomCompType = keyof PhantomCompMap;
-type PhantomSceneCompType = keyof PhantomSceneCompMap;
+/**
+ * An element in the `PhantomCompMap`.
+ * @see {@link PhantomCompMap}
+ * @since v0.0.0
+ */
+type PhantomCompType = Key<PhantomCompMap>;
+/**
+ * An element in the `PhantomSceneCompMap`.
+ * @see {@link PhantomSceneCompMap}
+ * @since v0.0.0
+ */
+type PhantomSceneCompType = Key<PhantomSceneCompMap>;
+/**
+ * A factory for creating component records.
+ * @since v0.0.0
+ */
 type CompRecord<A, B, C> = Record<string, new (ent: A, opts: B) => C>;
+/**
+ * An element from the `GeomMap`.
+ * @see {@link GeomMap}
+ * @since v0.0.0
+ */
+type GeomType = Key<GeomMap>;
+/**
+ * A keyof T.
+ * @since v0.0.0
+ */
+type Key<T> = keyof T;
+/**
+ * A simple, no-exec function shorthand.
+ * @since v0.0.0
+ */
 const NoFunc: Function = (() => {});
 
+/**
+ * Thrown when `CanvasRenderingContext2D` cannot be gotten.
+ * @since v0.0.0
+ */
 class NoContextError extends Error {
     constructor() {
         super("Cannot get context 2D.");
         this.name = "NoContextError";
     }
 }
+/**
+ * Thrown when the `Scene` constructor does not receive an `HTMLCanvasElement` or `HTMLElement`.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const el = document.createElement("div");
+ * const scene = new Scene({ canvas: el }); // cannot convert HTMLDivElement to HTMLCanvasElement
+ * ```
+ */
 class NoCanvasError extends Error {
     constructor() {
         super("Did not receive HTMLCanvasElement or HTMLElement in scene.");
         this.name = "NoCanvasError";
     }
 }
+/**
+ * Thrown when attempting to run a process while it's running.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const rt = new Runtime();
+ * rt.start(() => {}); // started process
+ * rt.start(() => {}); // process already started
+ * ```
+ */
 class ExistingProcessError extends Error {
     constructor() {
         super("A process already exists, cannot create new process.");
         this.name = "ExistingProcessError";
     }
 }
+/**
+ * Thrown when attempting to stop a process that does not exist.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const rt = new Runtime();
+ * rt.stop(); // no process has been started
+ * ```
+ */
 class NoProcessError extends Error {
     constructor() {
         super("A process does not exist.");
         this.name = "NoProcessError";
     }
 }
+/**
+ * Thrown by trying to use a component that's already in use.
+ * @since v0.0.0
+ * @example
+ * ```
+ * const ent = new Phantom2dEntity({});
+ * ent.use("health"); // use HealthComp
+ * ent.use("health"); // cannot use again
+ * ```
+ */
 class AlreadyUsingError extends Error {
     constructor() {
         super("Already using this component, cannot use again.");
@@ -82,138 +198,561 @@ class AlreadyUsingError extends Error {
     }
 }
 
+/**
+ * A storage for items.
+ * @since v0.0.0
+ */
 class Store<TI, TO> {
     store: Map<TI, TO>;
     constructor() {
         this.store = new Map();
     }
+    /**
+     * Retrieves an entry.
+     * @param key The key to get.
+     * @returns {TO | undefined} The entry or nothing.
+     * @since v0.0.0
+     */
     get(key: TI): TO | undefined {
         return this.store.get(key);
     }
+    /**
+     * Sets an entry.
+     * @param key The key to set.
+     * @param value The value of the new entry.
+     * @since v0.0.0
+     */
     set(key: TI, value: TO) {
         this.store.set(key, value);
     }
+    /**
+     * Returns whether this store contains an item.
+     * @param key The key to get.
+     * @returns {boolean} If this item is contained.
+     * @since v0.0.0
+     */
     has(key: TI): boolean {
         return this.store.has(key);
     }
+    /**
+     * Removes an entry from this storage.
+     * @param key The key to delete.
+     * @returns {boolean} If the key was deleted.
+     * @since v0.0.0
+     */
     del(key: TI): boolean {
         return this.store.delete(key);
     }
+    /**
+     * Returns an iterator for this keys.
+     * @returns {Iter<TI>} The iterator.
+     * @since v0.0.0
+     */
     keys(): Iter<TI> {
         return this.store.keys();
     }
+    /**
+     * Returns an iterator for this values.
+     * @returns {Iter<TI>} The iterator.
+     * @since v0.0.0
+     */
     values(): Iter<TO> {
         return this.store.values();
     }
+    /**
+     * Returns an iterator for this entries.
+     * @returns {Iter<[TI, TO]>} The iterator.
+     * @since v0.0.0
+     */
     items(): Iter<[TI, TO]> {
         return this.store.entries();
     }
 }
 
+/**
+ * The general options for a `Phantom2dEntity`.
+ * @since v0.0.0
+ */
 interface Phantom2dOptions {
+    /**
+     * The handler for a collision.
+     * @since v0.0.0
+     */
     collide?: CollisionHandle;
+    /**
+     * The x-coordinate.
+     * @since v0.0.0
+     */
     x?: number;
+    /**
+     * The y-coordinate.
+     * @since v0.0.0
+     */
     y?: number;
+    /**
+     * The rotation (in radians).
+     * @since v0.0.0
+     */
     rot?: number;
+    /**
+     * The width.
+     * @since v0.0.0
+     */
     width?: number;
+    /**
+     * The height.
+     * @since v0.0.0
+     */
     height?: number;
+    /**
+     * Custom properties.
+     * @since v0.0.0
+     */
     custom?: Custom;
+    /**
+     * An update to be ran during this update.
+     * @since v0.0.0
+     */
     upd?: Function;
+    /**
+     * The display color.
+     * @since v0.0.0
+     */
     color?: string;
 }
+/**
+ * The options for a `StaticObject`.
+ * @since v0.0.0
+ */
 interface StaticObjectOptions extends Phantom2dOptions {
-    shape: "rect" | "circle";
+    /**
+     * The display shape.
+     * @since v0.0.0
+     */
+    shape: GeomType;
     color: string;
 }
+/**
+ * The options for a `PhysicsObject`.
+ * @since v0.0.0
+ */
 interface PhysicsObjectOptions extends Phantom2dOptions {
+    /**
+     * The strength of gravity.
+     * @since v0.0.0
+     */
     strength: number;
 }
+/**
+ * Requires extent values for left, right, top and bottom.
+ * @since v0.0.0
+ */
 interface Extent {
-    extLeft: number; extRight: number;
-    extBtm: number; extTop: number;
+    /**
+     * The min x value.
+     * @since v0.0.0
+     */
+    extLeft: number;
+    /**
+     * The max x value.
+     * @since v0.0.0
+     */
+    extRight: number;
+    /**
+     * The max y value.
+     * @since v0.0.0
+     */
+    extBtm: number;
+    /**
+     * The min y value.
+     * @since v0.0.0
+     */
+    extTop: number;
 }
+/**
+ * The options for a `MovingObject`.
+ * @since v0.0.0
+ */
 interface MovingObjectOptions extends Phantom2dOptions, Extent {
+    /**
+     * The direction to start in. (for x)
+     * @since v0.0.0
+     */
     dirX: Dir;
+    /**
+     * The direction to start in. (for y)
+     * @since v0.0.0
+     */
     dirY: Dir;
+    /**
+     * If this should bounce on the event of the extent being reached.
+     * @since v0.0.0
+     */
     bouncy: boolean;
+    /**
+     * The movement speed.
+     * @since v0.0.0
+     */
     spd: number;
 }
+/**
+ * The options for a `BulletObject`.
+ * @since v0.0.0
+ */
 interface BulletObjectOptions extends Phantom2dOptions, Extent {
-    spd: number; rot: number; scene: Scene;
-}
-interface SceneOptions {
-    canvas: HTMLCanvasElement | HTMLElement | null;
-    w?: number;
-    h?: number;
-    cssW?: string;
-    cssH?: string;
-}
-interface PhantomEventMap {
-    alive: PhantomAliveEvent; added: PhantomAddedEvent; removed: PhantomRemovedEvent;
-    hurt: PhantomHealthCompHurtEvent; die: PhantomHealthCompDieEvent; heal: PhantomHealthCompHealEvent;
-}
-interface SaveOptions {
-    file: string;
-    mime: string;
-    ext: string;
-}
-interface SoundOptions {
-    src: string;
-    mime: AudioMIME;
-}
-interface CharacterOptions extends PhysicsObjectOptions {}
-interface PlayableCharacterOptions extends CharacterOptions {
-    binds?: Store<string, Function>;
-}
-interface RaycastOptions {
-    origin: Vector;
-    angle: number;
-    dist: number;
+    /**
+     * The movement speed.
+     * @since v0.0.0
+     */
+    spd: number;
+    rot: number;
+    /**
+     * A reference to the `Scene`.
+     * @since v0.0.0
+     */
     scene: Scene;
 }
+/**
+ * The options for a `Scene`.
+ * @since v0.0.0
+ */
+interface SceneOptions {
+    /**
+     * The actual canvas.
+     * @since v0.0.0
+     */
+    canvas: HTMLCanvasElement | HTMLElement | null;
+    /**
+     * The px width.
+     * @since v0.0.0
+     */
+    w?: number;
+    /**
+     * The px height.
+     * @since v0.0.0
+     */
+    h?: number;
+    /**
+     * The display width.
+     * @since v0.0.0
+     */
+    cssW?: string;
+    /**
+     * The display height.
+     * @since v0.0.0
+     */
+    cssH?: string;
+}
+/**
+ * Synthetic events.
+ * @since v0.0.0
+ */
+interface PhantomEventMap {
+    /**
+     * The `PhantomAliveEvent`.
+     * @see {@link PhantomAliveEvent}
+     * @since v0.0.0
+     */
+    alive: PhantomAliveEvent;
+    /**
+     * The `PhantomAddedEvent`.
+     * @see {@link PhantomAddedEvent}
+     * @since v0.0.0
+     */
+    added: PhantomAddedEvent;
+    /**
+     * The `PhantomRemovedEvent`.
+     * @see {@link PhantomRemovedEvent}
+     * @since v0.0.0
+     */
+    removed: PhantomRemovedEvent;
+    /**
+     * The `HealthComp`'s `HurtEvent`.
+     * @see {@link PhantomHealthCompHurtEvent}
+     * @since v0.0.0
+     */
+    hurt: PhantomHealthCompHurtEvent;
+    /**
+     * The `HealthComp`'s `DieEvent`.
+     * @see {@link PhantomHealthCompDieEvent}
+     * @since v0.0.0
+     */
+    die: PhantomHealthCompDieEvent;
+    /**
+     * The `HealthComp`'s `HealEvent`.
+     * @see {@link PhantomHealthCompHealEvent}
+     * @since v0.0.0
+     */
+    heal: PhantomHealthCompHealEvent;
+}
+/**
+ * The options for a `Save`.
+ * @since v0.0.0
+ */
+interface SaveOptions {
+    /**
+     * The filename.
+     * @since v0.0.0
+     */
+    file: string;
+    /**
+     * The MIME type.
+     * @since v0.0.0
+     */
+    mime: string;
+    /**
+     * The file extension.
+     * @since v0.0.0
+     */
+    ext: string;
+}
+/**
+ * The options for a `Sound`.
+ * @since v0.0.0
+ */
+interface SoundOptions {
+    /**
+     * The source of the sound.
+     * @since v0.0.0
+     */
+    src: string;
+    /**
+     * The MIME type of the sound.
+     * @since v0.0.0
+     */
+    mime: AudioMIME;
+}
+/**
+ * The options for a `Character`.
+ * @since v0.0.0
+ */
+interface CharacterOptions extends PhysicsObjectOptions {}
+/**
+ * The options for a `PlayableCharacter`.
+ * @since v0.0.0
+ */
+interface PlayableCharacterOptions extends CharacterOptions {
+    /**
+     * The keybinds.
+     * @since v0.0.0
+     */
+    binds?: Store<KeyCode, Function>;
+}
+/**
+ * The options for a `Raycast`.
+ * @since v0.0.0
+ */
+interface RaycastOptions {
+    /**
+     * The origin position of the ray.
+     * @since v0.0.0
+     */
+    origin: Vector;
+    /**
+     * The angle to travel at.
+     * @since v0.0.0
+     */
+    angle: number;
+    /**
+     * The maximum distance the ray can travel.
+     * @since v0.0.0
+     */
+    dist: number;
+    /**
+     * The `Scene`.
+     * @since v0.0.0
+     */
+    scene: Scene;
+}
+/**
+ * The map for `Comp`.
+ * @since v0.0.0
+ */
 interface PhantomCompMap {
+    /**
+     * The `HealthComp`.
+     * @see {@link HealthComp}
+     * @since v0.0.0
+     */
     health: HealthComp;
+    /**
+     * The `InvComp`.
+     * @see {@link InvComp}
+     * @since v0.0.0
+     */
     inv: InvComp;
 }
+/**
+ * The map for `SceneComp`.
+ * @since v0.0.0
+ */
 interface PhantomSceneCompMap {
+    /**
+     * The `SceneTilesComp`.
+     * @see {@link SceneTilesComp}
+     * @since v0.0.0
+     */
     tiles: SceneTilesComp;
 }
+/**
+ * The options for a `Comp`.
+ * @since v0.0.0
+ */
 interface CompOptions {}
+/**
+ * The options for a `HealthComp`.
+ * @since v0.0.0
+ */
 interface HealthCompOptions extends CompOptions {
-    hp?: number; mhp?: number;
+    /**
+     * The health points.
+     * @since v0.0.0
+     */
+    hp?: number;
+    /**
+     * The maximum health points.
+     * @since v0.0.0
+     */
+    mhp?: number;
+    /**
+     * A handle for the hurt event.
+     * 
+     * Default to consuming the `PhantomHealthCompHurtEvent`.
+     * @since v0.0.0
+     */
     onHurt?: PhantomEventHandle;
+    /**
+     * A handle for the die event.
+     * 
+     * Default to consuming the `PhantomHealthCompDieEvent`.
+     * @since v0.0.0
+     */
     onDie?: PhantomEventHandle;
+    /**
+     * A handle for the heal event.
+     * 
+     * Default to consuming the `PhantomHealthCompHealEvent`.
+     * @since v0.0.0
+     */
     onHeal?: PhantomEventHandle;
 }
+/**
+ * The options for a `InvComp`.
+ * @since v0.0.0
+ */
 interface InvCompOptions extends CompOptions {
+    /**
+     * The max size of the inv.
+     * @since v0.0.0
+     */
     size?: number;
 }
+/**
+ * The options for a `SceneComp`.
+ * @since v0.0.0
+ */
 interface SceneCompOptions {}
+/**
+ * The options for a `SceneTilesComp`.
+ * @since v0.0.0
+ */
 interface SceneTilesCompOptions extends SceneCompOptions {
+    /**
+     * The size (WxH) of the tile.
+     * @since v0.0.0
+     */
     size?: number;
-    nth?: { number?: string };
+    /**
+     * The nth tile's color.
+     * @since v0.0.0
+     */
+    nth?: { [x: number]: string };
 }
+/**
+ * The map for `Geom`.
+ * @since v0.0.0
+ */
+interface GeomMap {
+    /**
+     * The basic `Geom`.
+     * @see {@link Geom}
+     * @since v0.0.0
+     */
+    geom: Geom;
+    /**
+     * The `GeomRect`.
+     * @see {@link GeomRect}
+     * @since v0.0.0
+     */
+    rect: GeomRect;
+    /**
+     * The `GeomCircle`.
+     * @see {@link GeomCircle}
+     * @since v0.0.0
+     */
+    circle: GeomCircle;
+}
+/**
+ * The synthetic event class.
+ * @since v0.0.0
+ */
 class PhantomEvent {
     name: string;
     constructor(name: string) {
         this.name = name;
     }
 }
+/**
+ * Fired when this first constructs.
+ * @since v0.0.0
+ */
 class PhantomAliveEvent extends PhantomEvent { constructor() { super("alive"); } }
+/**
+ * Fired when this ent is added to the scene.
+ * @since v0.0.0
+ */
 class PhantomAddedEvent extends PhantomEvent { constructor() { super("added"); } }
+/**
+ * Fired when this ent is removed from the scene.
+ */
 class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"); } }
+/**
+ * Fired when this ent takes damage.
+ * @since v0.0.0
+ */
 class PhantomHealthCompHurtEvent extends PhantomEvent { constructor() { super("hurt"); } }
+/**
+ * Fired when this ent dies.
+ * @since v0.0.0
+ */
 class PhantomHealthCompDieEvent extends PhantomEvent { constructor() { super("die"); } }
+/**
+ * Fired when this ent heals.
+ * @since v0.0.0
+ */
 class PhantomHealthCompHealEvent extends PhantomEvent { constructor() { super("heal"); } }
+/**
+ * The component class.
+ * @since v0.0.0
+ */
 class Comp {
     ent: Phantom2dEntity;
     constructor(ent: Phantom2dEntity) {
         this.ent = ent;
     }
+    /**
+     * Consumes an event.
+     * @param k The event type.
+     * @param e The event.
+     */
     consume(k: PhantomEventType, e: PhantomEvent) {
         this.ent.consume(k, e);
     }
 }
+/**
+ * A simple health component.
+ * @since v0.0.0
+ */
 class HealthComp extends Comp {
     hp: number; mhp?: number;
     onHurt?: PhantomEventHandle;
@@ -227,24 +766,51 @@ class HealthComp extends Comp {
         this.onDie = opts.onDie;
         this.onHeal = opts.onHeal;
     }
+    /**
+     * Hurts this entity.
+     * @param dmg The damage to receive.
+     * @since v0.0.0
+     */
     hurt(dmg: number) {
         this.hp -= dmg;
         this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
         if(this.hp <= 0) this.die();
     }
+    /**
+     * Kills this entity.
+     * @since v0.0.0
+     */
     die() {
         this.#consume(this.onDie, "die", new PhantomHealthCompDieEvent());
     }
+    /**
+     * Heals this entity.
+     * @param hp The health to heal.
+     * @since v0.0.0
+     */
     heal(hp: number) {
         this.hp += hp;
         if(this.mhp) this.hp = Math.min(this.hp, this.mhp);
         this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent());
     }
+    /**
+     * If the handle exists, use the handle.
+     * 
+     * Else, consume the event.
+     * @param fn The handle.
+     * @param k The event type.
+     * @param e The event.
+     * @since v0.0.0
+     */
     #consume(fn: PhantomEventHandle | undefined, k: PhantomEventType, e: PhantomEvent) {
         if(fn) fn(e);
         else this.consume(k, e);
     }
 }
+/**
+ * A simple inventory system.
+ * @since v0.0.0
+ */
 class InvComp extends Comp {
     size?: number;
     inv: any[];
@@ -253,24 +819,57 @@ class InvComp extends Comp {
         this.size = opts.size;
         this.inv = [];
     }
+    /**
+     * Adds new items.
+     * @param items The items to add.
+     * @since v0.0.0
+     */
     add(...items: any[]) {
         for(let i = 0; i < items.length; i++) {
             if(this.size && this.inv.length >= this.size) continue;
             this.inv.push(items[i]);
         }
     }
+    /**
+     * Removes items.
+     * @param items The items to remove.
+     * @since v0.0.0
+     */
     rm(...items: any[]) {
         for(const i of items) if(this.has(i)) this.inv.splice(this.idxOf(i), 1);
     }
+    /**
+     * Tests if this inventory contains the items passed.
+     * @param items The items to check.
+     * @returns {booelan} If it contains all the items.
+     * @since v0.0.0
+     */
     has(...items: any[]): boolean {
         return items.every(i => this.inv.includes(i));
     }
+    /**
+     * Returns the index of an item.
+     * @param i The item.
+     * @returns {number} The index.
+     * @since v0.0.0
+     */
     idxOf(i: any): number {
         return this.inv.indexOf(i);
     }
+    /**
+     * Returns the length of the inventory.
+     * @returns {number} The length.
+     * @since v0.0.0
+     */
     len(): number {
         return this.inv.length;
     }
+    /**
+     * Returns an item at the index.
+     * @param i The index.
+     * @returns {any} The item.
+     * @since v0.0.0
+     */
     at(i: number): any {
         return this.inv[i];
     }
@@ -297,6 +896,39 @@ class SceneTilesComp extends SceneComp {
 const PhantomSceneCompRecord: CompRecord<Scene, SceneCompOptions, SceneComp> = {
     tiles: SceneTilesComp
 };
+const KeyCodeMap = {
+    "a": "KeyA", "b": "KeyB", "c": "KeyC", "d": "KeyD", "e": "KeyE", "f": "KeyF",
+    "g": "KeyG", "h": "KeyH", "i": "KeyI", "j": "KeyJ", "k": "KeyK", "l": "KeyL",
+    "m": "KeyM", "n": "KeyN", "o": "KeyO", "p": "KeyP", "q": "KeyQ", "r": "KeyR",
+    "s": "KeyS", "t": "KeyT", "u": "KeyU", "v": "KeyV", "w": "KeyW", "x": "KeyX",
+    "y": "KeyY", "z": "KeyZ",
+    "1": "Digit1", "2": "Digit2", "3": "Digit3", "4": "Digit4", "5": "Digit5",
+    "6": "Digit6", "7": "Digit7", "8": "Digit8", "9": "Digit9",
+    "shift": ["ShiftLeft", "ShiftRight"], "lshift": "ShiftLeft", "rshift": "ShiftRight",
+    "ctrl": ["ControlLeft", "ControlRight"], "lctrl": "ControlLeft", "rctrl": "ControlRight",
+    "alt": ["AltLeft", "AltRight"], "lalt": "AltLeft", "ralt": "AltRight",
+    "f1": "F1", "f2": "F2", "f3": "F3", "f4": "F4", "f5": "F5", "f6": "F6", "f7": "F7",
+    "f8": "F8", "f9": "F9", "f10": "F10", "f11": "F11", "f12": "F12",
+    "esc": "Escape", "tab": "Tab", "back": "Backspace", "bkquote": "Backquote", "quote": "Quote",
+    "comma": "Comma", "dot": "Period", "fslash": "Slash", "bslash": "Backslash",
+    "caps": "CapsLock", "ctx": "ContextMenu", "meta": ["MetaLeft", "MetaRight"],
+    "lmeta": "MetaLeft", "rmeta": "MetaRight", "ent": "Enter", "ins": "Insert",
+    "del": "Delete", "home": "Home", "pgu": "PageUp", "pgd": "PageDown", "numlk": "NumLock",
+    "end": "End", "pause": "Pause", "scrlk": "ScrollLock", "ndiv": "NumpadDivide",
+    "nmult": "NumpadMultiply", "nsub": "NumpadSubtract", "nadd": "NumpadAdd",
+    "nent": "NumpadEnter", "ndel": "NumpadDecimal",
+    "n7": "Numpad7", "n8": "Numpad8", "n9": "Numpad9", "n4": "Numpad4", "n5": "Numpad5",
+    "n6": "Numpad6", "n1": "Numpad1", "n2": "Numpad2", "n3": "Numpad3", "n0": "Numpad0",
+    "space": "Space", "arw": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+    "arwl": "ArrowLeft", "arwr": "ArrowRight", "arwu": "ArrowUp", "arwd": "ArrowDown"
+};
+const KeyCodeMapReverse: { [k: string]: string } = {};
+for(const [k, v] of Object.entries(KeyCodeMap))
+{
+    if(Array.isArray(v)) continue;
+    KeyCodeMapReverse[v] = k;
+}
+type KeyCode = keyof typeof KeyCodeMap;
 
 class Phantom2dEntity {
     collide: CollisionHandle; upd: Function;
@@ -558,7 +1190,7 @@ class Character extends Phantom2dEntity {
     }
 }
 class PlayableCharacter extends Character {
-    binds: Store<string, Function>;
+    binds: Store<KeyCode, Function>;
     keys: Store<string, boolean>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
@@ -571,22 +1203,22 @@ class PlayableCharacter extends Character {
             this.keys.set(e.code, false);
         });
     }
-    bind(code: string, exec: Function) {
+    bind(code: KeyCode, exec: Function) {
         this.binds.set(code, exec);
     }
-    unbind(code: string) {
+    unbind(code: KeyCode) {
         this.binds.del(code);
     }
-    isBind(code: string): boolean {
+    isBind(code: KeyCode): boolean {
         return this.binds.has(code);
     }
-    bindOf(code: string): Function | undefined {
+    bindOf(code: KeyCode): Function | undefined {
         return this.binds.get(code);
     }
     update() {
         for(const [k, v] of this.keys.items()) {
             if(v) {
-                const exec = this.binds.get(k);
+                const exec = this.binds.get(KeyCodeMapReverse[k] as KeyCode);
                 if(exec) {
                     exec();
                 }
@@ -889,6 +1521,13 @@ class Scene {
     comp(c: PhantomSceneCompType): SceneComp | undefined {
         return this.comps.get(c);
     }
+    bounds(): DOMRect {
+        return this.canvas.getBoundingClientRect();
+    }
+    clickAt(e: MouseEvent): Vector {
+        const rect = this.bounds();
+        return new Vector(e.clientX - rect.left, e.clientY - rect.top);
+    }
 }
 class Level {
     items: Items;
@@ -1010,6 +1649,14 @@ class Runtime {
         this.delta = 0;
     }
 }
+class Geom {
+    name: string;
+    constructor(name: string) {
+        this.name = name;
+    }
+}
+class GeomRect extends Geom { constructor() { super("rect"); } }
+class GeomCircle extends Geom { constructor() { super("circle"); } }
 
 function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
     const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
