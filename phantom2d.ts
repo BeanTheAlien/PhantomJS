@@ -1191,41 +1191,108 @@ class Phantom2dEntity {
     toString(): string {
         return Util.str(this);
     }
+    /**
+     * Applies a preset.
+     * @param preset The preset to apply.
+     * @since v0.0.0
+     */
     apply(preset: Preset) {
         preset.apply(this);
     }
+    /**
+     * Returns a new `Preset` from this.
+     * @returns {Preset} This, as a `Preset`.
+     * @since v0.0.0
+     */
     preset(): Preset {
         return new Preset(this);
     }
+    /**
+     * Returns the center coordinate.
+     * @returns {Vector} The center coordinate.
+     * @since v0.0.0
+     */
     center(): Vector {
         return new Vector(this.x + this.width / 2, this.y + this.height / 2);
     }
+    /**
+     * Returns the real screen position (accounting for width and height).
+     * @returns {Vector} The screen position.
+     * @since v0.0.0
+     */
     scrPos(): Vector {
         return new Vector(this.x + this.width, this.y + this.height);
     }
+    /**
+     * Returns the real screen x (accounting for width).
+     * @returns {number} The screen x.
+     * @since v0.0.0
+     */
     scrX(): number {
         return this.scrPos().x;
     }
+    /**
+     * Retunrs the real screen y (accounting for height).
+     * @returns {number} The screen y.
+     * @since v0.0.0
+     */
     scrY(): number {
         return this.scrPos().y;
     }
+    /**
+     * Uses a component.
+     * @param c The component type.
+     * @param opts The arguments for the component.
+     * @see {@link PhantomCompMap}
+     * @since v0.0.0
+     */
     use(c: PhantomCompType, opts: CompOptions = {}) {
         if(this.uses(c)) throw new AlreadyUsingError();
         this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
     }
+    /**
+     * Removes a component.
+     * @param c The component type.
+     * @see {@link PhantomCompMap}
+     * @since v0.0.0
+     */
     unuse(c: PhantomCompType) {
         this.comps.del(c);
     }
+    /**
+     * Returns whether this uses a component or not.
+     * @param c The component type.
+     * @returns {boolean} If it is in use.
+     * @since v0.0.0
+     */
     uses(c: PhantomCompType): boolean {
         return this.comps.has(c);
     }
+    /**
+     * Returns a reference to this component.
+     * @param c The component type.
+     * @returns {Comp | undefined} The component (or nothing).
+     * @since v0.0.0
+     */
     comp(c: PhantomCompType): Comp | undefined {
         return this.comps.get(c);
     }
+    /**
+     * Returns a new entity.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
     static from(opts: Phantom2dOptions): Phantom2dEntity {
         return new Phantom2dEntity(opts);
     }
 }
+/**
+ * A simple object that is primarily used for scenery.
+ * 
+ * This object has no special attributes.
+ * @since v0.0.0
+ */
 class StaticObject extends Phantom2dEntity {
     constructor(opts: StaticObjectOptions) {
         super(opts);
@@ -1234,6 +1301,10 @@ class StaticObject extends Phantom2dEntity {
         return new StaticObject(opts);
     }
 }
+/**
+ * A simple object that uses physics.
+ * @since v0.0.0
+ */
 class PhysicsObject extends Phantom2dEntity {
     strength: number; gravspd: number;
     constructor(opts: PhysicsObjectOptions) {
@@ -1250,6 +1321,12 @@ class PhysicsObject extends Phantom2dEntity {
         return new PhysicsObject(opts);
     }
 }
+/**
+ * An object that moves in both x and y directions.
+ * 
+ * Optionally, it can bounce on extent reached.
+ * @since v0.0.0
+ */
 class MovingObject extends Phantom2dEntity {
     dirX: Dir; dirY: Dir;
     extLeft: number; extRight: number; extBtm: number; extTop: number;
@@ -1295,6 +1372,12 @@ class MovingObject extends Phantom2dEntity {
         return new MovingObject(opts);
     }
 }
+/**
+ * Similar to a moving object, this will fly across the screen.
+ * 
+ * Will automatically destroy itself when reaching an extent.
+ * @since v0.0.0
+ */
 class BulletObject extends Phantom2dEntity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
@@ -1328,6 +1411,12 @@ class BulletObject extends Phantom2dEntity {
         return new BulletObject(opts);
     }
 }
+/**
+ * The root class for other character-like classes.
+ * 
+ * Provides functionality for characters; uses physics.
+ * @since v0.0.0
+ */
 class Character extends Phantom2dEntity {
     gspd: number;
     constructor(opts: CharacterOptions) {
@@ -1344,6 +1433,12 @@ class Character extends Phantom2dEntity {
         this.gspd = -(h);
     }
 }
+/**
+ * A character that also has bindings.
+ * 
+ * Automatically listens for `keydown` and `keyup` events.
+ * @since v0.0.0
+ */
 class PlayableCharacter extends Character {
     binds: Store<KeyCode, Function>;
     keys: Store<string, boolean>;
@@ -1382,6 +1477,12 @@ class PlayableCharacter extends Character {
         super.update();
     }
 }
+/**
+ * A 2D vector.
+ * 
+ * Part of the broader vector ecosystem.
+ * @since v0.0.0
+ */
 class Vector {
     x: number; y: number;
     constructor(x: number, y: number) {
@@ -1393,6 +1494,10 @@ class Vector {
         this.y *= factor;
     }
 }
+/**
+ * A pixel.
+ * @since v0.0.0
+ */
 class Pixel {
     r: number; g: number; b: number; a: number;
     constructor(pxl: { r: number, g: number, b: number, a: number }) {
@@ -1409,6 +1514,12 @@ class Pixel {
         }
     }
 }
+/**
+ * An audio source.
+ * 
+ * Used to play long-lasting sounds, NOT SFX.
+ * @since v0.0.0
+ */
 class Sound {
     src: string; mime: AudioMIME; aud: HTMLAudioElement;
     constructor(opts: SoundOptions) {
@@ -1436,6 +1547,12 @@ class Sound {
         return this.aud.duration;
     }
 }
+/**
+ * An image.
+ * 
+ * Shorthand for `HTMLImageElement`.
+ * @since v0.0.0
+ */
 class Img {
     img: HTMLImageElement;
     constructor(src: string) {
@@ -1443,6 +1560,10 @@ class Img {
         this.img.src = src;
     }
 }
+/**
+ * A component to store various elements.
+ * @since v0.0.0
+ */
 class Items {
     items: Phantom2dEntity[];
     constructor() {
@@ -1588,6 +1709,10 @@ class Scene {
     delLvl(lvlName: string) {
         this.lvlStore.del(lvlName);
     }
+    loadLvl(lvlName: string) {
+        const lvl = this.lvlStore.get(lvlName);
+        if(lvl) this.items = lvl.items;
+    }
     get color(): string | CanvasGradient | CanvasPattern {
         return this.ctx.fillStyle;
     }
@@ -1684,6 +1809,12 @@ class Scene {
         return new Vector(e.clientX - rect.left, e.clientY - rect.top);
     }
 }
+/**
+ * A collection of items.
+ * 
+ * Can be used as a `Preset` for `Scene`.
+ * @since v0.0.0
+ */
 class Level {
     items: Items;
     constructor() {
@@ -1712,6 +1843,10 @@ class Level {
         s.save(this, 4);
     }
 }
+/**
+ * A class for saving content.
+ * @since v0.0.0
+ */
 class Save {
     file: string; mime: string; ext: string;
     constructor(opts: SaveOptions) {
@@ -1731,6 +1866,12 @@ class Save {
         URL.revokeObjectURL(url);
     }
 }
+/**
+ * An extension class of `Save`.
+ * 
+ * Used for saving specifically JSON files.
+ * @since v0.0.0
+ */
 class SaveJSON extends Save {
     constructor(file: string) {
         super({ file, mime: "application/json", ext: "json" });
@@ -1739,6 +1880,12 @@ class SaveJSON extends Save {
         super.save(Util.str(cont, indent));
     }
 }
+/**
+ * A saved set of attributes for an entity.
+ * 
+ * Can be applied to an entity later.
+ * @since v0.0.0
+ */
 class Preset {
     atts: { any?: any };
     constructor(ent: Phantom2dEntity) {
@@ -1753,6 +1900,10 @@ class Preset {
         Object.assign(ent, this.atts);
     }
 }
+/**
+ * A ray in the scene space.
+ * @since v0.0.0
+ */
 class Raycast {
     origin: Vector; angle: number; dist: number; scene: Scene;
     constructor(opts: RaycastOptions) {
@@ -1773,6 +1924,10 @@ class Raycast {
         return res;
     }
 }
+/**
+ * The intersection returned by a `Raycast` collision.
+ * @since v0.0.0
+ */
 class RaycastIntersecton {
     dist: number;
     obj: Phantom2dEntity;
@@ -1783,6 +1938,12 @@ class RaycastIntersecton {
         this.point = point;
     }
 }
+/**
+ * Handler for the `Scene` runtime.
+ * 
+ * Controls the state of the `Scene` rendering.
+ * @since v0.0.0
+ */
 class Runtime {
     processId: number; delta: number;
     constructor() {
@@ -1804,20 +1965,47 @@ class Runtime {
         this.delta = 0;
     }
 }
+/**
+ * The geometric object root class.
+ * @since v0.0.0
+ */
 class Geom {
     name: string;
     constructor(name: string) {
         this.name = name;
     }
 }
+/**
+ * Represents a rectangle.
+ * @since v0.0.0
+ */
 class GeomRect extends Geom { constructor() { super("rect"); } }
+/**
+ * Represents a circle.
+ * @since v0.0.0
+ */
 class GeomCircle extends Geom { constructor() { super("circle"); } }
 
+/**
+ * Returns whether 2 objects are in collision.
+ * @param a Object 1.
+ * @param b Object 2.
+ * @returns {boolean} If they collide.
+ * @since v0.0.0
+ */
 function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
     const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
 }
+/**
+ * Returns an intersection distance between a ray and a rect.
+ * @param origin The beginning point.
+ * @param dir The angle to travel at (in vector-angle).
+ * @param rect The rectangle to test.
+ * @param scene The scene.
+ * @returns {number | null} The distance of intersection (if there was one).
+ */
 function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene: Scene): number | null {
     const uv = uvVec(dir, scene.width, scene.height);
     const t1 = (rect.x - origin.x) / uv.x;
@@ -1829,6 +2017,15 @@ function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene:
     if(tmax < 0 || tmin > tmax) return null;
     return tmin >= 0 ? tmin : tmax;
 }
+/**
+ * Returns a `Vector` relative to screen space.
+ * 
+ * Uses UV vector conversion math to map coords to [-1, 1].
+ * @param p The vector.
+ * @param w The scene-space width.
+ * @param h The scene-space height.
+ * @returns {Vector} A new UV `Vector`.
+ */
 function uvVec(p: Vector, w: number, h: number): Vector {
     let u = p.x / (w - 1);
     let v = p.y / (h - 1);
