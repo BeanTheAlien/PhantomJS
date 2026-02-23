@@ -10,6 +10,21 @@ class Util {
         return Math.min(Math.max(n, min), max);
     }
 }
+class ArrayUtil {
+    static add(arr: any[], ...items: any[]) {
+        arr.push(...items);
+    }
+    static rm(arr: any[], ...items: any[]) {
+        for(const i of items) {
+            if(ArrayUtil.has(arr, i)) {
+                arr.splice(arr.indexOf(i), 1);
+            }
+        }
+    }
+    static has(arr: any[], ...items: any[]): boolean {
+        return items.every(i => arr.includes(i));
+    }
+}
 
 /**
  * Represents custom properties to
@@ -197,6 +212,18 @@ class AlreadyUsingError extends Error {
     constructor() {
         super("Already using this component, cannot use again.");
         this.name = "AlreadyUsingError";
+    }
+}
+/**
+ * Thrown when a component requires a reference to the scene, but there is none.
+ * 
+ * Only thrown during `Comp.protoype.update`.
+ * @since v0.0.0
+ */
+class NoSceneAvailableError extends Error {
+    constructor() {
+        super("A component requires a scene reference, but none was provided.");
+        this.name = "NoSceneAvailableError";
     }
 }
 
@@ -649,6 +676,10 @@ interface InvCompOptions extends CompOptions {
      */
     size?: number;
 }
+interface SpriteCompOptions extends CompOptions {
+    frames?: string[];
+    scene?: Scene;
+}
 /**
  * The options for a `SceneComp`.
  * @since v0.0.0
@@ -752,6 +783,13 @@ class Comp {
     consume(k: PhantomEventType, e: PhantomEvent) {
         this.ent.consume(k, e);
     }
+    /**
+     * The updater for this component.
+     * 
+     * Called during `update`.
+     * @since v0.0.0
+     */
+    upd() {}
 }
 /**
  * A simple health component.
@@ -840,7 +878,7 @@ class InvComp extends Comp {
      * @since v0.0.0
      */
     rm(...items: any[]) {
-        for(const i of items) if(this.has(i)) this.inv.splice(this.idxOf(i), 1);
+        ArrayUtil.rm(this.inv, ...items);
     }
     /**
      * Tests if this inventory contains the items passed.
@@ -849,7 +887,7 @@ class InvComp extends Comp {
      * @since v0.0.0
      */
     has(...items: any[]): boolean {
-        return items.every(i => this.inv.includes(i));
+        return ArrayUtil.has(this.inv, ...items);
     }
     /**
      * Returns the index of an item.
@@ -878,13 +916,45 @@ class InvComp extends Comp {
         return this.inv[i];
     }
 }
+class SpriteComp extends Comp {
+    frames: Frames;
+    scene?: Scene;
+    idx: number;
+    constructor(ent: Phantom2dEntity, opts: SpriteCompOptions) {
+        super(ent);
+        this.frames = (opts.frames ?? []).map(Img.from);
+        this.scene = opts.scene;
+        this.idx = 0;
+    }
+    frame(idx: number) {
+        this.idx = idx;
+    }
+    at(idx: number): Frame {
+        return this.frames[idx];
+    }
+    cur(): Frame {
+        return this.at(this.idx);
+    }
+    add(...items: Frames) {
+        ArrayUtil.add(this.frames, ...items);
+    }
+    rm(...items: Frames) {
+        ArrayUtil.rm(this.frames, ...items);
+    }
+    upd() {
+        const s = this.scene;
+        if(!s) throw new NoSceneAvailableError();
+        s.img(this.cur(), this.ent.width, this.ent.height);
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
  */
 const PhantomCompRecord: CompRecord<Phantom2dEntity, CompOptions, Comp> = {
     health: HealthComp,
-    inv: InvComp
+    inv: InvComp,
+    sprite: SpriteComp
 };
 /**
  * The class used for creating components for the scene.
@@ -1990,23 +2060,6 @@ class GeomRect extends Geom { constructor() { super("rect"); } }
  * @since v0.0.0
  */
 class GeomCircle extends Geom { constructor() { super("circle"); } }
-class Sprite {
-    frames: Frames;
-    idx: number;
-    constructor(frames: string[]) {
-        this.frames = frames.map(Img.from);
-        this.idx = 0;
-    }
-    frame(idx: number) {
-        this.idx = idx;
-    }
-    at(idx: number): Frame {
-        return this.frames[idx];
-    }
-    cur(): Frame {
-        return this.at(this.idx);
-    }
-}
 
 /**
  * Returns whether 2 objects are in collision.
