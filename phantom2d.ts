@@ -952,6 +952,10 @@ class InvComp extends Comp {
         return this.inv[i];
     }
 }
+/**
+ * A displayable sprite, packages multiple image frames to use.
+ * @since v0.0.0
+ */
 class SpriteComp extends Comp {
     frames: Frames;
     scene?: Scene;
@@ -1073,10 +1077,45 @@ type KeyCode = keyof typeof KeyCodeMap;
  * @since v0.0.0
  */
 class Phantom2dEntity {
-    collide: CollisionHandle; upd: Function;
-    x: number; y: number;
+    /**
+     * Fired when this object collides with another.
+     * @since v0.0.0
+     */
+    collide: CollisionHandle;
+    /**
+     * A special function that is called during `update`.
+     * @since v0.0.0
+     */
+    upd: Function;
+    /**
+     * The x-coordinate.
+     * @since v0.0.0
+     */
+    x: number;
+    /**
+     * The y-coordinate.
+     * @since v0.0.0
+     */
+    y: number;
+    /**
+     * The rotation, in radians.
+     * @since v0.0.0
+     */
     rot: number;
-    width: number; height: number;
+    /**
+     * The displayed width, in pixels.
+     * @since v0.0.0
+     */
+    width: number;
+    /**
+     * The displayed height, in pixels.
+     * @since v0.0.0
+     */
+    height: number;
+    /**
+     * The display color.
+     * @since v0.0.0
+     */
     color: string;
     evStore: Store<PhantomEventType, PhantomEventHandle>;
     [x: string]: any;
