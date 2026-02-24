@@ -1,6 +1,6 @@
 {
   "name": "@beanthealien/phantomjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Phantom.js is a web API to simplify the webgame development proccess.\r Phantom.js supports both 2D and 3D games with readable and simple scripting!",
   "main": "phantom.js",
   "directories": {

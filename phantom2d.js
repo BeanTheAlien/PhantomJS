@@ -412,6 +412,10 @@ class InvComp extends Comp {
         return this.inv[i];
     }
 }
+/**
+ * A displayable sprite, packages multiple image frames to use.
+ * @since v0.0.0
+ */
 class SpriteComp extends Comp {
     constructor(ent, opts) {
         var _a;
@@ -1119,7 +1123,6 @@ class Img {
     constructor(src) {
         this.img = new Image();
         this.img.src = src;
-        document.body.appendChild(this.img);
     }
     static from(src) {
         return new Img(src);
