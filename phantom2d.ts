@@ -1711,7 +1711,6 @@ class Img {
     constructor(src: string) {
         this.img = new Image();
         this.img.src = src;
-        document.body.appendChild(this.img);
     }
     static from(src: string): Img {
         return new Img(src);
