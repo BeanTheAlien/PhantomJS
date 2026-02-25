@@ -20,6 +20,8 @@ npm install @beanthealien/phantomjs
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
+### v1.0.2
+- New `Local` class.
 
 # Phantom 3D v0.0.0
 

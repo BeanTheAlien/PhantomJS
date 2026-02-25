@@ -2145,6 +2145,55 @@ class GeomRect extends Geom { constructor() { super("rect"); } }
  * @since v0.0.0
  */
 class GeomCircle extends Geom { constructor() { super("circle"); } }
+/**
+ * An implementation of `localStorage`.
+ * @since v1.0.2
+ */
+class Local {
+    /**
+     * Sets a value in `localStorage`.
+     * @param k The key.
+     * @param v The value.
+     * @since v1.0.2
+     */
+    static set(k: string, v: any) {
+        const val = typeof v == "string" ? v : Util.str(v);
+        localStorage.setItem(k, val);
+    }
+    /**
+     * Gets a value from `localStorage`.
+     * @param k The key.
+     * @returns {string|null} The value (or none, if it does not exist).
+     * @since v1.0.2
+     */
+    static get(k: string): string | null {
+        return localStorage.getItem(k);
+    }
+    /**
+     * Returns whether an entry with this key exists.
+     * @param k The key.
+     * @returns {boolean} Whether this entry exists.
+     * @since v1.0.2
+     */
+    static has(k: string): boolean {
+        return !!this.get(k);
+    }
+    /**
+     * Returns the length of `localStorage`.
+     * @since v1.0.2
+     */
+    static get len(): number {
+        return localStorage.length;
+    }
+    /**
+     * Deletes an item.
+     * @param k The key.
+     * @since v1.0.2
+     */
+    static del(k: string) {
+        localStorage.removeItem(k);
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -2214,7 +2263,7 @@ export {
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton,
+    RaycastIntersecton, Local,
 
     isCol, rayInterRect, uvVec
 };
