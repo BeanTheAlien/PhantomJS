@@ -1117,6 +1117,10 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     color: string;
+    /**
+     * The storage for listeners for events.
+     * @since v0.0.0
+     */
     evStore: Store<PhantomEventType, PhantomEventHandle>;
     [x: string]: any;
     comps: Store<PhantomCompType, Comp>;
