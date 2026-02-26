@@ -1742,7 +1742,7 @@ class Items {
         }
     }
     has(...items: Phantom2dEntity[]): boolean {
-        return items.every(i => this.items.includes(i));
+        return ArrayUtil.has(this.items, items);
     }
     idxOf(item: Phantom2dEntity): number {
         return this.items.indexOf(item);
@@ -2244,6 +2244,21 @@ function uvVec(p: Vector, w: number, h: number): Vector {
     u *= aspect;
     return new Vector(u, v);
 }
+/**
+ * Returns a `Promise` to wait for a specified amount of time.
+ * @param ms The time to wait.
+ * @returns {Promise<void>} A `Promise` to wait for.
+ */
+function wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function random(a?: number, b?: number) {
+    const ra = a ?? 0;
+    const rb = b ?? 101;
+    const min = Math.ceil(Math.min(ra, rb));
+    const max = Math.floor(Math.max(ra, rb));
+    return Math.floor(Math.random() * (max - min)) + min;
+}
 
 export {
     Custom, Axis, Dir, EventHandle, EventType, Callback, PhantomEventType,
@@ -2265,5 +2280,5 @@ export {
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
     RaycastIntersecton, Local,
 
-    isCol, rayInterRect, uvVec
+    isCol, rayInterRect, uvVec, wait, random
 };

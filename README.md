@@ -22,6 +22,8 @@ npm install @beanthealien/phantomjs
 - Ported most legacy content
 ### v1.0.2
 - New `Local` class.
+### v1.0.3
+- Added `wait`, `random`.
 
 # Phantom 3D v0.0.0
 
