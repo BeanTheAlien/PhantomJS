@@ -1301,7 +1301,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     on(event: PhantomEventType, handle: PhantomEventHandle) {
-        const a = (this.evStore.get(event) ?? []);
+        const a = this.evStore.get(event) ?? [];
         a.push(handle);
         this.evStore.set(event, a);
     }
@@ -1312,7 +1312,7 @@ class Phantom2dEntity {
      */
     off(event: PhantomEventType, handle?: PhantomEventHandle) {
         if(handle) {
-            const a = (this.evStore.get(event) ?? []);
+            const a = this.evStore.get(event) ?? [];
             ArrayUtil.rm(a, handle);
             this.evStore.set(event, a);
         } else {
@@ -1865,8 +1865,15 @@ class Scene {
         this.canvas.addEventListener(name, handle);
     }
     off(name: EventType, handle?: EventHandle) {
-        if(handle) this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
-        this.evStore.del(name);
+        if(handle) {
+            this.canvas.removeEventListener(name, handle);
+            const a = this.evStore.get(name) ?? [];
+            ArrayUtil.rm(a, handle);
+            this.evStore.set(name, a);
+        }
+        else {
+            this.evStore.del(name);
+        }
     }
     getImgData(pos: Vector): ImageData {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);

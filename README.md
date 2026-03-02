@@ -24,6 +24,9 @@ npm install @beanthealien/phantomjs
 - New `Local` class.
 ### v1.0.3
 - Added `wait`, `random`.
+### v1.0.4
+- Updated handling to use `PhantomEventType`/`EventType`, `PhantomEventHandle[]`/`EventHandle[]` for event stores.
+- Deprecated `AudioMIME`, `Sound` now uses regular `HTMLAudioElement` (no `HTMLSourceElement`).
 
 # Phantom 3D v0.0.0
 
