@@ -26,7 +26,7 @@ npm install @beanthealien/phantomjs
 - Added `wait`, `random`.
 ### v1.0.4
 - Updated handling to use `PhantomEventType`/`EventType`, `PhantomEventHandle[]`/`EventHandle[]` for event stores.
-- Deprecated `AudioMIME`, `Sound` now uses regular `HTMLAudioElement` (no `HTMLSourceElement`).
+- Deprecated `AudioMIME`, `Sound` now uses regular `HTMLAudioElement` (no `HTMLSourceElement`). (**Note**: you can still clarify the `mime` property to use the deprecated version)
 
 # Phantom HTML v0.0.1
 ### 0.0.1
