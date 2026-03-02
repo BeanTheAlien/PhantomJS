@@ -90,6 +90,7 @@ type PhantomEventHandle = (e: PhantomEvent) => void;
 /**
  * An audio MIME type. With or without the `audio/` prepension.
  * @since v0.0.0
+ * @deprecated Since v1.0.4. No longer supported.
  */
 type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audio/ogg" | "audio/aac" | "audio/aacp" | "audio/x-caf" | "audio/flac" |
                 "wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac";
@@ -136,6 +137,7 @@ type GeomType = Key<GeomMap>;
 type Key<T> = keyof T;
 type Frame = Img | undefined;
 type Frames = Img[];
+type MoveMode = "fixed" | "move";
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -245,7 +247,7 @@ class NoSceneAvailableError extends Error {
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
  * const ent = new Phantom2dEntity({});
- * ent.use("sprite", { scene: canvas }); // no frames property
+ * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
  * ```
@@ -378,6 +380,11 @@ interface Phantom2dOptions {
      * @since v0.0.0
      */
     color?: string;
+    /**
+     * The movement mode.
+     * @since v1.0.4
+     */
+    moveMode?: MoveMode;
 }
 /**
  * The options for a `StaticObject`.
@@ -578,8 +585,9 @@ interface SoundOptions {
     /**
      * The MIME type of the sound.
      * @since v0.0.0
+     * @deprecated Since v1.0.4. No longer supported.
      */
-    mime: AudioMIME;
+    mime?: AudioMIME;
 }
 /**
  * The options for a `Character`.
@@ -1121,9 +1129,10 @@ class Phantom2dEntity {
      * The storage for listeners for events.
      * @since v0.0.0
      */
-    evStore: Store<PhantomEventType, PhantomEventHandle>;
+    evStore: Store<PhantomEventType, PhantomEventHandle[]>;
     [x: string]: any;
     comps: Store<PhantomCompType, Comp>;
+    moveMode: MoveMode;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
         this.upd = opts.upd ?? NoFunc;
@@ -1138,6 +1147,7 @@ class Phantom2dEntity {
             this[k] = v;
         }
         this.comps = new Store();
+        this.moveMode = opts.moveMode ?? "move";
     }
     /**
      * Sets the position.
@@ -1195,6 +1205,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     move(dist: number, axis: Axis) {
+        if(this.moveMode == "fixed") return console.warn("Cannot move this entity, because it has a 'fixed' move mode.");
         if(axis == "x" || axis == 0) this.x += dist;
         else if(axis == "y" || axis == 1) this.y += dist;
     }
@@ -1290,15 +1301,23 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     on(event: PhantomEventType, handle: PhantomEventHandle) {
-        this.evStore.set(event, handle);
+        const a = (this.evStore.get(event) ?? []);
+        a.push(handle);
+        this.evStore.set(event, a);
     }
     /**
      * Removes a listener for an event.
      * @param event The event type.
      * @since v0.0.0
      */
-    off(event: PhantomEventType) {
-        this.evStore.del(event);
+    off(event: PhantomEventType, handle?: PhantomEventHandle) {
+        if(handle) {
+            const a = (this.evStore.get(event) ?? []);
+            ArrayUtil.rm(a, handle);
+            this.evStore.set(event, a);
+        } else {
+            this.evStore.del(event);
+        }
     }
     /**
      * Consumes an event.
@@ -1307,9 +1326,9 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     consume(title: PhantomEventType, event: PhantomEvent) {
-        const handle = this.evStore.get(title);
-        if(handle) {
-            handle(event);
+        const handles = this.evStore.get(title);
+        if(handles) {
+            handles.forEach(h => h(event));
         }
     }
     /**
@@ -1433,6 +1452,12 @@ class Phantom2dEntity {
      */
     comp(c: PhantomCompType): Comp | undefined {
         return this.comps.get(c);
+    }
+    getMoveMode(): MoveMode {
+        return this.moveMode;
+    }
+    setMoveMode(m: MoveMode) {
+        this.moveMode = m;
     }
     /**
      * Returns a new entity.
@@ -1678,15 +1703,19 @@ class Pixel {
  * @since v0.0.0
  */
 class Sound {
-    src: string; mime: AudioMIME; aud: HTMLAudioElement;
+    src: string; mime?: AudioMIME; aud: HTMLAudioElement;
     constructor(opts: SoundOptions) {
         this.src = opts.src;
-        this.mime = opts.mime;
         this.aud = new Audio();
-        const source = document.createElement("source");
-        source.src = this.src;
-        source.type = this.mime.startsWith("audio") ? this.mime : `audio/${this.mime}`;
-        this.aud.appendChild(source);
+        if(opts.mime) {
+            this.mime = opts.mime;
+            const source = document.createElement("source");
+            source.src = this.src;
+            source.type = this.mime.startsWith("audio") ? this.mime : `audio/${this.mime}`;
+            this.aud.appendChild(source);
+        } else {
+            this.aud.src = this.src;
+        }
     }
     play() {
         this.aud.play();
@@ -1765,7 +1794,7 @@ class Scene {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     items: Items;
-    evStore: Store<EventType, EventHandle>;
+    evStore: Store<EventType, EventHandle[]>;
     lvlStore: Store<string, Level>;
     mousePos: Vector;
     runtime: Runtime;
@@ -1830,10 +1859,12 @@ class Scene {
         return this.items.filter(cb);
     }
     on(name: EventType, handle: EventHandle) {
-        this.evStore.set(name, handle);
+        const a = this.evStore.get(name) ?? [];
+        a.push(handle);
+        this.evStore.set(name, a);
         this.canvas.addEventListener(name, handle);
     }
-    off(name: EventType, handle: EventHandle | undefined) {
+    off(name: EventType, handle?: EventHandle) {
         if(handle) this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
         this.evStore.del(name);
     }
