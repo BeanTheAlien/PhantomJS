@@ -1,6 +1,6 @@
 # PhantomJS
 Phantom.js is a web API to simplify the webgame development proccess.\
-Phantom.js supports both 2D and 3D games with readable and simple scripting!\
+Phantom.js is a 2D game development API with readable and simple scripting.\
 Phantom.js is a side project, most of my focus is directed to [GhostScript](https://github.com/BeanTheAlien/GhostScript), so sorry for lack of attention on this. <3
 
 # Download
@@ -27,8 +27,6 @@ npm install @beanthealien/phantomjs
 ### v1.0.4
 - Updated handling to use `PhantomEventType`/`EventType`, `PhantomEventHandle[]`/`EventHandle[]` for event stores.
 - Deprecated `AudioMIME`, `Sound` now uses regular `HTMLAudioElement` (no `HTMLSourceElement`).
-
-# Phantom 3D v0.0.0
 
 # Phantom HTML v0.0.1
 ### 0.0.1
