@@ -27,6 +27,13 @@ npm install @beanthealien/phantomjs
 ### v1.0.4
 - Updated handling to use `PhantomEventType`/`EventType`, `PhantomEventHandle[]`/`EventHandle[]` for event stores.
 - Deprecated `AudioMIME`, `Sound` now uses regular `HTMLAudioElement` (no `HTMLSourceElement`). (**Note**: you can still clarify the `mime` property to use the deprecated version)
+### v1.0.5
+- Adjusted `Phantom2dEntity.setPos` to have 2 overloads, `(Vector)` and `(number, number)`.
+- Adjusted `Sound` to serve a constructor with `SoundOptions` and a constructor with `SoundOptionsDeprecated` (can test for deprecated opts with `SoundOptionsIsSOD`).
+- Added `SceneOptions.canvas: ... | string`. Retrieves element, throws `NoCanvasError` if it does not get an element.
+- Added `Phantom2dOptions`, `Preset` overloads for `Phantom2dEntity.from` calls.
+- Added `ErrRoot` class.
+- Enhanced `random` to add `()`, `(number)` and `(number, number)`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

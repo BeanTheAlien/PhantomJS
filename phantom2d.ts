@@ -145,13 +145,22 @@ type MoveMode = "fixed" | "move";
 const NoFunc: Function = (() => {});
 
 /**
+ * A simplified class for creating errors.
+ * @since v1.0.5
+ */
+class ErrRoot extends Error {
+    constructor(name: string, msg: string) {
+        super(msg);
+        this.name = name;
+    }
+}
+/**
  * Thrown when `CanvasRenderingContext2D` cannot be gotten.
  * @since v0.0.0
  */
-class NoContextError extends Error {
+class NoContextError extends ErrRoot {
     constructor() {
-        super("Cannot get context 2D.");
-        this.name = "NoContextError";
+        super("NoContextError", "Cannot get context 2D.");
     }
 }
 /**
@@ -163,10 +172,9 @@ class NoContextError extends Error {
  * const scene = new Scene({ canvas: el }); // cannot convert undefined to HTMLCanvasElement
  * ```
  */
-class NoCanvasError extends Error {
+class NoCanvasError extends ErrRoot {
     constructor() {
-        super("Did not receive HTMLCanvasElement or HTMLElement in scene.");
-        this.name = "NoCanvasError";
+        super("NoCanvasError", "Did not receive HTMLCanvasElement or HTMLElement in scene.");
     }
 }
 /**
@@ -179,10 +187,9 @@ class NoCanvasError extends Error {
  * rt.start(() => {}); // process already started
  * ```
  */
-class ExistingProcessError extends Error {
+class ExistingProcessError extends ErrRoot {
     constructor() {
-        super("A process already exists, cannot create new process.");
-        this.name = "ExistingProcessError";
+        super("ExistingProcessError", "A process already exists, cannot create new process.");
     }
 }
 /**
@@ -194,10 +201,9 @@ class ExistingProcessError extends Error {
  * rt.stop(); // no process has been started
  * ```
  */
-class NoProcessError extends Error {
+class NoProcessError extends ErrRoot {
     constructor() {
-        super("A process does not exist.");
-        this.name = "NoProcessError";
+        super("NoProcessError", "A process does not exist.");
     }
 }
 /**
@@ -210,10 +216,9 @@ class NoProcessError extends Error {
  * ent.use("health"); // cannot use again
  * ```
  */
-class AlreadyUsingError extends Error {
+class AlreadyUsingError extends ErrRoot {
     constructor() {
-        super("Already using this component, cannot use again.");
-        this.name = "AlreadyUsingError";
+        super("AlreadyUsingError", "Already using this component, cannot use again.");
     }
 }
 /**
@@ -231,10 +236,9 @@ class AlreadyUsingError extends Error {
  * scene.start(); // cannot render without scene
  * ```
  */
-class NoSceneAvailableError extends Error {
+class NoSceneAvailableError extends ErrRoot {
     constructor() {
-        super("A component requires a scene reference, but none was provided.");
-        this.name = "NoSceneAvailableError";
+        super("NoSceneAvailableError", "A component requires a scene reference, but none was provided.");
     }
 }
 /**
@@ -252,10 +256,9 @@ class NoSceneAvailableError extends Error {
  * scene.start(); // throws error on first tick of ent
  * ```
  */
-class OutOfBoundsError extends Error {
+class OutOfBoundsError extends ErrRoot {
     constructor() {
-        super("Index exceeds length; could not get crucial value.");
-        this.name = "OutOfBoundsError";
+        super("OutOfBoundsError", "Index exceeds length; could not get crucial value.");
     }
 }
 
@@ -485,9 +488,11 @@ interface BulletObjectOptions extends Phantom2dOptions, Extent {
 interface SceneOptions {
     /**
      * The actual canvas.
+     * 
+     * Or, the element id (>=v1.0.5).
      * @since v0.0.0
      */
-    canvas: HTMLCanvasElement | HTMLElement | null;
+    canvas: HTMLCanvasElement | HTMLElement | string | null;
     /**
      * The px width.
      * @since v0.0.0
@@ -582,12 +587,18 @@ interface SoundOptions {
      * @since v0.0.0
      */
     src: string;
+}
+/**
+ * The older options for `Sound`.
+ * @since v1.0.4
+ */
+interface SoundOptionsDeprecated extends SoundOptions {
     /**
      * The MIME type of the sound.
      * @since v0.0.0
      * @deprecated Since v1.0.4. No longer supported.
      */
-    mime?: AudioMIME;
+    mime: AudioMIME;
 }
 /**
  * The options for a `Character`.
@@ -1021,7 +1032,7 @@ class SceneComp {
  */
 class SceneTilesComp extends SceneComp {
     size: number;
-    nth?: { number?: string }
+    nth?: { [x: number]: string }
     constructor(scene: Scene, opts: SceneTilesCompOptions) {
         super(scene);
         this.size = opts.size ?? 0;
@@ -1150,11 +1161,18 @@ class Phantom2dEntity {
         this.moveMode = opts.moveMode ?? "move";
     }
     /**
-     * Sets the position.
-     * @param x The new x pos (or `Vector`).
-     * @param y The new y pos.
+     * Sets the position, based on a `Vector`.
+     * @param vec The `Vector` position.
      * @since v0.0.0
      */
+    setPos(vec: Vector): void;
+    /**
+     * Sets the position, based on x and y coordinates.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @since v0.0.0
+     */
+    setPos(x: number, y: number): void;
     setPos(x: number | Vector, y?: number) {
         if(typeof x == "number" && typeof y == "number") {
             this.x = x;
@@ -1308,6 +1326,7 @@ class Phantom2dEntity {
     /**
      * Removes a listener for an event.
      * @param event The event type.
+     * @param handle The event handle (or nothing, to remove all handles).
      * @since v0.0.0
      */
     off(event: PhantomEventType, handle?: PhantomEventHandle) {
@@ -1460,12 +1479,25 @@ class Phantom2dEntity {
         this.moveMode = m;
     }
     /**
-     * Returns a new entity.
+     * Returns a new entity, based on options.
      * @param opts The options to use.
      * @returns {Phantom2dEntity} The new entity.
      * @since v0.0.0
      */
-    static from(opts: Phantom2dOptions): Phantom2dEntity {
+    static from(opts: Phantom2dOptions): Phantom2dEntity;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): Phantom2dEntity;
+    static from(opts: Phantom2dOptions | Preset): Phantom2dEntity {
+        if(opts instanceof Preset) {
+            const ent = new Phantom2dEntity({});
+            opts.apply(ent);
+            return ent;
+        }
         return new Phantom2dEntity(opts);
     }
 }
@@ -1478,8 +1510,29 @@ class Phantom2dEntity {
 class StaticObject extends Phantom2dEntity {
     constructor(opts: StaticObjectOptions) {
         super(opts);
+        // requires an enforced fixed move mode
+        this.setMoveMode("fixed");
     }
-    static from(opts: StaticObjectOptions): StaticObject {
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: StaticObjectOptions): StaticObject;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): StaticObject;
+    static from(opts: StaticObjectOptions | Preset): StaticObject {
+        if(opts instanceof Preset) {
+            const ent = new StaticObject({ shape: "geom", color: "#fff" });
+            opts.apply(ent);
+            return ent;
+        }
         return new StaticObject(opts);
     }
 }
@@ -1499,7 +1552,26 @@ class PhysicsObject extends Phantom2dEntity {
         this.y += this.gravspd;
         super.update();
     }
-    static from(opts: PhysicsObject): PhysicsObject {
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: PhysicsObjectOptions): PhysicsObject;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): PhysicsObject;
+    static from(opts: PhysicsObjectOptions | Preset): PhysicsObject {
+        if(opts instanceof Preset) {
+            const ent = new PhysicsObject({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
         return new PhysicsObject(opts);
     }
 }
@@ -1550,7 +1622,26 @@ class MovingObject extends Phantom2dEntity {
         }
         super.update();
     }
-    static from(opts: MovingObjectOptions): MovingObject {
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: MovingObjectOptions): MovingObject;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): MovingObject;
+    static from(opts: MovingObjectOptions | Preset): MovingObject {
+        if(opts instanceof Preset) {
+            const ent = new MovingObject({ dirX: 0, dirY: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, bouncy: false });
+            opts.apply(ent);
+            return ent;
+        }
         return new MovingObject(opts);
     }
 }
@@ -1589,7 +1680,26 @@ class BulletObject extends Phantom2dEntity {
             this.scene.rm(this);
         }
     }
-    static from(opts: BulletObjectOptions): BulletObject {
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: BulletObjectOptions): BulletObject;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): BulletObject;
+    static from(opts: BulletObjectOptions | Preset): BulletObject {
+        if(opts instanceof Preset) {
+            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: null as unknown as Scene });
+            opts.apply(ent);
+            return ent;
+        }
         return new BulletObject(opts);
     }
 }
@@ -1613,6 +1723,28 @@ class Character extends Phantom2dEntity {
     }
     jump(h: number) {
         this.gspd = -(h);
+    }
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: CharacterOptions): Character;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): Character;
+    static from(opts: CharacterOptions | Preset): Character {
+        if(opts instanceof Preset) {
+            const ent = new Character({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
+        return new Character(opts);
     }
 }
 /**
@@ -1658,6 +1790,28 @@ class PlayableCharacter extends Character {
         }
         super.update();
     }
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: PlayableCharacterOptions): PlayableCharacter;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns {Phantom2dEntity} The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): PlayableCharacter;
+    static from(opts: PlayableCharacterOptions | Preset): PlayableCharacter {
+        if(opts instanceof Preset) {
+            const ent = new PlayableCharacter({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
+        return new PlayableCharacter(opts);
+    }
 }
 /**
  * A 2D vector.
@@ -1696,6 +1850,9 @@ class Pixel {
         }
     }
 }
+function SoundOptionsIsSOD(o: any): o is SoundOptionsDeprecated {
+    return "mime" in o;
+}
 /**
  * An audio source.
  * 
@@ -1704,10 +1861,25 @@ class Pixel {
  */
 class Sound {
     src: string; mime?: AudioMIME; aud: HTMLAudioElement;
+    /**
+     * The constructor for sounds.
+     * 
+     * This is the newer constructor (>=v1.0.4).
+     * @param opts The options for this `Sound`.
+     */
+    constructor(opts: SoundOptions);
+    /**
+     * The constructor for sounds.
+     * 
+     * This is the older constructor (<=v1.0.3).
+     * @param opts The options for this `Sound`.
+     * @deprecated Since v1.0.4. No longer supported.
+     */
+    constructor(opts: SoundOptionsDeprecated);
     constructor(opts: SoundOptions) {
         this.src = opts.src;
         this.aud = new Audio();
-        if(opts.mime) {
+        if(SoundOptionsIsSOD(opts)) {
             this.mime = opts.mime;
             const source = document.createElement("source");
             source.src = this.src;
@@ -1731,6 +1903,9 @@ class Sound {
     }
     get len(): number {
         return this.aud.duration;
+    }
+    static from(opts: SoundOptions): Sound {
+        return new Sound(opts);
     }
 }
 /**
@@ -1800,6 +1975,9 @@ class Scene {
     runtime: Runtime;
     comps: Store<PhantomSceneCompType, SceneComp>;
     constructor(opts: SceneOptions) {
+        if(typeof opts.canvas == "string") {
+            opts.canvas = document.getElementById(opts.canvas);
+        }
         if(!opts.canvas) throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
         this.canvas.width = opts.w ?? 0;
@@ -2002,9 +2180,21 @@ class Scene {
     bounds(): DOMRect {
         return this.canvas.getBoundingClientRect();
     }
-    clickAt(e: MouseEvent): Vector {
+    mouseAt(e: MouseEvent): Vector {
         const rect = this.bounds();
         return new Vector(e.clientX - rect.left, e.clientY - rect.top);
+    }
+    clickFScrOn() {
+        this.on("click", this.fScrOn);
+    }
+    clickFScrOff() {
+        this.off("click", this.fScrOn);
+    }
+    clickPLockOn() {
+        this.on("click", this.pLockOn);
+    }
+    clickPLockOff() {
+        this.off("click", this.pLockOn);
     }
 }
 /**
@@ -2232,6 +2422,25 @@ class Local {
         localStorage.removeItem(k);
     }
 }
+class Cooldown {
+    id: number;
+    constructor();
+    constructor(handle?: TimerHandler, ms?: number) {
+        this.id = -1;
+        if(handle && ms) {
+            this.on(handle, ms);
+        }
+    }
+    on(handle: TimerHandler, ms: number) {
+        if(this.id != -1) throw new ExistingProcessError();
+        this.id = setInterval(handle, ms);
+    }
+    off() {
+        if(this.id == -1) throw new NoProcessError();
+        clearInterval(this.id);
+        this.id = -1;
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -2290,11 +2499,38 @@ function uvVec(p: Vector, w: number, h: number): Vector {
 function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-function random(a?: number, b?: number) {
-    const ra = a ?? 0;
-    const rb = b ?? 101;
-    const min = Math.ceil(Math.min(ra, rb));
-    const max = Math.floor(Math.max(ra, rb));
+/**
+ * Returns a random number from [0, 100].
+ * @returns {number} The random number.
+ * @since v1.0.5
+ */
+function random(): number;
+/**
+ * Returns a random number from [0, `max`).
+ * @returns {number} The random number.
+ * @since v1.0.5
+ */
+function random(max: number): number;
+/**
+ * Returns a random number from (`min`, `max`).
+ * 
+ * Automatically swaps `min` and `max` if `min` > `max`.
+ * @returns {number} The random number.
+ * @since v1.0.5
+ */
+function random(min: number, max: number): number;
+function random(a?: number, b?: number): number {
+    let min = 0; let max = 0;
+    if(a == undefined && b == undefined) {
+        min = 0; max = 101;
+    } else if(a && b == undefined) {
+        min = 0; max = a;
+    } else if(a && b) {
+        min = a; max = b;
+    }
+    if(min > max) {
+        [min, max] = [max, min];
+    }
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
@@ -2316,7 +2552,7 @@ export {
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Local,
+    RaycastIntersecton, Local, Cooldown,
 
     isCol, rayInterRect, uvVec, wait, random
 };
