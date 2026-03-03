@@ -936,7 +936,7 @@ class InvComp extends Comp {
     /**
      * Tests if this inventory contains the items passed.
      * @param items The items to check.
-     * @returns {booelan} If it contains all the items.
+     * @returns If it contains all the items.
      * @since v0.0.0
      */
     has(...items: any[]): boolean {
@@ -945,7 +945,7 @@ class InvComp extends Comp {
     /**
      * Returns the index of an item.
      * @param i The item.
-     * @returns {number} The index.
+     * @returns The index.
      * @since v0.0.0
      */
     idxOf(i: any): number {
@@ -953,7 +953,7 @@ class InvComp extends Comp {
     }
     /**
      * Returns the length of the inventory.
-     * @returns {number} The length.
+     * @returns The length.
      * @since v0.0.0
      */
     len(): number {
@@ -962,7 +962,7 @@ class InvComp extends Comp {
     /**
      * Returns an item at the index.
      * @param i The index.
-     * @returns {any} The item.
+     * @returns The item.
      * @since v0.0.0
      */
     at(i: number): any {
@@ -1350,7 +1350,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns this width.
-     * @returns {number} The width.
+     * @returns The width.
      * @since v0.0.0
      */
     getWidth(): number {
@@ -1358,7 +1358,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns this height.
-     * @returns {number} The height.
+     * @returns The height.
      * @since v0.0.0
      */
     getHeight(): number {
@@ -1378,7 +1378,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the string representation of this object.
-     * @returns {string} This, as a string.
+     * @returns This, as a string.
      * @since v0.0.0
      */
     toString(): string {
@@ -1394,7 +1394,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns a new `Preset` from this.
-     * @returns {Preset} This, as a `Preset`.
+     * @returns This, as a `Preset`.
      * @since v0.0.0
      */
     preset(): Preset {
@@ -1402,7 +1402,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the center coordinate.
-     * @returns {Vector} The center coordinate.
+     * @returns The center coordinate.
      * @since v0.0.0
      */
     center(): Vector {
@@ -1410,7 +1410,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the real screen position (accounting for width and height).
-     * @returns {Vector} The screen position.
+     * @returns The screen position.
      * @since v0.0.0
      */
     scrPos(): Vector {
@@ -1418,7 +1418,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the real screen x (accounting for width).
-     * @returns {number} The screen x.
+     * @returns The screen x.
      * @since v0.0.0
      */
     scrX(): number {
@@ -1426,7 +1426,7 @@ class Phantom2dEntity {
     }
     /**
      * Retunrs the real screen y (accounting for height).
-     * @returns {number} The screen y.
+     * @returns The screen y.
      * @since v0.0.0
      */
     scrY(): number {
@@ -1456,7 +1456,7 @@ class Phantom2dEntity {
     /**
      * Returns whether this uses a component or not.
      * @param c The component type.
-     * @returns {boolean} If it is in use.
+     * @returns If it is in use.
      * @since v0.0.0
      */
     uses(c: PhantomCompType): boolean {
@@ -1465,7 +1465,7 @@ class Phantom2dEntity {
     /**
      * Returns a reference to this component.
      * @param c The component type.
-     * @returns {Comp | undefined} The component (or nothing).
+     * @returns The component (or nothing).
      * @since v0.0.0
      */
     comp(c: PhantomCompType): Comp | undefined {
@@ -1480,14 +1480,14 @@ class Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: Phantom2dOptions): Phantom2dEntity;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): Phantom2dEntity;
@@ -1515,14 +1515,14 @@ class StaticObject extends Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: StaticObjectOptions): StaticObject;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): StaticObject;
@@ -1533,6 +1533,9 @@ class StaticObject extends Phantom2dEntity {
             return ent;
         }
         return new StaticObject(opts);
+    }
+    static is(obj: any): obj is Phantom2dEntity {
+        return obj != undefined && obj instanceof Phantom2dEntity;
     }
 }
 /**
@@ -1554,14 +1557,14 @@ class PhysicsObject extends Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: PhysicsObjectOptions): PhysicsObject;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): PhysicsObject;
@@ -1624,14 +1627,14 @@ class MovingObject extends Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: MovingObjectOptions): MovingObject;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): MovingObject;
@@ -1682,14 +1685,14 @@ class BulletObject extends Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: BulletObjectOptions): BulletObject;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): BulletObject;
@@ -1726,14 +1729,14 @@ class Character extends Phantom2dEntity {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: CharacterOptions): Character;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): Character;
@@ -1792,7 +1795,7 @@ class PlayableCharacter extends Character {
     /**
      * Returns a new entity, based on options.
      * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v0.0.0
      */
     static from(opts: PlayableCharacterOptions): PlayableCharacter;
@@ -2390,7 +2393,7 @@ class Local {
     /**
      * Gets a value from `localStorage`.
      * @param k The key.
-     * @returns {string|null} The value (or none, if it does not exist).
+     * @returns The value (or none, if it does not exist).
      * @since v1.0.2
      */
     static get(k: string): string | null {
@@ -2399,7 +2402,7 @@ class Local {
     /**
      * Returns whether an entry with this key exists.
      * @param k The key.
-     * @returns {boolean} Whether this entry exists.
+     * @returns Whether this entry exists.
      * @since v1.0.2
      */
     static has(k: string): boolean {
@@ -2429,7 +2432,7 @@ class Cookies {
     /**
      * Returns a cookie value.
      * @param k The key to get.
-     * @returns {Promise<CookieListItem | null>} The associated cookie (or nothing).
+     * @returns The associated cookie (or nothing).
      * @since v1.0.6
      */
     static get(k: string): Promise<CookieListItem | null> {
@@ -2448,7 +2451,7 @@ class Cookies {
     /**
      * Returns a list of associated cookie values.
      * @param k The key to get.
-     * @returns {Promise<CookieList>} The values.
+     * @returns The values.
      * @since v1.0.6
      */
     static getAll(k: string): Promise<CookieList> {
@@ -2566,7 +2569,7 @@ function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
  * @param dir The angle to travel at (in vector-angle).
  * @param rect The rectangle to test.
  * @param scene The scene.
- * @returns {number | null} The distance of intersection (if there was one).
+ * @returns The distance of intersection (if there was one).
  */
 function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene: Scene): number | null {
     const uv = uvVec(dir, scene.width, scene.height);
@@ -2586,7 +2589,7 @@ function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene:
  * @param p The vector.
  * @param w The scene-space width.
  * @param h The scene-space height.
- * @returns {Vector} A new UV `Vector`.
+ * @returns A new UV `Vector`.
  */
 function uvVec(p: Vector, w: number, h: number): Vector {
     let u = p.x / (w - 1);
@@ -2600,20 +2603,20 @@ function uvVec(p: Vector, w: number, h: number): Vector {
 /**
  * Returns a `Promise` to wait for a specified amount of time.
  * @param ms The time to wait.
- * @returns {Promise<void>} A `Promise` to wait for.
+ * @returns A `Promise` to wait for.
  */
 function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 /**
  * Returns a random number from [0, 100].
- * @returns {number} The random number.
+ * @returns The random number.
  * @since v1.0.5
  */
 function random(): number;
 /**
  * Returns a random number from [0, `max`).
- * @returns {number} The random number.
+ * @returns The random number.
  * @since v1.0.5
  */
 function random(max: number): number;
@@ -2621,7 +2624,7 @@ function random(max: number): number;
  * Returns a random number from (`min`, `max`).
  * 
  * Automatically swaps `min` and `max` if `min` > `max`.
- * @returns {number} The random number.
+ * @returns The random number.
  * @since v1.0.5
  */
 function random(min: number, max: number): number;
