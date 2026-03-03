@@ -2522,6 +2522,31 @@ class Cooldown {
         this.ready = true;
     }
 }
+class Config<K, V> {
+    config: Store<K, V>;
+    constructor() {
+        this.config = new Store();
+    }
+    get(k: K): V | undefined {
+        return this.config.get(k);
+    }
+    set(k: K, v: V) {
+        this.config.set(k, v);
+    }
+    has(k: K): boolean {
+        return this.config.has(k);
+    }
+    del(k: K) {
+        this.config.del(k);
+    }
+}
+const SceneConfigMap = {
+    "resolution": ["h"]
+};
+type SceneConfigType = typeof SceneConfigMap;
+type SceneConfigKey = Key<SceneConfigType>;
+type SceneConfigItem = SceneConfigType[SceneConfigKey];
+class SceneConfig extends Config<SceneConfigKey, SceneConfigItem> {}
 
 /**
  * Returns whether 2 objects are in collision.
