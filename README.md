@@ -38,5 +38,8 @@ npm install @beanthealien/phantomjs
 - Expanded `Cooldown` to construct with `()`, `(number)`, `(boolean)` and `(number, boolean)`.
 - Added `Cookies` class.
 
+# Phantom 2D Roadmap
+- Config for classes
+
 # Phantom HTML v0.0.1
 ### 0.0.1
