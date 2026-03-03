@@ -922,10 +922,8 @@ class InvComp extends Comp {
      * @since v0.0.0
      */
     add(...items: any[]) {
-        for(let i = 0; i < items.length; i++) {
-            if(this.size && this.inv.length >= this.size) continue;
-            this.inv.push(items[i]);
-        }
+        ArrayUtil.add(this.inv, ...items);
+        if(this.size && this.inv.length > this.size) this.inv.length = this.size;
     }
     /**
      * Removes items.
@@ -1440,6 +1438,7 @@ class Phantom2dEntity {
      * @param opts The arguments for the component.
      * @see {@link PhantomCompMap}
      * @since v0.0.0
+     * @throws {AlreadyUsingError} If this component is already in use.
      */
     use(c: PhantomCompType, opts: CompOptions = {}) {
         if(this.uses(c)) throw new AlreadyUsingError();
@@ -2422,23 +2421,105 @@ class Local {
         localStorage.removeItem(k);
     }
 }
+/**
+ * An implementation of `cookieStore`.
+ * @since v1.0.6
+ */
+class Cookies {
+    /**
+     * Returns a cookie value.
+     * @param k The key to get.
+     * @returns {Promise<CookieListItem | null>} The associated cookie (or nothing).
+     * @since v1.0.6
+     */
+    static get(k: string): Promise<CookieListItem | null> {
+        return cookieStore.get(k);
+    }
+    /**
+     * Sets a cookie value.
+     * @param k The key.
+     * @param v The value.
+     * @since v1.0.6
+     */
+    static set(k: string, v: any) {
+        const str = typeof v == "string" ? v : Util.str(v);
+        cookieStore.set(k, str);
+    }
+    /**
+     * Returns a list of associated cookie values.
+     * @param k The key to get.
+     * @returns {Promise<CookieList>} The values.
+     * @since v1.0.6
+     */
+    static getAll(k: string): Promise<CookieList> {
+        return cookieStore.getAll(k);
+    }
+    /**
+     * Deletes a cookie pair.
+     * @param k The key.
+     * @since v1.0.6
+     */
+    static del(k: string) {
+        cookieStore.delete(k);
+    }
+}
+/**
+ * A simple cooldown timer.
+ * @since v1.0.5
+ */
 class Cooldown {
     id: number;
+    ready: boolean;
+    /**
+     * A constructor that won't start the cooldown.
+     * @since v1.0.6
+     */
     constructor();
-    constructor(handle?: TimerHandler, ms?: number) {
+    /**
+     * A constructor that will start the cooldown.
+     * @param ms The time to use.
+     * @since v1.0.6
+     */
+    constructor(ms: number);
+    /**
+     * A constructor that won't start the cooldown, but will set the inital value of the `ready` attribute.
+     * @param initalState The inital state of the `ready` attribute.
+     * @since v1.0.6
+     */
+    constructor(initalState: boolean);
+    /**
+     * A constructor that will start the cooldown and will set the inital value of the `ready` attribute.
+     * @param ms The time to use.
+     * @param initalState The inital state of the `ready` attribute.
+     * @since v1.0.6
+     */
+    constructor(ms: number, initalState: boolean);
+    constructor(msOrState?: number | boolean, msOrState2?: number | boolean) {
         this.id = -1;
-        if(handle && ms) {
-            this.on(handle, ms);
+        this.ready = false;
+        if(msOrState && typeof msOrState == "number" && msOrState2 == undefined) {
+            this.on(msOrState);
+        } else if(msOrState && typeof msOrState == "boolean" && msOrState2 == undefined) {
+            this.ready = msOrState;
+        } else if(msOrState && typeof msOrState == "number" && msOrState2 && typeof msOrState2 == "boolean") {
+            this.on(msOrState);
+            this.ready = msOrState2;
         }
     }
-    on(handle: TimerHandler, ms: number) {
+    on(ms: number) {
         if(this.id != -1) throw new ExistingProcessError();
-        this.id = setInterval(handle, ms);
+        this.id = setInterval(this.#handle, ms);
     }
     off() {
         if(this.id == -1) throw new NoProcessError();
         clearInterval(this.id);
         this.id = -1;
+    }
+    consume() {
+        this.ready = false;
+    }
+    #handle() {
+        this.ready = true;
     }
 }
 
@@ -2552,7 +2633,7 @@ export {
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Local, Cooldown,
+    RaycastIntersecton, Local, Cooldown, Cookies,
 
     isCol, rayInterRect, uvVec, wait, random
 };

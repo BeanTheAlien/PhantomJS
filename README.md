@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.5 BETA
+# Phantom 2D v1.0.6 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -34,6 +34,9 @@ npm install @beanthealien/phantomjs
 - Added `Phantom2dOptions`, `Preset` overloads for `Phantom2dEntity.from` calls.
 - Added `ErrRoot` class.
 - Enhanced `random` to add `()`, `(number)` and `(number, number)`.
+### v1.0.6
+- Expanded `Cooldown` to construct with `()`, `(number)`, `(boolean)` and `(number, boolean)`.
+- Added `Cookies` class.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
