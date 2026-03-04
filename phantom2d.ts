@@ -2658,8 +2658,28 @@ type ImgConfigType = ConfigType<typeof ImgConfigMap>;
 class ImgConfig extends Config<ImgConfigType> {}
 Img.config = new ImgConfig();
 Img.config.set("root", "");
+/**
+ * The options for pickers.
+ * 
+ * Includes `id` and `start` properties.
+ * @since v1.0.7
+ */
 interface PickerOptions {
+    /**
+     * By specifying an ID, the browser can remember different directories for different IDs.
+     * 
+     * If the same ID is used for another picker, the picker opens in the same directory.
+     * 
+     * As specified by MDN Web Docs.
+     * @since v1.0.7
+     */
     id?: string;
+    /**
+     * A `FileSystemHandle` or a well known directory ("desktop", "documents", "downloads", "music", "pictures", or "videos") to open the dialog in.
+     * 
+     * As specified by MDN Web Docs.
+     * @since v1.0.7
+     */
     start?: FileSystemStartPosition;
 }
 type WellKnownDir = "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
@@ -2681,6 +2701,12 @@ abstract class Picker<T> {
         return { id: opts.id, startIn: opts.start };
     }
 }
+/**
+ * Shows a file picker.
+ * 
+ * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker)
+ * @since v1.0.7
+ */
 class FilePicker extends Picker<string|string[]> {
     async pick(opts: FilePickerOptions): Promise<string|string[]> {
         const clean = {
@@ -2711,7 +2737,7 @@ class DirPicker extends Picker<FileSystemDirectoryHandle> {
         const clean = {
             id: opts.id,
             startIn: opts.start,
-            mode: opts.mode ? { "r": "", "rw": "" }[opts.mode] : undefined
+            mode: opts.mode ? { "r": "read", "rw": "readwrite" }[opts.mode] : undefined
         };
         try {
             const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(clean);
