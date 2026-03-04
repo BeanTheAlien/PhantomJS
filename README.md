@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.6 BETA
+# Phantom 2D v1.0.7 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -38,6 +38,12 @@ npm install @beanthealien/phantomjs
 - Expanded `Cooldown` to construct with `()`, `(number)`, `(boolean)` and `(number, boolean)`.
 - Added `Cookies` class.
 - Minor structure changes.
+### v1.0.7
+- Added `objIs`.
+- The start to `Config` are here!
+- `FilePicker`, `DirPicker` to handle picking files/dirs.
+- (Most) classes have a static `is` method that runs `objIs<PARENT_CLASS_TYPE>`.
+- `SceneConfig` now has `resolution`, `master`, `music` and `sfx` properties. `ImgConfig` now has `root` property.
 
 # Phantom 2D Roadmap
 - Config for classes

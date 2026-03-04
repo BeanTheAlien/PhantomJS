@@ -138,6 +138,7 @@ type Key<T> = keyof T;
 type Frame = Img | undefined;
 type Frames = Img[];
 type MoveMode = "fixed" | "move";
+type Constructor<T> = new (...args: any[]) => T;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -1499,6 +1500,14 @@ class Phantom2dEntity {
         }
         return new Phantom2dEntity(opts);
     }
+    /**
+     * Returns whether the object passed is an `Phantom2dEntity`.
+     * @param obj The object to test.
+     * @returns Whether it is an entity.
+     */
+    static is(obj: any): obj is Phantom2dEntity {
+        return objIs<Phantom2dEntity>(obj);
+    }
 }
 /**
  * A simple object that is primarily used for scenery.
@@ -1534,8 +1543,8 @@ class StaticObject extends Phantom2dEntity {
         }
         return new StaticObject(opts);
     }
-    static is(obj: any): obj is Phantom2dEntity {
-        return obj != undefined && obj instanceof Phantom2dEntity;
+    static is(obj: any): obj is StaticObject {
+        return objIs<StaticObject>(obj);
     }
 }
 /**
@@ -1575,6 +1584,9 @@ class PhysicsObject extends Phantom2dEntity {
             return ent;
         }
         return new PhysicsObject(opts);
+    }
+    static is(obj: any): obj is PhysicsObject {
+        return objIs<PhysicsObject>(obj);
     }
 }
 /**
@@ -1646,6 +1658,9 @@ class MovingObject extends Phantom2dEntity {
         }
         return new MovingObject(opts);
     }
+    static is(obj: any): obj is MovingObject {
+        return objIs<MovingObject>(obj);
+    }
 }
 /**
  * Similar to a moving object, this will fly across the screen.
@@ -1704,6 +1719,9 @@ class BulletObject extends Phantom2dEntity {
         }
         return new BulletObject(opts);
     }
+    static is(obj: any): obj is BulletObject {
+        return objIs<BulletObject>(obj);
+    }
 }
 /**
  * The root class for other character-like classes.
@@ -1747,6 +1765,9 @@ class Character extends Phantom2dEntity {
             return ent;
         }
         return new Character(opts);
+    }
+    static is(obj: any): obj is Character {
+        return objIs<Character>(obj);
     }
 }
 /**
@@ -1802,7 +1823,7 @@ class PlayableCharacter extends Character {
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
-     * @returns {Phantom2dEntity} The new entity.
+     * @returns The new entity.
      * @since v1.0.5
      */
     static from(preset: Preset): PlayableCharacter;
@@ -1813,6 +1834,9 @@ class PlayableCharacter extends Character {
             return ent;
         }
         return new PlayableCharacter(opts);
+    }
+    static is(obj: any): obj is PlayableCharacter {
+        return objIs<PlayableCharacter>(obj);
     }
 }
 /**
@@ -1917,6 +1941,7 @@ class Sound {
  * @since v0.0.0
  */
 class Img {
+    static config: ImgConfig;
     img: HTMLImageElement;
     constructor(src: string) {
         this.img = new Image();
@@ -1968,6 +1993,7 @@ class Items {
  * @since v0.0.0
  */
 class Scene {
+    static config: SceneConfig;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     items: Items;
@@ -2090,6 +2116,11 @@ class Scene {
     loadLvl(lvlName: string) {
         const lvl = this.lvlStore.get(lvlName);
         if(lvl) this.items = lvl.items;
+    }
+    lvl(): Level {
+        const lvl = new Level();
+        lvl.items = this.items;
+        return lvl;
     }
     get color(): string | CanvasGradient | CanvasPattern {
         return this.ctx.fillStyle;
@@ -2308,7 +2339,7 @@ class Raycast {
         for(const i of this.scene.items.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit) {
-                if(res && hit < res.dist) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+                if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
             }
         }
         return res;
@@ -2525,31 +2556,171 @@ class Cooldown {
         this.ready = true;
     }
 }
-class Config<K, V> {
-    config: Store<K, V>;
+class Config<T extends Record<string, any>> {
+    config: Store<keyof T, T[keyof T]>;
+
     constructor() {
         this.config = new Store();
     }
-    get(k: K): V | undefined {
+
+    get<K extends keyof T>(k: K): T[K] | undefined {
         return this.config.get(k);
     }
-    set(k: K, v: V) {
+
+    set<K extends keyof T>(k: K, v: T[K]) {
         this.config.set(k, v);
     }
-    has(k: K): boolean {
+
+    has<K extends keyof T>(k: K): boolean {
         return this.config.has(k);
     }
-    del(k: K) {
+
+    del<K extends keyof T>(k: K) {
         this.config.del(k);
     }
 }
-const SceneConfigMap = {
-    "resolution": ["h"]
+type ConfigTypeExtract<T> = T extends { vals: readonly any[]} ?
+    T["vals"][number] : T extends { type: NumberConstructor} ?
+    number : T extends { type: StringConstructor } ?
+    string : T extends { type: BooleanConstructor } ?
+    boolean : never;
+type ConfigType<T extends Record<string, any>> = {
+    [K in keyof T]: ConfigTypeExtract<T[K]>
 };
-type SceneConfigType = typeof SceneConfigMap;
-type SceneConfigKey = Key<SceneConfigType>;
-type SceneConfigItem = SceneConfigType[SceneConfigKey];
-class SceneConfig extends Config<SceneConfigKey, SceneConfigItem> {}
+function option<const T extends readonly any[]>(vals: T): { vals: T } {
+    return { vals };
+}
+function prim<T>(type: T): { type: T } {
+    return { type };
+}
+const SceneConfigMap = {
+    /**
+     * Controls the displayed resolution (outputted textures width and height).
+     * 
+     * Resolution is basically a texture's "sharpness" prior application.
+     * 
+     * Textures (including basic colors) are stretched to fill an entities `width` and `height`.
+     * @since v1.0.7
+     */
+    resolution: option(["1920x1080", "2560x1440", "1280x720", "640x360"]),
+    /**
+     * Controls the master volume of all audio in this project.
+     * 
+     * Accepts a value from 0 - 1.
+     * 
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    master: prim(Number),
+    /**
+     * Controls the volume of all music audio in this project.
+     * 
+     * Any `Sound` or `SFX` with the tag "music" is controlled by this.
+     * 
+     * Accepts a value from 0 - 1.
+     * 
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    music: prim(Number),
+    /**
+     * Controls the volume of all sound effect audio in this project.
+     * 
+     * Any `Sound` with the tag `sfx` or `SFX` is controlled by this.
+     * 
+     * Accepts a value from 0 - 1.
+     * 
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    sfx: prim(Number)
+} as const;
+type SceneConfigType = ConfigType<typeof SceneConfigMap>;
+class SceneConfig extends Config<SceneConfigType> {}
+Scene.config = new SceneConfig();
+Scene.config.set("resolution", "1920x1080");
+Scene.config.set("master", 1);
+Scene.config.set("music", 1);
+Scene.config.set("sfx", 1);
+const ImgConfigMap = {
+    /**
+     * Controls the beginning (pre-pended) folder path to all `src` properties.
+     * @since v1.0.7
+     * @example
+     * ```
+     * Img.config.set("root", "assets"); // assuming there was an 'assets/' folder
+     * const img = new Img("cool.png"); // this would be transformed to be 'assets/cool.png'
+     * ```
+     */
+    root: prim(String)
+} as const;
+type ImgConfigType = ConfigType<typeof ImgConfigMap>;
+class ImgConfig extends Config<ImgConfigType> {}
+Img.config = new ImgConfig();
+Img.config.set("root", "");
+interface PickerOptions {
+    id?: string;
+    start?: FileSystemStartPosition;
+}
+type WellKnownDir = "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
+type Accepted = { desc?: string, accept: { string: string[] } };
+type OpenDirectoryAccessMode = "r" | "rw";
+type FileSystemStartPosition = FileSystemHandle | WellKnownDir;
+interface FilePickerOptions extends PickerOptions {
+    all?: boolean;
+    mult?: boolean;
+    accept?: Accepted[]
+}
+interface DirPickerOptions extends PickerOptions {
+    mode?: OpenDirectoryAccessMode;
+}
+type PickerCleanedOptions = { id?: string, startIn?: FileSystemStartPosition };
+abstract class Picker<T> {
+    abstract pick(opts: PickerOptions): Promise<T>;
+    clean(opts: PickerOptions): PickerCleanedOptions {
+        return { id: opts.id, startIn: opts.start };
+    }
+}
+class FilePicker extends Picker<string|string[]> {
+    async pick(opts: FilePickerOptions): Promise<string|string[]> {
+        const clean = {
+            ...this.clean(opts),
+            excludeAcceptAllOption: opts.all,
+            multiple: opts.mult,
+            types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
+        };
+        try {
+            const [...handles]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker(clean);
+            if(handles.length == 1) {
+                const file = await handles[0].getFile();
+                return await file.text();
+            }
+            const files: File[] = [];
+            for(const handle of handles) {
+                files.push(await handle.getFile());
+            }
+            const out = await Promise.all(files.map(async o => o.text()));
+            return out;
+        } catch(e) {
+            throw e;
+        }
+    }
+}
+class DirPicker extends Picker<FileSystemDirectoryHandle> {
+    async pick(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
+        const clean = {
+            id: opts.id,
+            startIn: opts.start,
+            mode: opts.mode ? { "r": "", "rw": "" }[opts.mode] : undefined
+        };
+        try {
+            const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(clean);
+            return handle;
+        } catch(e) {
+            throw e;
+        }
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -2642,11 +2813,11 @@ function random(a?: number, b?: number): number {
     }
     return Math.floor(Math.random() * (max - min)) + min;
 }
+function objIs<T>(obj: any): obj is T {
+    return obj != undefined && obj instanceof (null as unknown as Constructor<T>);
+}
 
 export {
-    Custom, Axis, Dir, EventHandle, EventType, Callback, PhantomEventType,
-    PhantomEventHandle, AudioMIME, CollisionHandle,
-    
     NoFunc,
 
     NoContextError, ExistingProcessError, NoCanvasError, NoProcessError,
@@ -2661,7 +2832,9 @@ export {
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Local, Cooldown, Cookies,
+    RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker,
+
+    Config, SceneConfig,
 
     isCol, rayInterRect, uvVec, wait, random
 };
