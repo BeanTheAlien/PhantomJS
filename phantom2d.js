@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume;
+var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Cooldown_instances, _Cooldown_handle;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -37,13 +37,22 @@ class ArrayUtil {
  */
 const NoFunc = (() => { });
 /**
+ * A simplified class for creating errors.
+ * @since v1.0.5
+ */
+class ErrRoot extends Error {
+    constructor(name, msg) {
+        super(msg);
+        this.name = name;
+    }
+}
+/**
  * Thrown when `CanvasRenderingContext2D` cannot be gotten.
  * @since v0.0.0
  */
-class NoContextError extends Error {
+class NoContextError extends ErrRoot {
     constructor() {
-        super("Cannot get context 2D.");
-        this.name = "NoContextError";
+        super("NoContextError", "Cannot get context 2D.");
     }
 }
 /**
@@ -55,10 +64,9 @@ class NoContextError extends Error {
  * const scene = new Scene({ canvas: el }); // cannot convert undefined to HTMLCanvasElement
  * ```
  */
-class NoCanvasError extends Error {
+class NoCanvasError extends ErrRoot {
     constructor() {
-        super("Did not receive HTMLCanvasElement or HTMLElement in scene.");
-        this.name = "NoCanvasError";
+        super("NoCanvasError", "Did not receive HTMLCanvasElement or HTMLElement in scene.");
     }
 }
 /**
@@ -71,10 +79,9 @@ class NoCanvasError extends Error {
  * rt.start(() => {}); // process already started
  * ```
  */
-class ExistingProcessError extends Error {
+class ExistingProcessError extends ErrRoot {
     constructor() {
-        super("A process already exists, cannot create new process.");
-        this.name = "ExistingProcessError";
+        super("ExistingProcessError", "A process already exists, cannot create new process.");
     }
 }
 /**
@@ -86,10 +93,9 @@ class ExistingProcessError extends Error {
  * rt.stop(); // no process has been started
  * ```
  */
-class NoProcessError extends Error {
+class NoProcessError extends ErrRoot {
     constructor() {
-        super("A process does not exist.");
-        this.name = "NoProcessError";
+        super("NoProcessError", "A process does not exist.");
     }
 }
 /**
@@ -102,10 +108,9 @@ class NoProcessError extends Error {
  * ent.use("health"); // cannot use again
  * ```
  */
-class AlreadyUsingError extends Error {
+class AlreadyUsingError extends ErrRoot {
     constructor() {
-        super("Already using this component, cannot use again.");
-        this.name = "AlreadyUsingError";
+        super("AlreadyUsingError", "Already using this component, cannot use again.");
     }
 }
 /**
@@ -123,10 +128,9 @@ class AlreadyUsingError extends Error {
  * scene.start(); // cannot render without scene
  * ```
  */
-class NoSceneAvailableError extends Error {
+class NoSceneAvailableError extends ErrRoot {
     constructor() {
-        super("A component requires a scene reference, but none was provided.");
-        this.name = "NoSceneAvailableError";
+        super("NoSceneAvailableError", "A component requires a scene reference, but none was provided.");
     }
 }
 /**
@@ -139,15 +143,14 @@ class NoSceneAvailableError extends Error {
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
  * const ent = new Phantom2dEntity({});
- * ent.use("sprite", { scene: canvas }); // no frames property
+ * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
  * ```
  */
-class OutOfBoundsError extends Error {
+class OutOfBoundsError extends ErrRoot {
     constructor() {
-        super("Index exceeds length; could not get crucial value.");
-        this.name = "OutOfBoundsError";
+        super("OutOfBoundsError", "Index exceeds length; could not get crucial value.");
     }
 }
 /**
@@ -218,6 +221,24 @@ class Store {
     items() {
         return this.store.entries();
     }
+}
+/**
+ * A metaphorical "box" of items.
+ *
+ * Useful for array-based classes.
+ * @since v1.0.8
+ */
+class ItemBox {
+    constructor() {
+        this.stuff = [];
+    }
+    add(...stuff) {
+        ArrayUtil.add(this.stuff, stuff);
+    }
+    rm(...stuff) {
+        ArrayUtil.rm(this.stuff, stuff);
+    }
+    forEach(cb) { }
 }
 /**
  * The synthetic event class.
@@ -301,10 +322,10 @@ class Comp {
  */
 class HealthComp extends Comp {
     constructor(ent, opts) {
-        var _a;
+        var _b;
         super(ent);
         _HealthComp_instances.add(this);
-        this.hp = (_a = opts.hp) !== null && _a !== void 0 ? _a : 0;
+        this.hp = (_b = opts.hp) !== null && _b !== void 0 ? _b : 0;
         this.mhp = opts.mhp;
         this.onHurt = opts.onHurt;
         this.onDie = opts.onDie;
@@ -362,11 +383,9 @@ class InvComp extends Comp {
      * @since v0.0.0
      */
     add(...items) {
-        for (let i = 0; i < items.length; i++) {
-            if (this.size && this.inv.length >= this.size)
-                continue;
-            this.inv.push(items[i]);
-        }
+        ArrayUtil.add(this.inv, ...items);
+        if (this.size && this.inv.length > this.size)
+            this.inv.length = this.size;
     }
     /**
      * Removes items.
@@ -379,7 +398,7 @@ class InvComp extends Comp {
     /**
      * Tests if this inventory contains the items passed.
      * @param items The items to check.
-     * @returns {booelan} If it contains all the items.
+     * @returns If it contains all the items.
      * @since v0.0.0
      */
     has(...items) {
@@ -388,7 +407,7 @@ class InvComp extends Comp {
     /**
      * Returns the index of an item.
      * @param i The item.
-     * @returns {number} The index.
+     * @returns The index.
      * @since v0.0.0
      */
     idxOf(i) {
@@ -396,7 +415,7 @@ class InvComp extends Comp {
     }
     /**
      * Returns the length of the inventory.
-     * @returns {number} The length.
+     * @returns The length.
      * @since v0.0.0
      */
     len() {
@@ -405,7 +424,7 @@ class InvComp extends Comp {
     /**
      * Returns an item at the index.
      * @param i The index.
-     * @returns {any} The item.
+     * @returns The item.
      * @since v0.0.0
      */
     at(i) {
@@ -418,9 +437,9 @@ class InvComp extends Comp {
  */
 class SpriteComp extends Comp {
     constructor(ent, opts) {
-        var _a;
+        var _b;
         super(ent);
-        this.frames = ((_a = opts.frames) !== null && _a !== void 0 ? _a : []).map(Img.from);
+        this.frames = ((_b = opts.frames) !== null && _b !== void 0 ? _b : []).map(Img.from);
         this.scene = opts.scene;
         this.idx = 0;
     }
@@ -472,9 +491,9 @@ class SceneComp {
  */
 class SceneTilesComp extends SceneComp {
     constructor(scene, opts) {
-        var _a;
+        var _b;
         super(scene);
-        this.size = (_a = opts.size) !== null && _a !== void 0 ? _a : 0;
+        this.size = (_b = opts.size) !== null && _b !== void 0 ? _b : 0;
         this.nth = opts.nth;
     }
 }
@@ -531,28 +550,23 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  */
 class Phantom2dEntity {
     constructor(opts) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        this.collide = (_a = opts.collide) !== null && _a !== void 0 ? _a : ((o) => { });
-        this.upd = (_b = opts.upd) !== null && _b !== void 0 ? _b : NoFunc;
-        this.x = (_c = opts.x) !== null && _c !== void 0 ? _c : 0;
-        this.y = (_d = opts.y) !== null && _d !== void 0 ? _d : 0;
-        this.rot = (_e = opts.rot) !== null && _e !== void 0 ? _e : 0;
-        this.width = (_f = opts.width) !== null && _f !== void 0 ? _f : 0;
-        this.height = (_g = opts.height) !== null && _g !== void 0 ? _g : 0;
+        var _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        this.collide = (_b = opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
+        this.upd = (_c = opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
+        this.x = (_d = opts.x) !== null && _d !== void 0 ? _d : 0;
+        this.y = (_e = opts.y) !== null && _e !== void 0 ? _e : 0;
+        this.rot = (_f = opts.rot) !== null && _f !== void 0 ? _f : 0;
+        this.width = (_g = opts.width) !== null && _g !== void 0 ? _g : 0;
+        this.height = (_h = opts.height) !== null && _h !== void 0 ? _h : 0;
         this.evStore = new Store();
-        this.color = (_h = opts.color) !== null && _h !== void 0 ? _h : "#fff";
+        this.color = (_j = opts.color) !== null && _j !== void 0 ? _j : "#fff";
         if (opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
         this.comps = new Store();
+        this.moveMode = (_k = opts.moveMode) !== null && _k !== void 0 ? _k : "move";
     }
-    /**
-     * Sets the position.
-     * @param x The new x pos (or `Vector`).
-     * @param y The new y pos.
-     * @since v0.0.0
-     */
     setPos(x, y) {
         if (typeof x == "number" && typeof y == "number") {
             this.x = x;
@@ -604,6 +618,8 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     move(dist, axis) {
+        if (this.moveMode == "fixed")
+            return console.warn("Cannot move this entity, because it has a 'fixed' move mode.");
         if (axis == "x" || axis == 0)
             this.x += dist;
         else if (axis == "y" || axis == 1)
@@ -703,15 +719,27 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     on(event, handle) {
-        this.evStore.set(event, handle);
+        var _b;
+        const a = (_b = this.evStore.get(event)) !== null && _b !== void 0 ? _b : [];
+        a.push(handle);
+        this.evStore.set(event, a);
     }
     /**
      * Removes a listener for an event.
      * @param event The event type.
+     * @param handle The event handle (or nothing, to remove all handles).
      * @since v0.0.0
      */
-    off(event) {
-        this.evStore.del(event);
+    off(event, handle) {
+        var _b;
+        if (handle) {
+            const a = (_b = this.evStore.get(event)) !== null && _b !== void 0 ? _b : [];
+            ArrayUtil.rm(a, handle);
+            this.evStore.set(event, a);
+        }
+        else {
+            this.evStore.del(event);
+        }
     }
     /**
      * Consumes an event.
@@ -720,14 +748,14 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     consume(title, event) {
-        const handle = this.evStore.get(title);
-        if (handle) {
-            handle(event);
+        const handles = this.evStore.get(title);
+        if (handles) {
+            handles.forEach(h => h(event));
         }
     }
     /**
      * Returns this width.
-     * @returns {number} The width.
+     * @returns The width.
      * @since v0.0.0
      */
     getWidth() {
@@ -735,7 +763,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns this height.
-     * @returns {number} The height.
+     * @returns The height.
      * @since v0.0.0
      */
     getHeight() {
@@ -755,7 +783,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the string representation of this object.
-     * @returns {string} This, as a string.
+     * @returns This, as a string.
      * @since v0.0.0
      */
     toString() {
@@ -771,7 +799,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns a new `Preset` from this.
-     * @returns {Preset} This, as a `Preset`.
+     * @returns This, as a `Preset`.
      * @since v0.0.0
      */
     preset() {
@@ -779,7 +807,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the center coordinate.
-     * @returns {Vector} The center coordinate.
+     * @returns The center coordinate.
      * @since v0.0.0
      */
     center() {
@@ -787,7 +815,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the real screen position (accounting for width and height).
-     * @returns {Vector} The screen position.
+     * @returns The screen position.
      * @since v0.0.0
      */
     scrPos() {
@@ -795,7 +823,7 @@ class Phantom2dEntity {
     }
     /**
      * Returns the real screen x (accounting for width).
-     * @returns {number} The screen x.
+     * @returns The screen x.
      * @since v0.0.0
      */
     scrX() {
@@ -803,7 +831,7 @@ class Phantom2dEntity {
     }
     /**
      * Retunrs the real screen y (accounting for height).
-     * @returns {number} The screen y.
+     * @returns The screen y.
      * @since v0.0.0
      */
     scrY() {
@@ -815,6 +843,7 @@ class Phantom2dEntity {
      * @param opts The arguments for the component.
      * @see {@link PhantomCompMap}
      * @since v0.0.0
+     * @throws {AlreadyUsingError} If this component is already in use.
      */
     use(c, opts = {}) {
         if (this.uses(c))
@@ -833,7 +862,7 @@ class Phantom2dEntity {
     /**
      * Returns whether this uses a component or not.
      * @param c The component type.
-     * @returns {boolean} If it is in use.
+     * @returns If it is in use.
      * @since v0.0.0
      */
     uses(c) {
@@ -842,20 +871,33 @@ class Phantom2dEntity {
     /**
      * Returns a reference to this component.
      * @param c The component type.
-     * @returns {Comp | undefined} The component (or nothing).
+     * @returns The component (or nothing).
      * @since v0.0.0
      */
     comp(c) {
         return this.comps.get(c);
     }
-    /**
-     * Returns a new entity.
-     * @param opts The options to use.
-     * @returns {Phantom2dEntity} The new entity.
-     * @since v0.0.0
-     */
+    getMoveMode() {
+        return this.moveMode;
+    }
+    setMoveMode(m) {
+        this.moveMode = m;
+    }
     static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new Phantom2dEntity({});
+            opts.apply(ent);
+            return ent;
+        }
         return new Phantom2dEntity(opts);
+    }
+    /**
+     * Returns whether the object passed is an `Phantom2dEntity`.
+     * @param obj The object to test.
+     * @returns Whether it is an entity.
+     */
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -867,9 +909,19 @@ class Phantom2dEntity {
 class StaticObject extends Phantom2dEntity {
     constructor(opts) {
         super(opts);
+        // requires an enforced fixed move mode
+        this.setMoveMode("fixed");
     }
     static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new StaticObject({ shape: "geom", color: "#fff" });
+            opts.apply(ent);
+            return ent;
+        }
         return new StaticObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -888,7 +940,15 @@ class PhysicsObject extends Phantom2dEntity {
         super.update();
     }
     static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new PhysicsObject({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
         return new PhysicsObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -941,7 +1001,15 @@ class MovingObject extends Phantom2dEntity {
         super.update();
     }
     static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new MovingObject({ dirX: 0, dirY: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, bouncy: false });
+            opts.apply(ent);
+            return ent;
+        }
         return new MovingObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -978,7 +1046,15 @@ class BulletObject extends Phantom2dEntity {
         }
     }
     static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: null });
+            opts.apply(ent);
+            return ent;
+        }
         return new BulletObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -1001,6 +1077,17 @@ class Character extends Phantom2dEntity {
     jump(h) {
         this.gspd = -(h);
     }
+    static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new Character({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
+        return new Character(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
+    }
 }
 /**
  * A character that also has bindings.
@@ -1010,9 +1097,9 @@ class Character extends Phantom2dEntity {
  */
 class PlayableCharacter extends Character {
     constructor(opts) {
-        var _a;
+        var _b;
         super(opts);
-        this.binds = (_a = opts.binds) !== null && _a !== void 0 ? _a : new Store();
+        this.binds = (_b = opts.binds) !== null && _b !== void 0 ? _b : new Store();
         this.keys = new Store();
         window.addEventListener("keydown", (e) => {
             this.keys.set(e.code, true);
@@ -1043,6 +1130,17 @@ class PlayableCharacter extends Character {
             }
         }
         super.update();
+    }
+    static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new PlayableCharacter({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
+        return new PlayableCharacter(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
     }
 }
 /**
@@ -1081,6 +1179,9 @@ class Pixel {
         }
     }
 }
+function SoundOptionsIsSOD(o) {
+    return "mime" in o;
+}
 /**
  * An audio source.
  *
@@ -1090,12 +1191,17 @@ class Pixel {
 class Sound {
     constructor(opts) {
         this.src = opts.src;
-        this.mime = opts.mime;
         this.aud = new Audio();
-        const source = document.createElement("source");
-        source.src = this.src;
-        source.type = this.mime.startsWith("audio") ? this.mime : `audio/${this.mime}`;
-        this.aud.appendChild(source);
+        if (SoundOptionsIsSOD(opts)) {
+            this.mime = opts.mime;
+            const source = document.createElement("source");
+            source.src = this.src;
+            source.type = this.mime.startsWith("audio") ? this.mime : `audio/${this.mime}`;
+            this.aud.appendChild(source);
+        }
+        else {
+            this.aud.src = this.src;
+        }
     }
     play() {
         this.aud.play();
@@ -1112,6 +1218,9 @@ class Sound {
     get len() {
         return this.aud.duration;
     }
+    static from(opts) {
+        return new Sound(opts);
+    }
 }
 /**
  * An image.
@@ -1121,13 +1230,23 @@ class Sound {
  */
 class Img {
     constructor(src) {
+        _Img_instances.add(this);
         this.img = new Image();
-        this.img.src = src;
+        this.rebuild(src);
+    }
+    rebuild(src) {
+        this.img.src = __classPrivateFieldGet(this, _Img_instances, "m", _Img_realSrc).call(this, src);
     }
     static from(src) {
-        return new Img(src);
+        return new _a(src);
     }
 }
+_a = Img, _Img_instances = new WeakSet(), _Img_realSrc = function _Img_realSrc(src) {
+    const root = _a.config.get("root");
+    if (!root || root.length == 0)
+        return src;
+    return `${root}${root.endsWith("/") ? "" : "/"}${src}`;
+};
 /**
  * A component to store various elements.
  * @since v0.0.0
@@ -1149,7 +1268,7 @@ class Items {
         }
     }
     has(...items) {
-        return items.every(i => this.items.includes(i));
+        return ArrayUtil.has(this.items, items);
     }
     idxOf(item) {
         return this.items.indexOf(item);
@@ -1170,14 +1289,17 @@ class Items {
  */
 class Scene {
     constructor(opts) {
-        var _a, _b, _c, _d;
+        var _b, _c, _d, _e;
+        if (typeof opts.canvas == "string") {
+            opts.canvas = document.getElementById(opts.canvas);
+        }
         if (!opts.canvas)
             throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas;
-        this.canvas.width = (_a = opts.w) !== null && _a !== void 0 ? _a : 0;
-        this.canvas.height = (_b = opts.h) !== null && _b !== void 0 ? _b : 0;
-        this.canvas.style.width = (_c = opts.cssW) !== null && _c !== void 0 ? _c : "0px";
-        this.canvas.style.height = (_d = opts.cssH) !== null && _d !== void 0 ? _d : "0px";
+        this.canvas.width = (_b = opts.w) !== null && _b !== void 0 ? _b : 0;
+        this.canvas.height = (_c = opts.h) !== null && _c !== void 0 ? _c : 0;
+        this.canvas.style.width = (_d = opts.cssW) !== null && _d !== void 0 ? _d : "0px";
+        this.canvas.style.height = (_e = opts.cssH) !== null && _e !== void 0 ? _e : "0px";
         const ctx = this.canvas.getContext("2d");
         if (!ctx)
             throw new NoContextError();
@@ -1232,13 +1354,23 @@ class Scene {
         return this.items.filter(cb);
     }
     on(name, handle) {
-        this.evStore.set(name, handle);
+        var _b;
+        const a = (_b = this.evStore.get(name)) !== null && _b !== void 0 ? _b : [];
+        a.push(handle);
+        this.evStore.set(name, a);
         this.canvas.addEventListener(name, handle);
     }
     off(name, handle) {
-        if (handle)
-            this.canvas.removeEventListener(name, handle !== null && handle !== void 0 ? handle : this.evStore.get(name));
-        this.evStore.del(name);
+        var _b;
+        if (handle) {
+            this.canvas.removeEventListener(name, handle);
+            const a = (_b = this.evStore.get(name)) !== null && _b !== void 0 ? _b : [];
+            ArrayUtil.rm(a, handle);
+            this.evStore.set(name, a);
+        }
+        else {
+            this.evStore.del(name);
+        }
     }
     getImgData(pos) {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);
@@ -1276,6 +1408,11 @@ class Scene {
         const lvl = this.lvlStore.get(lvlName);
         if (lvl)
             this.items = lvl.items;
+    }
+    lvl() {
+        const lvl = new Level();
+        lvl.items = this.items;
+        return lvl;
     }
     get color() {
         return this.ctx.fillStyle;
@@ -1370,9 +1507,21 @@ class Scene {
     bounds() {
         return this.canvas.getBoundingClientRect();
     }
-    clickAt(e) {
+    mouseAt(e) {
         const rect = this.bounds();
         return new Vector(e.clientX - rect.left, e.clientY - rect.top);
+    }
+    clickFScrOn() {
+        this.on("click", this.fScrOn);
+    }
+    clickFScrOff() {
+        this.off("click", this.fScrOn);
+    }
+    clickPLockOn() {
+        this.on("click", this.pLockOn);
+    }
+    clickPLockOff() {
+        this.off("click", this.pLockOn);
     }
 }
 /**
@@ -1480,7 +1629,7 @@ class Raycast {
         for (const i of this.scene.items.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if (hit) {
-                if (res && hit < res.dist)
+                if ((res && hit < res.dist) || (res == null))
                     res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
             }
         }
@@ -1550,6 +1699,290 @@ class GeomCircle extends Geom {
     constructor() { super("circle"); }
 }
 /**
+ * An implementation of `localStorage`.
+ * @since v1.0.2
+ */
+class Local {
+    /**
+     * Sets a value in `localStorage`.
+     * @param k The key.
+     * @param v The value.
+     * @since v1.0.2
+     */
+    static set(k, v) {
+        const val = typeof v == "string" ? v : Util.str(v);
+        localStorage.setItem(k, val);
+    }
+    /**
+     * Gets a value from `localStorage`.
+     * @param k The key.
+     * @returns The value (or none, if it does not exist).
+     * @since v1.0.2
+     */
+    static get(k) {
+        return localStorage.getItem(k);
+    }
+    /**
+     * Returns whether an entry with this key exists.
+     * @param k The key.
+     * @returns Whether this entry exists.
+     * @since v1.0.2
+     */
+    static has(k) {
+        return !!this.get(k);
+    }
+    /**
+     * Returns the length of `localStorage`.
+     * @since v1.0.2
+     */
+    static get len() {
+        return localStorage.length;
+    }
+    /**
+     * Deletes an item.
+     * @param k The key.
+     * @since v1.0.2
+     */
+    static del(k) {
+        localStorage.removeItem(k);
+    }
+}
+/**
+ * An implementation of `cookieStore`.
+ * @since v1.0.6
+ */
+class Cookies {
+    /**
+     * Returns a cookie value.
+     * @param k The key to get.
+     * @returns The associated cookie (or nothing).
+     * @since v1.0.6
+     */
+    static get(k) {
+        return cookieStore.get(k);
+    }
+    /**
+     * Sets a cookie value.
+     * @param k The key.
+     * @param v The value.
+     * @since v1.0.6
+     */
+    static set(k, v) {
+        const str = typeof v == "string" ? v : Util.str(v);
+        cookieStore.set(k, str);
+    }
+    /**
+     * Returns a list of associated cookie values.
+     * @param k The key to get.
+     * @returns The values.
+     * @since v1.0.6
+     */
+    static getAll(k) {
+        return cookieStore.getAll(k);
+    }
+    /**
+     * Deletes a cookie pair.
+     * @param k The key.
+     * @since v1.0.6
+     */
+    static del(k) {
+        cookieStore.delete(k);
+    }
+}
+/**
+ * A simple cooldown timer.
+ * @since v1.0.5
+ */
+class Cooldown {
+    constructor(msOrState, msOrState2) {
+        _Cooldown_instances.add(this);
+        this.id = -1;
+        this.ready = false;
+        if (msOrState && typeof msOrState == "number" && msOrState2 == undefined) {
+            this.on(msOrState);
+        }
+        else if (msOrState && typeof msOrState == "boolean" && msOrState2 == undefined) {
+            this.ready = msOrState;
+        }
+        else if (msOrState && typeof msOrState == "number" && msOrState2 && typeof msOrState2 == "boolean") {
+            this.on(msOrState);
+            this.ready = msOrState2;
+        }
+    }
+    on(ms) {
+        if (this.id != -1)
+            throw new ExistingProcessError();
+        this.id = setInterval(__classPrivateFieldGet(this, _Cooldown_instances, "m", _Cooldown_handle), ms);
+    }
+    off() {
+        if (this.id == -1)
+            throw new NoProcessError();
+        clearInterval(this.id);
+        this.id = -1;
+    }
+    consume() {
+        this.ready = false;
+    }
+}
+_Cooldown_instances = new WeakSet(), _Cooldown_handle = function _Cooldown_handle() {
+    this.ready = true;
+};
+class Config {
+    constructor() {
+        this.config = new Store();
+    }
+    get(k) {
+        return this.config.get(k);
+    }
+    set(k, v) {
+        this.config.set(k, v);
+    }
+    has(k) {
+        return this.config.has(k);
+    }
+    del(k) {
+        this.config.del(k);
+    }
+}
+function option(vals) {
+    return { vals };
+}
+function prim(type) {
+    return { type };
+}
+const SceneConfigMap = {
+    /**
+     * Controls the displayed resolution (outputted textures width and height).
+     *
+     * Resolution is basically a texture's "sharpness" prior application.
+     *
+     * Textures (including basic colors) are stretched to fill an entities `width` and `height`.
+     * @since v1.0.7
+     */
+    resolution: option(["1920x1080", "2560x1440", "1280x720", "640x360"]),
+    /**
+     * Controls the master volume of all audio in this project.
+     *
+     * Accepts a value from 0 - 1.
+     *
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    master: prim(Number),
+    /**
+     * Controls the volume of all music audio in this project.
+     *
+     * Any `Sound` or `SFX` with the tag "music" is controlled by this.
+     *
+     * Accepts a value from 0 - 1.
+     *
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    music: prim(Number),
+    /**
+     * Controls the volume of all sound effect audio in this project.
+     *
+     * Any `Sound` with the tag `sfx` or `SFX` is controlled by this.
+     *
+     * Accepts a value from 0 - 1.
+     *
+     * Part of the sound volume control collection.
+     * @since v1.0.7
+     */
+    sfx: prim(Number)
+};
+class SceneConfig extends Config {
+}
+Scene.config = new SceneConfig();
+Scene.config.set("resolution", "1920x1080");
+Scene.config.set("master", 1);
+Scene.config.set("music", 1);
+Scene.config.set("sfx", 1);
+const ImgConfigMap = {
+    /**
+     * Controls the beginning (pre-pended) folder path to all `src` properties.
+     * @since v1.0.7
+     * @example
+     * ```
+     * Img.config.set("root", "assets"); // assuming there was an 'assets/' folder
+     * const img = new Img("cool.png"); // this would be transformed to be 'assets/cool.png'
+     * ```
+     */
+    root: prim(String)
+};
+class ImgConfig extends Config {
+}
+Img.config = new ImgConfig();
+Img.config.set("root", "");
+class Picker {
+    clean(opts) {
+        return { id: opts.id, startIn: opts.start };
+    }
+}
+/**
+ * Shows a file picker.
+ *
+ * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker)
+ * @since v1.0.7
+ */
+class FilePicker extends Picker {
+    async pick(opts) {
+        try {
+            const [...handles] = await this.handle(opts);
+            if (handles.length == 1) {
+                const file = await handles[0].getFile();
+                return await file.text();
+            }
+            const files = [];
+            for (const handle of handles) {
+                files.push(await handle.getFile());
+            }
+            const out = await Promise.all(files.map(async (o) => o.text()));
+            return out;
+        }
+        catch (e) {
+            throw e;
+        }
+    }
+    async handle(opts) {
+        try {
+            const [...handles] = await window.showOpenFilePicker(this.cleanOpts(opts));
+            return handles;
+        }
+        catch (e) {
+            throw e;
+        }
+    }
+    cleanOpts(opts) {
+        var _b;
+        return Object.assign(Object.assign({}, this.clean(opts)), { excludeAcceptAllOption: opts.all, multiple: opts.mult, types: (_b = opts.accept) === null || _b === void 0 ? void 0 : _b.map(a => { return { description: a.desc, accept: a.accept }; }) });
+    }
+}
+/**
+ * Shows a directory picker.
+ *
+ * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker)
+ * @since v1.0.7
+ */
+class DirPicker extends Picker {
+    async pick(opts) {
+        try {
+            const handle = await window.showDirectoryPicker(this.cleanOpts(opts));
+            return handle;
+        }
+        catch (e) {
+            throw e;
+        }
+    }
+    async handle(opts) {
+        return this.pick(opts);
+    }
+    cleanOpts(opts) {
+        return Object.assign(Object.assign({}, this.clean(opts)), { mode: opts.mode ? { "r": "read", "rw": "readwrite" }[opts.mode] : undefined });
+    }
+}
+/**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
  * @param b Object 2.
@@ -1573,7 +2006,7 @@ function isCol(a, b) {
  * @param dir The angle to travel at (in vector-angle).
  * @param rect The rectangle to test.
  * @param scene The scene.
- * @returns {number | null} The distance of intersection (if there was one).
+ * @returns The distance of intersection (if there was one).
  */
 function rayInterRect(origin, dir, rect, scene) {
     const uv = uvVec(dir, scene.width, scene.height);
@@ -1594,7 +2027,7 @@ function rayInterRect(origin, dir, rect, scene) {
  * @param p The vector.
  * @param w The scene-space width.
  * @param h The scene-space height.
- * @returns {Vector} A new UV `Vector`.
+ * @returns A new UV `Vector`.
  */
 function uvVec(p, w, h) {
     let u = p.x / (w - 1);
@@ -1605,4 +2038,35 @@ function uvVec(p, w, h) {
     u *= aspect;
     return new Vector(u, v);
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, isCol, rayInterRect, uvVec };
+/**
+ * Returns a `Promise` to wait for a specified amount of time.
+ * @param ms The time to wait.
+ * @returns A `Promise` to wait for.
+ */
+function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function random(a, b) {
+    let min = 0;
+    let max = 0;
+    if (a == undefined && b == undefined) {
+        min = 0;
+        max = 101;
+    }
+    else if (a && b == undefined) {
+        min = 0;
+        max = a;
+    }
+    else if (a && b) {
+        min = a;
+        max = b;
+    }
+    if (min > max) {
+        [min, max] = [max, min];
+    }
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+function objIs(obj) {
+    return obj != undefined && obj instanceof null;
+}
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker, Img, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random };

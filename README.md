@@ -44,6 +44,12 @@ npm install @beanthealien/phantomjs
 - `FilePicker`, `DirPicker` to handle picking files/dirs.
 - (Most) classes have a static `is` method that runs `objIs<PARENT_CLASS_TYPE>`.
 - `SceneConfig` now has `resolution`, `master`, `music` and `sfx` properties. `ImgConfig` now has `root` property.
+### v1.0.8
+- Minor structure changes to pickers.
+- Added `ItemBox`.
+- Fixed `Callback`, added `Predicate`, `CallbackBase`. Fixed descriptions accordingly.
+- Implemented `Img.config.root`.
+- Added `Img.rebuild(string)` to rebuild the `src`.
 
 # Phantom 2D Roadmap
 - Config for classes

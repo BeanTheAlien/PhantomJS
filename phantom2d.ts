@@ -68,12 +68,32 @@ type EventHandle = (e: Event) => void;
  */
 type EventType = Key<HTMLElementEventMap>;
 /**
- * The callback used in `Array.prototype.filter` and `Array.prototype.forEach`.
+ * The base to all callbacks, such as the ones used in `Array.prototype.forEach` and `Array.prototype.filter`.
  * 
- * The type T represents the return type.
+ * The type T represents the value/array type. The type R represents the return type.
+ * @since v1.0.8
+ */
+type CallbackBase<T, R> = (value: T, index: number, array: T[]) => R;
+/**
+ * The `void` callback used in methods such as `Array.prototype.forEach`.
  * @since v0.0.0
  */
-type Callback<T> = (value: Phantom2dEntity, index: number, array: Phantom2dEntity[]) => T;
+type Callback<T> = CallbackBase<T, void>;
+/**
+ * The common `Phantom2dEntity` callback.
+ * @since v1.0.8
+ */
+type CallbackEntity = Callback<Phantom2dEntity>;
+/**
+ * The `unknown` callback used in methods such as `Array.prototype.filter`.
+ * @since v1.0.8
+ */
+type Predicate<T> = CallbackBase<T, unknown>;
+/**
+ * The common `Phantom2dEntity` predicate.
+ * @since v1.0.8
+ */
+type PredicateEntity = Predicate<Phantom2dEntity>;
 /**
  * An event in the `PhantomEventMap`.
  * @see {@link PhantomEventMap}
@@ -332,6 +352,25 @@ class Store<TI, TO> {
     items(): Iter<[TI, TO]> {
         return this.store.entries();
     }
+}
+/**
+ * A metaphorical "box" of items.
+ * 
+ * Useful for array-based classes.
+ * @since v1.0.8
+ */
+class ItemBox<T> {
+    stuff: T[];
+    constructor() {
+        this.stuff = [];
+    }
+    add(...stuff: T[]) {
+        ArrayUtil.add(this.stuff, stuff);
+    }
+    rm(...stuff: T[]) {
+        ArrayUtil.rm(this.stuff, stuff);
+    }
+    forEach(cb: any) {}
 }
 
 /**
@@ -1945,7 +1984,15 @@ class Img {
     img: HTMLImageElement;
     constructor(src: string) {
         this.img = new Image();
-        this.img.src = src;
+        this.rebuild(src);
+    }
+    rebuild(src: string) {
+        this.img.src = this.#realSrc(src);
+    }
+    #realSrc(src: string): string {
+        const root = Img.config.get("root");
+        if(!root || root.length == 0) return src;
+        return `${root}${root.endsWith("/") ? "" : "/"}${src}`;
     }
     static from(src: string): Img {
         return new Img(src);
@@ -1978,10 +2025,10 @@ class Items {
     idxOf(item: Phantom2dEntity): number {
         return this.items.indexOf(item);
     }
-    filter(cb: Callback<unknown>): Phantom2dEntity[] {
+    filter(cb: PredicateEntity): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
-    forEach(cb: Callback<void>) {
+    forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
     }
     at(i: number): Phantom2dEntity | undefined {
@@ -2098,7 +2145,7 @@ class Scene {
         d.data[3] = rgba.a;
         this.setImgData(pos, d);
     }
-    forEach(cb: Callback<void>) {
+    forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
     }
     getLvl(lvlName: string): Level | undefined {
@@ -2256,7 +2303,7 @@ class Level {
     filter(cb: Callback<unknown>): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
-    forEach(cb: Callback<void>) {
+    forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
     }
     save(file: string) {
@@ -2685,38 +2732,46 @@ interface PickerOptions {
 type WellKnownDir = "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
 type Accepted = { desc?: string, accept: { string: string[] } };
 type OpenDirectoryAccessMode = "r" | "rw";
+type OpenDirectoryFinalAccessMode = "read" | "readwrite";
 type FileSystemStartPosition = FileSystemHandle | WellKnownDir;
+type AcceptedFinal = { description?: string, accept: { string: string[] } };
 interface FilePickerOptions extends PickerOptions {
     all?: boolean;
     mult?: boolean;
     accept?: Accepted[]
 }
+interface FilePickerFinalOptions extends PickerCleanedOptions {
+    excludeAcceptAllOption?: boolean;
+    multiple?: boolean;
+    types?: AcceptedFinal[];
+}
 interface DirPickerOptions extends PickerOptions {
     mode?: OpenDirectoryAccessMode;
 }
+interface DirPickerFinalOptions extends PickerCleanedOptions {
+    mode?: OpenDirectoryFinalAccessMode;
+}
 type PickerCleanedOptions = { id?: string, startIn?: FileSystemStartPosition };
-abstract class Picker<T> {
-    abstract pick(opts: PickerOptions): Promise<T>;
+abstract class Picker<P, H> {
+    abstract pick(opts: PickerOptions): Promise<P>;
+    abstract handle(opts: PickerOptions): Promise<H>;
+    abstract cleanOpts(opts: PickerOptions): PickerOptions;
     clean(opts: PickerOptions): PickerCleanedOptions {
         return { id: opts.id, startIn: opts.start };
     }
 }
+type FilePickerPickType = string | string[];
+type FilePickerHandleType = FileSystemFileHandle[];
 /**
  * Shows a file picker.
  * 
  * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker)
  * @since v1.0.7
  */
-class FilePicker extends Picker<string|string[]> {
-    async pick(opts: FilePickerOptions): Promise<string|string[]> {
-        const clean = {
-            ...this.clean(opts),
-            excludeAcceptAllOption: opts.all,
-            multiple: opts.mult,
-            types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
-        };
+class FilePicker extends Picker<FilePickerPickType, FilePickerHandleType> {
+    async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
         try {
-            const [...handles]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker(clean);
+            const [...handles]: FilePickerHandleType = await this.handle(opts);
             if(handles.length == 1) {
                 const file = await handles[0].getFile();
                 return await file.text();
@@ -2731,19 +2786,45 @@ class FilePicker extends Picker<string|string[]> {
             throw e;
         }
     }
-}
-class DirPicker extends Picker<FileSystemDirectoryHandle> {
-    async pick(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
-        const clean = {
-            id: opts.id,
-            startIn: opts.start,
-            mode: opts.mode ? { "r": "read", "rw": "readwrite" }[opts.mode] : undefined
-        };
+    async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
         try {
-            const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(clean);
+            const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker(this.cleanOpts(opts));
+            return handles;
+        } catch(e) {
+            throw e;
+        }
+    }
+    cleanOpts(opts: FilePickerOptions): FilePickerFinalOptions {
+        return {
+            ...this.clean(opts),
+            excludeAcceptAllOption: opts.all,
+            multiple: opts.mult,
+            types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
+        };
+    }
+}
+/**
+ * Shows a directory picker.
+ * 
+ * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker)
+ * @since v1.0.7
+ */
+class DirPicker extends Picker<FileSystemDirectoryHandle, FileSystemDirectoryHandle> {
+    async pick(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
+        try {
+            const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(this.cleanOpts(opts));
             return handle;
         } catch(e) {
             throw e;
+        }
+    }
+    async handle(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
+        return this.pick(opts);
+    }
+    cleanOpts(opts: DirPickerOptions): DirPickerFinalOptions {
+        return {
+            ...this.clean(opts),
+            mode: opts.mode ? ({ "r": "read", "rw": "readwrite" } as const)[opts.mode] : undefined
         }
     }
 }
@@ -2848,19 +2929,15 @@ export {
 
     NoContextError, ExistingProcessError, NoCanvasError, NoProcessError,
     
-    Phantom2dOptions, StaticObjectOptions, PhysicsObjectOptions, Extent,
-    MovingObjectOptions, BulletObjectOptions, SceneOptions, PhantomEventMap,
-    SaveOptions, SoundOptions, RaycastOptions,
-
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
     Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker,
+    RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker, Img,
 
-    Config, SceneConfig,
+    Config, SceneConfig, ImgConfig,
 
     isCol, rayInterRect, uvVec, wait, random
 };
