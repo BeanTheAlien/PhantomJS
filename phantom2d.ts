@@ -370,7 +370,9 @@ class ItemBox<T> {
     rm(...stuff: T[]) {
         ArrayUtil.rm(this.stuff, stuff);
     }
-    forEach(cb: any) {}
+    forEach(cb: Callback<T>) {
+        this.stuff.forEach(cb);
+    }
 }
 
 /**
@@ -1182,6 +1184,7 @@ class Phantom2dEntity {
     [x: string]: any;
     comps: Store<PhantomCompType, Comp>;
     moveMode: MoveMode;
+    evMng: PhantomEventManager;
     constructor(opts: Phantom2dOptions) {
         this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
         this.upd = opts.upd ?? NoFunc;
@@ -1197,6 +1200,7 @@ class Phantom2dEntity {
         }
         this.comps = new Store();
         this.moveMode = opts.moveMode ?? "move";
+        this.evMng = new PhantomEventManager(this, this.evStore);
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1357,9 +1361,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     on(event: PhantomEventType, handle: PhantomEventHandle) {
-        const a = this.evStore.get(event) ?? [];
-        a.push(handle);
-        this.evStore.set(event, a);
+        this.evMng.on(event, handle);
     }
     /**
      * Removes a listener for an event.
@@ -1368,13 +1370,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     off(event: PhantomEventType, handle?: PhantomEventHandle) {
-        if(handle) {
-            const a = this.evStore.get(event) ?? [];
-            ArrayUtil.rm(a, handle);
-            this.evStore.set(event, a);
-        } else {
-            this.evStore.del(event);
-        }
+        this.evMng.off(event, handle);
     }
     /**
      * Consumes an event.
@@ -2049,6 +2045,7 @@ class Scene {
     mousePos: Vector;
     runtime: Runtime;
     comps: Store<PhantomSceneCompType, SceneComp>;
+    evMng: SceneEventManager;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2067,10 +2064,11 @@ class Scene {
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
         window.addEventListener("mousemove", (e) => {
-            this.mousePos = new Vector(e.clientX, e.clientY);
+            this.mousePos = this.mouseAt(e);
         });
         this.runtime = new Runtime();
         this.comps = new Store();
+        this.evMng = new SceneEventManager(this, this.evStore);
     }
     get width(): number {
         return this.canvas.width;
@@ -2108,25 +2106,14 @@ class Scene {
     idxOf(item: Phantom2dEntity): number {
         return this.items.idxOf(item);
     }
-    filter(cb: Callback<unknown>): Phantom2dEntity[] {
+    filter(cb: PredicateEntity): Phantom2dEntity[] {
         return this.items.filter(cb);
     }
     on(name: EventType, handle: EventHandle) {
-        const a = this.evStore.get(name) ?? [];
-        a.push(handle);
-        this.evStore.set(name, a);
-        this.canvas.addEventListener(name, handle);
+        this.evMng.on(name, handle);
     }
     off(name: EventType, handle?: EventHandle) {
-        if(handle) {
-            this.canvas.removeEventListener(name, handle);
-            const a = this.evStore.get(name) ?? [];
-            ArrayUtil.rm(a, handle);
-            this.evStore.set(name, a);
-        }
-        else {
-            this.evStore.del(name);
-        }
+        this.evMng.off(name, handle);
     }
     getImgData(pos: Vector): ImageData {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);
@@ -2275,6 +2262,12 @@ class Scene {
     }
     clickPLockOff() {
         this.off("click", this.pLockOn);
+    }
+    __listenOn(e: EventType, h: EventHandle) {
+        this.canvas.addEventListener(e, h);
+    }
+    __listenOff(e: EventType, h: EventHandle) {
+        this.canvas.removeEventListener(e, h);
     }
 }
 /**
@@ -2828,6 +2821,48 @@ class DirPicker extends Picker<FileSystemDirectoryHandle, FileSystemDirectoryHan
         }
     }
 }
+class EventManager<T, E, H> {
+    store: Store<E, H[]>;
+    self: T;
+    constructor(self: T, store: Store<E, H[]>) {
+        this.self = self;
+        this.store = store;
+    }
+    on(e: E, h: H, thenExec: Function = NoFunc) {
+        const a = this.store.get(e) ?? [];
+        ArrayUtil.add(a, h);
+        this.store.set(e, a);
+        thenExec();
+    }
+    off(e: E, h?: H, hExist: Function = NoFunc, notHExist: Function = NoFunc) {
+        if(h) {
+            const a = this.store.get(e) ?? [];
+            ArrayUtil.rm(a, h);
+            this.store.set(e, a);
+            hExist();
+        } else {
+            notHExist();
+            this.store.del(e);
+        }
+    }
+}
+class SceneEventManager extends EventManager<Scene, EventType, EventHandle> {
+    on(e: EventType, h: EventHandle) {
+        super.on(e, h, () => {
+            this.self.__listenOn(e, h);
+        });
+    }
+    off(e: EventType, h?: EventHandle) {
+        super.off(e, h, () => {
+            if(h) this.self.__listenOff(e, h);
+        }, () => {
+            for(const [_e, _h] of this.self.evStore.items()) {
+                for(const __h of _h) this.self.__listenOff(_e, __h);
+            }
+        });
+    }
+}
+class PhantomEventManager extends EventManager<Phantom2dEntity, PhantomEventType, PhantomEventHandle> {}
 
 /**
  * Returns whether 2 objects are in collision.

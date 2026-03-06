@@ -50,6 +50,9 @@ npm install @beanthealien/phantomjs
 - Fixed `Callback`, added `Predicate`, `CallbackBase`. Fixed descriptions accordingly.
 - Implemented `Img.config.root`.
 - Added `Img.rebuild(string)` to rebuild the `src`.
+### v1.0.9
+- Added `EventManager`, `SceneEventManager`, `PhantomEventManager` for optimization.
+- Added `Scene.__listenOn(EventType, EventHandle)` and `Scene.__listenOff(EventType, EventHandle)`.
 
 # Phantom 2D Roadmap
 - Config for classes
