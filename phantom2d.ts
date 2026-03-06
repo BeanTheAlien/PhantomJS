@@ -2955,6 +2955,28 @@ function random(a?: number, b?: number): number {
     }
     return Math.floor(Math.random() * (max - min)) + min;
 }
+/**
+ * Returns a `boolean` of whether a randomly-generated number is less-equal `max`.
+ * 
+ * Uses random(101).
+ * @param max The cutoff point.
+ * @returns If the number generated is in the cutoff point.
+ * @since v1.0.10
+ */
+function chance(max: number): boolean;
+/**
+ * Returns a `boolean` of whether a randomly-generated number is less-equal `max`.
+ * 
+ * Uses random(`upperBound` + 1).
+ * @param max The cutoff point.
+ * @param upperBound The maximum bound to use.
+ * @returns If the number generated is in the cutoff point.
+ * @since v1.0.10
+ */
+function chance(max: number, upperBound: number): boolean;
+function chance(max: number, upperBound?: number): boolean {
+    return max <= random((upperBound ?? 100) + 1);
+}
 function objIs<T>(obj: any): obj is T {
     return obj != undefined && obj instanceof (null as unknown as Constructor<T>);
 }
@@ -2974,5 +2996,5 @@ export {
 
     Config, SceneConfig, ImgConfig,
 
-    isCol, rayInterRect, uvVec, wait, random
+    isCol, rayInterRect, uvVec, wait, random, chance
 };

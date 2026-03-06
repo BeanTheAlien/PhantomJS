@@ -53,6 +53,8 @@ npm install @beanthealien/phantomjs
 ### v1.0.9
 - Added `EventManager`, `SceneEventManager`, `PhantomEventManager` for optimization.
 - Added `Scene.__listenOn(EventType, EventHandle)` and `Scene.__listenOff(EventType, EventHandle)`.
+### v1.0.10
+- Added `chance(number)`, `chance(number, number)`.
 
 # Phantom 2D Roadmap
 - Config for classes
