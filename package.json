@@ -9,6 +9,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "phantom": "bin/bin.js",
+    "phantomjs": "bin/bin.js",
+    "pjs": "bin/bin.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BeanTheAlien/PhantomJS.git"
@@ -22,6 +27,7 @@
   },
   "homepage": "https://github.com/BeanTheAlien/PhantomJS#readme",
   "dependencies": {
+    "prompts": "^2.4.2",
     "ws": "^8.18.3"
   }
 }
