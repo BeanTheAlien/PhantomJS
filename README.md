@@ -56,6 +56,9 @@ npm install @beanthealien/phantomjs
 ### v1.0.10
 - Added `chance(number)`, `chance(number, number)`.
 - Added `bin/`.
+### v1.0.11
+- Changed `Phantom2dEntity` to just `Entity`.
+- Added `Local` and `Session` objects (derived from `StorageRoot`). Deprecated `Local` (now `LocalDeprecated`).
 
 # Phantom 2D Roadmap
 - Config for classes

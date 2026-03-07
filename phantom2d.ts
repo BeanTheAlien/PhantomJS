@@ -9,6 +9,9 @@ class Util {
     static clamp(n: number, min: number, max: number): number {
         return Math.min(Math.max(n, min), max);
     }
+    static strOf(o: any): string {
+        return typeof o == "string" ? o : Util.str(o);
+    }
 }
 class ArrayUtil {
     static add(arr: any[], ...items: any[]) {
@@ -80,20 +83,20 @@ type CallbackBase<T, R> = (value: T, index: number, array: T[]) => R;
  */
 type Callback<T> = CallbackBase<T, void>;
 /**
- * The common `Phantom2dEntity` callback.
+ * The common `Entity` callback.
  * @since v1.0.8
  */
-type CallbackEntity = Callback<Phantom2dEntity>;
+type CallbackEntity = Callback<Entity>;
 /**
  * The `unknown` callback used in methods such as `Array.prototype.filter`.
  * @since v1.0.8
  */
 type Predicate<T> = CallbackBase<T, unknown>;
 /**
- * The common `Phantom2dEntity` predicate.
+ * The common `Entity` predicate.
  * @since v1.0.8
  */
-type PredicateEntity = Predicate<Phantom2dEntity>;
+type PredicateEntity = Predicate<Entity>;
 /**
  * An event in the `PhantomEventMap`.
  * @see {@link PhantomEventMap}
@@ -120,7 +123,7 @@ type AudioMIME = "audio/wav" | "audio/mpeg" | "audio/mp4" | "audio/webm" | "audi
  * Takes one argument, the colliding object.
  * @since v0.0.0
  */
-type CollisionHandle = (o: Phantom2dEntity) => void;
+type CollisionHandle = (o: Entity) => void;
 /**
  * A shorthand for `MapIterator`.
  * @see {@link MapIterator}
@@ -232,7 +235,7 @@ class NoProcessError extends ErrRoot {
  * @since v0.0.0
  * @example
  * ```
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("health"); // use HealthComp
  * ent.use("health"); // cannot use again
  * ```
@@ -251,7 +254,7 @@ class AlreadyUsingError extends ErrRoot {
  * ```
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("sprite", { frames: ["frame0.jpg"] }); // no scene property
  * scene.add(ent);
  * scene.start(); // cannot render without scene
@@ -271,7 +274,7 @@ class NoSceneAvailableError extends ErrRoot {
  * ```
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
@@ -376,10 +379,10 @@ class ItemBox<T> {
 }
 
 /**
- * The general options for a `Phantom2dEntity`.
+ * The general options for a `Entity`.
  * @since v0.0.0
  */
-interface Phantom2dOptions {
+interface EntityOptions {
     /**
      * The handler for a collision.
      * @since v0.0.0
@@ -435,19 +438,18 @@ interface Phantom2dOptions {
  * The options for a `StaticObject`.
  * @since v0.0.0
  */
-interface StaticObjectOptions extends Phantom2dOptions {
+interface StaticObjectOptions extends EntityOptions {
     /**
      * The display shape.
      * @since v0.0.0
      */
     shape: GeomType;
-    color: string;
 }
 /**
  * The options for a `PhysicsObject`.
  * @since v0.0.0
  */
-interface PhysicsObjectOptions extends Phantom2dOptions {
+interface PhysicsObjectOptions extends EntityOptions {
     /**
      * The strength of gravity.
      * @since v0.0.0
@@ -484,7 +486,7 @@ interface Extent {
  * The options for a `MovingObject`.
  * @since v0.0.0
  */
-interface MovingObjectOptions extends Phantom2dOptions, Extent {
+interface MovingObjectOptions extends EntityOptions, Extent {
     /**
      * The direction to start in. (for x)
      * @since v0.0.0
@@ -510,7 +512,7 @@ interface MovingObjectOptions extends Phantom2dOptions, Extent {
  * The options for a `BulletObject`.
  * @since v0.0.0
  */
-interface BulletObjectOptions extends Phantom2dOptions, Extent {
+interface BulletObjectOptions extends EntityOptions, Extent {
     /**
      * The movement speed.
      * @since v0.0.0
@@ -867,8 +869,8 @@ class PhantomHealthCompHealEvent extends PhantomEvent { constructor() { super("h
  * @since v0.0.0
  */
 class Comp {
-    ent: Phantom2dEntity;
-    constructor(ent: Phantom2dEntity) {
+    ent: Entity;
+    constructor(ent: Entity) {
         this.ent = ent;
     }
     /**
@@ -897,7 +899,7 @@ class HealthComp extends Comp {
     onHurt?: PhantomEventHandle;
     onDie?: PhantomEventHandle;
     onHeal?: PhantomEventHandle;
-    constructor(ent: Phantom2dEntity, opts: HealthCompOptions) {
+    constructor(ent: Entity, opts: HealthCompOptions) {
         super(ent);
         this.hp = opts.hp ?? 0;
         this.mhp = opts.mhp;
@@ -953,7 +955,7 @@ class HealthComp extends Comp {
 class InvComp extends Comp {
     size?: number;
     inv: any[];
-    constructor(ent: Phantom2dEntity, opts: InvCompOptions) {
+    constructor(ent: Entity, opts: InvCompOptions) {
         super(ent);
         this.size = opts.size;
         this.inv = [];
@@ -1019,7 +1021,7 @@ class SpriteComp extends Comp {
     frames: Frames;
     scene?: Scene;
     idx: number;
-    constructor(ent: Phantom2dEntity, opts: SpriteCompOptions) {
+    constructor(ent: Entity, opts: SpriteCompOptions) {
         super(ent);
         this.frames = (opts.frames ?? []).map(Img.from);
         this.scene = opts.scene;
@@ -1051,7 +1053,7 @@ class SpriteComp extends Comp {
  * The record used to create components.
  * @since v0.0.0
  */
-const PhantomCompRecord: CompRecord<Phantom2dEntity, CompOptions, Comp> = {
+const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     health: HealthComp,
     inv: InvComp,
     sprite: SpriteComp
@@ -1135,7 +1137,8 @@ type KeyCode = keyof typeof KeyCodeMap;
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
  */
-class Phantom2dEntity {
+class Entity {
+    static defaults: EntityDefaults;
     /**
      * Fired when this object collides with another.
      * @since v0.0.0
@@ -1185,21 +1188,23 @@ class Phantom2dEntity {
     comps: Store<PhantomCompType, Comp>;
     moveMode: MoveMode;
     evMng: PhantomEventManager;
-    constructor(opts: Phantom2dOptions) {
-        this.collide = opts.collide ?? ((o: Phantom2dEntity) => {});
-        this.upd = opts.upd ?? NoFunc;
-        this.x = opts.x ?? 0;
-        this.y = opts.y ?? 0;
-        this.rot = opts.rot ?? 0;
-        this.width = opts.width ?? 0;
-        this.height = opts.height ?? 0;
+    constructor();
+    constructor(opts: EntityOptions);
+    constructor(opts?: EntityOptions) {
+        this.collide = opts?.collide ?? ((o: Entity) => {});
+        this.upd = opts?.upd ?? NoFunc;
+        this.x = opts?.x ?? Entity.defaults.get("x") ?? 0;
+        this.y = opts?.y ?? Entity.defaults.get("y") ?? 0;
+        this.rot = opts?.rot ?? Entity.defaults.get("rot") ?? 0;
+        this.width = opts?.width ?? Entity.defaults.get("width") ?? 0;
+        this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
         this.evStore = new Store();
-        this.color = opts.color ?? "#fff";
-        if(opts.custom) for(const [k, v] of Object.entries(opts.custom)) {
+        this.color = opts?.color ?? Entity.defaults.get("color") ?? "#fff";
+        if(opts?.custom) for(const [k, v] of Object.entries(opts.custom)) {
             this[k] = v;
         }
         this.comps = new Store();
-        this.moveMode = opts.moveMode ?? "move";
+        this.moveMode = opts?.moveMode ?? "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
     }
     /**
@@ -1519,29 +1524,29 @@ class Phantom2dEntity {
      * @returns The new entity.
      * @since v0.0.0
      */
-    static from(opts: Phantom2dOptions): Phantom2dEntity;
+    static from(opts: EntityOptions): Entity;
     /**
      * Returns a new entity, based on a preset.
      * @param preset The preset to use.
      * @returns The new entity.
      * @since v1.0.5
      */
-    static from(preset: Preset): Phantom2dEntity;
-    static from(opts: Phantom2dOptions | Preset): Phantom2dEntity {
+    static from(preset: Preset): Entity;
+    static from(opts: EntityOptions | Preset): Entity {
         if(opts instanceof Preset) {
-            const ent = new Phantom2dEntity({});
+            const ent = new Entity({});
             opts.apply(ent);
             return ent;
         }
-        return new Phantom2dEntity(opts);
+        return new Entity(opts);
     }
     /**
-     * Returns whether the object passed is an `Phantom2dEntity`.
+     * Returns whether the object passed is an `Entity`.
      * @param obj The object to test.
      * @returns Whether it is an entity.
      */
-    static is(obj: any): obj is Phantom2dEntity {
-        return objIs<Phantom2dEntity>(obj);
+    static is(obj: any): obj is Entity {
+        return objIs<Entity>(obj);
     }
 }
 /**
@@ -1550,7 +1555,7 @@ class Phantom2dEntity {
  * This object has no special attributes.
  * @since v0.0.0
  */
-class StaticObject extends Phantom2dEntity {
+class StaticObject extends Entity {
     constructor(opts: StaticObjectOptions) {
         super(opts);
         // requires an enforced fixed move mode
@@ -1572,7 +1577,7 @@ class StaticObject extends Phantom2dEntity {
     static from(preset: Preset): StaticObject;
     static from(opts: StaticObjectOptions | Preset): StaticObject {
         if(opts instanceof Preset) {
-            const ent = new StaticObject({ shape: "geom", color: "#fff" });
+            const ent = new StaticObject({ shape: "geom" });
             opts.apply(ent);
             return ent;
         }
@@ -1586,7 +1591,7 @@ class StaticObject extends Phantom2dEntity {
  * A simple object that uses physics.
  * @since v0.0.0
  */
-class PhysicsObject extends Phantom2dEntity {
+class PhysicsObject extends Entity {
     strength: number; gravspd: number;
     constructor(opts: PhysicsObjectOptions) {
         super(opts);
@@ -1630,7 +1635,7 @@ class PhysicsObject extends Phantom2dEntity {
  * Optionally, it can bounce on extent reached.
  * @since v0.0.0
  */
-class MovingObject extends Phantom2dEntity {
+class MovingObject extends Entity {
     dirX: Dir; dirY: Dir;
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
@@ -1703,7 +1708,7 @@ class MovingObject extends Phantom2dEntity {
  * Will automatically destroy itself when reaching an extent.
  * @since v0.0.0
  */
-class BulletObject extends Phantom2dEntity {
+class BulletObject extends Entity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     scene: Scene;
@@ -1764,7 +1769,7 @@ class BulletObject extends Phantom2dEntity {
  * Provides functionality for characters; uses physics.
  * @since v0.0.0
  */
-class Character extends Phantom2dEntity {
+class Character extends Entity {
     gspd: number;
     constructor(opts: CharacterOptions) {
         super(opts);
@@ -1999,15 +2004,15 @@ class Img {
  * @since v0.0.0
  */
 class Items {
-    items: Phantom2dEntity[];
+    items: Entity[];
     constructor() {
         this.items = [];
     }
-    add(...items: Phantom2dEntity[]) {
+    add(...items: Entity[]) {
         this.items.push(...items);
         items.forEach(i => i.consume("added", new PhantomAddedEvent()));
     }
-    rm(...items: Phantom2dEntity[]) {
+    rm(...items: Entity[]) {
         for(const item of items) {
             if(this.has(item)) {
                 this.items.splice(this.idxOf(item), 1);
@@ -2015,19 +2020,19 @@ class Items {
             }
         }
     }
-    has(...items: Phantom2dEntity[]): boolean {
+    has(...items: Entity[]): boolean {
         return ArrayUtil.has(this.items, items);
     }
-    idxOf(item: Phantom2dEntity): number {
+    idxOf(item: Entity): number {
         return this.items.indexOf(item);
     }
-    filter(cb: PredicateEntity): Phantom2dEntity[] {
+    filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
     }
     forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
     }
-    at(i: number): Phantom2dEntity | undefined {
+    at(i: number): Entity | undefined {
         return this.items[i];
     }
 }
@@ -2094,19 +2099,19 @@ class Scene {
     set cssHeight(h: string) {
         this.canvas.style.height = h;
     }
-    add(...items: Phantom2dEntity[]) {
+    add(...items: Entity[]) {
         this.items.add(...items);
     }
-    rm(...items: Phantom2dEntity[]) {
+    rm(...items: Entity[]) {
         this.items.rm(...items);
     }
-    has(...items: Phantom2dEntity[]): boolean {
+    has(...items: Entity[]): boolean {
         return this.items.has(...items);
     }
-    idxOf(item: Phantom2dEntity): number {
+    idxOf(item: Entity): number {
         return this.items.idxOf(item);
     }
-    filter(cb: PredicateEntity): Phantom2dEntity[] {
+    filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
     }
     on(name: EventType, handle: EventHandle) {
@@ -2281,19 +2286,19 @@ class Level {
     constructor() {
         this.items = new Items();
     }
-    add(...items: Phantom2dEntity[]) {
+    add(...items: Entity[]) {
         this.items.add(...items);
     }
-    rm(...items: Phantom2dEntity[]) {
+    rm(...items: Entity[]) {
         this.items.rm(...items);
     }
-    has(...items: Phantom2dEntity[]): boolean {
+    has(...items: Entity[]): boolean {
         return this.items.has(...items);
     }
-    idxOf(item: Phantom2dEntity): number {
+    idxOf(item: Entity): number {
         return this.items.idxOf(item);
     }
-    filter(cb: Callback<unknown>): Phantom2dEntity[] {
+    filter(cb: Callback<unknown>): Entity[] {
         return this.items.filter(cb);
     }
     forEach(cb: CallbackEntity) {
@@ -2349,7 +2354,7 @@ class SaveJSON extends Save {
  */
 class Preset {
     atts: { any?: any };
-    constructor(ent: Phantom2dEntity) {
+    constructor(ent: Entity) {
         this.atts = {};
         Object.assign(this.atts, ent);
     }
@@ -2357,7 +2362,7 @@ class Preset {
         const s = new SaveJSON(out);
         s.save(this, 4);
     }
-    apply(ent: Phantom2dEntity) {
+    apply(ent: Entity) {
         Object.assign(ent, this.atts);
     }
 }
@@ -2391,9 +2396,9 @@ class Raycast {
  */
 class RaycastIntersecton {
     dist: number;
-    obj: Phantom2dEntity;
+    obj: Entity;
     point: Vector;
-    constructor(dist: number, obj: Phantom2dEntity, point: Vector) {
+    constructor(dist: number, obj: Entity, point: Vector) {
         this.dist = dist;
         this.obj = obj;
         this.point = point;
@@ -2446,11 +2451,38 @@ class GeomRect extends Geom { constructor() { super("rect"); } }
  * @since v0.0.0
  */
 class GeomCircle extends Geom { constructor() { super("circle"); } }
+class StorageRoot {
+    storage: Storage;
+    constructor(obj: Storage) {
+        this.storage = obj;
+    }
+    get(k: string): string | null {
+        return this.storage.getItem(k);
+    }
+    set(k: string, v: any) {
+        this.storage.setItem(k, Util.strOf(v));
+    }
+    has(k: string): boolean {
+        return !!this.get(k);
+    }
+    get len(): number {
+        return this.storage.length;
+    }
+    del(k: string) {
+        this.storage.removeItem(k);
+    }
+    clear() {
+        this.storage.clear();
+    }
+}
+const Local = new StorageRoot(localStorage);
+const Session = new StorageRoot(sessionStorage);
 /**
  * An implementation of `localStorage`.
  * @since v1.0.2
+ * @deprecated Replaced by new `Local` object.
  */
-class Local {
+class LocalDeprecated {
     /**
      * Sets a value in `localStorage`.
      * @param k The key.
@@ -2633,6 +2665,15 @@ function option<const T extends readonly any[]>(vals: T): { vals: T } {
 function prim<T>(type: T): { type: T } {
     return { type };
 }
+function primNum(): { type: NumberConstructor } {
+    return prim(Number);
+}
+function primString(): { type: StringConstructor } {
+    return prim(String);
+}
+function primBool(): { type: BooleanConstructor } {
+    return prim(Boolean);
+}
 const SceneConfigMap = {
     /**
      * Controls the displayed resolution (outputted textures width and height).
@@ -2651,7 +2692,7 @@ const SceneConfigMap = {
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    master: prim(Number),
+    master: primNum(),
     /**
      * Controls the volume of all music audio in this project.
      * 
@@ -2662,7 +2703,7 @@ const SceneConfigMap = {
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    music: prim(Number),
+    music: primNum(),
     /**
      * Controls the volume of all sound effect audio in this project.
      * 
@@ -2673,7 +2714,7 @@ const SceneConfigMap = {
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    sfx: prim(Number)
+    sfx: primNum()
 } as const;
 type SceneConfigType = ConfigType<typeof SceneConfigMap>;
 class SceneConfig extends Config<SceneConfigType> {}
@@ -2692,12 +2733,47 @@ const ImgConfigMap = {
      * const img = new Img("cool.png"); // this would be transformed to be 'assets/cool.png'
      * ```
      */
-    root: prim(String)
+    root: primString()
 } as const;
 type ImgConfigType = ConfigType<typeof ImgConfigMap>;
 class ImgConfig extends Config<ImgConfigType> {}
 Img.config = new ImgConfig();
 Img.config.set("root", "");
+const EntityDefaultsMap = {
+    /**
+     * Controls the x-coordinate.
+     * @since v1.0.11
+     */
+    x: primNum(),
+    /**
+     * Controls the y-coordinate.
+     * @since v1.0.11
+     */
+    y: primNum(),
+    /**
+     * Controls the rotation, in radians.
+     * @since v1.0.11
+     */
+    rot: primNum(),
+    /**
+     * Controls the width.
+     * @since v1.0.11
+     */
+    width: primNum(),
+    /**
+     * Controls the height.
+     * @since v1.0.11
+     */
+    height: primNum(),
+    /**
+     * Controls the color.
+     * @since v1.0.11
+     */
+    color: primString()
+} as const;
+type EntityDefaultsType = ConfigType<typeof EntityDefaultsMap>;
+class EntityDefaults extends Config<EntityDefaultsType> {}
+Entity.defaults = new EntityDefaults();
 /**
  * The options for pickers.
  * 
@@ -2862,7 +2938,7 @@ class SceneEventManager extends EventManager<Scene, EventType, EventHandle> {
         });
     }
 }
-class PhantomEventManager extends EventManager<Phantom2dEntity, PhantomEventType, PhantomEventHandle> {}
+class PhantomEventManager extends EventManager<Entity, PhantomEventType, PhantomEventHandle> {}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -2871,7 +2947,7 @@ class PhantomEventManager extends EventManager<Phantom2dEntity, PhantomEventType
  * @returns {boolean} If they collide.
  * @since v0.0.0
  */
-function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
+function isCol(a: Entity, b: Entity): boolean {
     const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
@@ -2884,7 +2960,7 @@ function isCol(a: Phantom2dEntity, b: Phantom2dEntity): boolean {
  * @param scene The scene.
  * @returns The distance of intersection (if there was one).
  */
-function rayInterRect(origin: Vector, dir: Vector, rect: Phantom2dEntity, scene: Scene): number | null {
+function rayInterRect(origin: Vector, dir: Vector, rect: Entity, scene: Scene): number | null {
     const uv = uvVec(dir, scene.width, scene.height);
     const t1 = (rect.x - origin.x) / uv.x;
     const t2 = (rect.scrX() - origin.x) / uv.x;
@@ -2988,13 +3064,15 @@ export {
     
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
-    Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject,
+    Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker, Img,
+    RaycastIntersecton, Cooldown, Cookies, FilePicker, DirPicker, Img,
 
     Config, SceneConfig, ImgConfig,
 
-    isCol, rayInterRect, uvVec, wait, random, chance
+    isCol, rayInterRect, uvVec, wait, random, chance,
+
+    Local, LocalDeprecated, Session
 };
