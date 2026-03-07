@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.7 BETA
+# Phantom 2D v1.0.10 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -55,6 +55,7 @@ npm install @beanthealien/phantomjs
 - Added `Scene.__listenOn(EventType, EventHandle)` and `Scene.__listenOff(EventType, EventHandle)`.
 ### v1.0.10
 - Added `chance(number)`, `chance(number, number)`.
+- Added `bin/`.
 
 # Phantom 2D Roadmap
 - Config for classes
