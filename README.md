@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.10 BETA
+# Phantom 2D v1.0.12 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -59,6 +59,8 @@ npm install @beanthealien/phantomjs
 ### v1.0.11
 - Changed `Phantom2dEntity` to just `Entity`.
 - Added `Local` and `Session` objects (derived from `StorageRoot`). Deprecated `Local` (now `LocalDeprecated`).
+### v1.0.12
+- Added `WallObject`. (+published)
 
 # Phantom 2D Roadmap
 - Config for classes

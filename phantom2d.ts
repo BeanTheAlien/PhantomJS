@@ -558,6 +558,7 @@ interface SceneOptions {
      */
     cssH?: string;
 }
+interface WallObjectOptions extends EntityOptions {}
 /**
  * Synthetic events.
  * @since v0.0.0
@@ -1761,6 +1762,69 @@ class BulletObject extends Entity {
     }
     static is(obj: any): obj is BulletObject {
         return objIs<BulletObject>(obj);
+    }
+}
+/**
+ * Acts as a barrier to other entities.
+ * @since v1.0.12
+ */
+class WallObject extends Entity {
+    constructor(opts: WallObjectOptions) {
+        super(opts);
+        this.collide = (e: Entity) => {
+            // left vs right pen
+            const xl = e.x + e.width - this.x;
+            const xr = this.x + this.width - e.x;
+            const mx = Math.min(xl, xr);
+            // top vs btm pen
+            const yt = e.y + e.height - this.y;
+            const yb = this.y + this.height - e.y;
+            const my = Math.min(yt, yb);
+            const ec = e.center();
+            const wc = this.center();
+            if(mx < my) {
+                if(ec.x < wc.x) {
+                    // push left
+                    e.x = this.x - e.width;
+                } else {
+                    // push right
+                    e.x = this.x + this.width;
+                }
+            } else {
+                if(ec.y < wc.y) {
+                    // push up
+                    e.y = this.y - e.height;
+                } else {
+                    // push down
+                    e.y = this.y + this.height;
+                }
+            }
+        }
+    }
+    /**
+     * Returns a new entity, based on options.
+     * @param opts The options to use.
+     * @returns The new entity.
+     * @since v0.0.0
+     */
+    static from(opts: WallObjectOptions): WallObject;
+    /**
+     * Returns a new entity, based on a preset.
+     * @param preset The preset to use.
+     * @returns The new entity.
+     * @since v1.0.5
+     */
+    static from(preset: Preset): WallObject;
+    static from(opts: WallObjectOptions | Preset): WallObject {
+        if(opts instanceof Preset) {
+            const ent = new WallObject({});
+            opts.apply(ent);
+            return ent;
+        }
+        return new WallObject(opts);
+    }
+    static is(obj: any): obj is WallObject {
+        return objIs<WallObject>(obj);
     }
 }
 /**
@@ -3065,7 +3129,7 @@ export {
     PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
 
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
-    Scene, Character, PlayableCharacter,
+    Scene, Character, PlayableCharacter, WallObject,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
     RaycastIntersecton, Cooldown, Cookies, FilePicker, DirPicker, Img,
