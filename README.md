@@ -69,6 +69,9 @@ npm install @beanthealien/phantomjs
 - Added `Tag`, `TagList`.
 ### v1.0.15
 - Added further tag support (in `Scene` with `findByTag`, `hasByTag`).
+- Added `Scene.some(PredicateEntity)`.
+- Added `ItemBox.filter(Predicate<T>)`, `ItemBox.find(FindPredicate<T>)`, `ItemBox.some(Predicate<T>)`.
+- Added `Items.find(FindPredicateEntity)`, `Items.some(PredicateEntity)`.
 
 # Phantom 2D Roadmap
 - Config for classes

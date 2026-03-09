@@ -166,6 +166,14 @@ type GeomType = Key<GeomMap>;
 type Key<T> = keyof T;
 type Frame = Img | undefined;
 type Frames = Img[];
+/**
+ * The movement allowed for an entity.
+ * 
+ * A move mode of `fixed` will not allow any movement.
+ * 
+ * A move mode of `move` will alow all movement.
+ * @since v1.0.15
+ */
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
 /**
