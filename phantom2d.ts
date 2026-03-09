@@ -2627,8 +2627,7 @@ class Cookies {
      * @since v1.0.6
      */
     static set(k: string, v: any) {
-        const str = typeof v == "string" ? v : Util.str(v);
-        cookieStore.set(k, str);
+        cookieStore.set(k, Util.strOf(v));
     }
     /**
      * Returns a list of associated cookie values.
