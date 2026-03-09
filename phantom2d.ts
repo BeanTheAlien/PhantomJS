@@ -98,6 +98,12 @@ type Predicate<T> = CallbackBase<T, unknown>;
  */
 type PredicateEntity = Predicate<Entity>;
 /**
+ * The predicate used in `Array.protoype.find`.
+ * @since v1.0.15
+ */
+type FindPredicate<T> = (value: T, index: number, obj: T[]) => value is T;
+type FindPredicateEntity = FindPredicate<Entity>;
+/**
  * An event in the `PhantomEventMap`.
  * @see {@link PhantomEventMap}
  * @since v0.0.0
@@ -375,6 +381,18 @@ class ItemBox<T> {
     }
     forEach(cb: Callback<T>) {
         this.stuff.forEach(cb);
+    }
+    has(...stuff: T[]): boolean {
+        return ArrayUtil.has(this.stuff, stuff);
+    }
+    find(cb: FindPredicate<T>): T | undefined {
+        return this.stuff.find(cb);
+    }
+    filter(cb: Predicate<T>): T[] {
+        return this.stuff.filter(cb);
+    }
+    some(cb: Predicate<T>): boolean {
+        return this.stuff.some(cb);
     }
 }
 
@@ -2116,6 +2134,12 @@ class Items {
     at(i: number): Entity | undefined {
         return this.items[i];
     }
+    find(cb: FindPredicateEntity): Entity | undefined {
+        return this.items.find(cb);
+    }
+    some(cb: PredicateEntity): boolean {
+        return this.items.some(cb);
+    }
 }
 /**
  * The root canvas to display content.
@@ -2374,6 +2398,30 @@ class Scene {
         });
         save.trigger(this.toDataURL(format, quality));
     }
+    find(cb: FindPredicateEntity): Entity | undefined {
+        return this.items.find(cb);
+    }
+    findByTag(tagName: Tag | string): Entity | undefined {
+        return this.find((e): e is Entity => {
+            if(objIs<Tag>(tagName)) {
+                return e.tags.has(tagName);
+            } else {
+                return e.tags.some((t) => t.test(tagName));
+            }
+        });
+    }
+    hasByTag(tagName: Tag | string): boolean {
+        return this.some((e) => {
+            if(objIs<Tag>(tagName)) {
+                return e.tags.has(tagName);
+            } else {
+                return e.tags.some((t) => t.test(tagName));
+            }
+        });
+    }
+    some(cb: PredicateEntity) {
+        return this.items.some(cb);
+    }
 }
 /**
  * A collection of items.
@@ -2403,6 +2451,9 @@ class Level {
     }
     forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
+    }
+    find(cb: FindPredicateEntity): Entity | undefined {
+        return this.items.find(cb);
     }
     save(file: string) {
         const s = new SaveJSON(file);

@@ -67,6 +67,8 @@ npm install @beanthealien/phantomjs
 - Added `Scene.screenshot(string, string?, number?)`.
 - Added `Clipboard`.
 - Added `Tag`, `TagList`.
+### v1.0.15
+- Added further tag support (in `Scene` with `findByTag`, `hasByTag`).
 
 # Phantom 2D Roadmap
 - Config for classes
