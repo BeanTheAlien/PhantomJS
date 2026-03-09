@@ -61,6 +61,8 @@ npm install @beanthealien/phantomjs
 - Added `Local` and `Session` objects (derived from `StorageRoot`). Deprecated `Local` (now `LocalDeprecated`).
 ### v1.0.12
 - Added `WallObject`. (+published)
+### v1.0.13
+- Added `Entity.initState`, `Entity.restoreInitState()`.
 
 # Phantom 2D Roadmap
 - Config for classes

@@ -1189,6 +1189,7 @@ class Entity {
     comps: Store<PhantomCompType, Comp>;
     moveMode: MoveMode;
     evMng: PhantomEventManager;
+    initState: Preset;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts?: EntityOptions) {
@@ -1207,6 +1208,7 @@ class Entity {
         this.comps = new Store();
         this.moveMode = opts?.moveMode ?? "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
+        this.initState = this.preset();
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1518,6 +1520,19 @@ class Entity {
     }
     setMoveMode(m: MoveMode) {
         this.moveMode = m;
+    }
+    /**
+     * Restores this `Entity` to the state it was in at the time of construction.
+     * @since v1.0.13
+     * @example
+     * ```
+     * const ent = new Entity({ ... });
+     * messUpEnt(ent); // assuming this would mess up the entity in some way
+     * ent.restoreInitState(); // back to normal
+     * ```
+     */
+    restoreInitState() {
+        this.apply(this.initState);
     }
     /**
      * Returns a new entity, based on options.
