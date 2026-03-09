@@ -1215,7 +1215,7 @@ class Entity {
     comps: Store<PhantomCompType, Comp>;
     moveMode: MoveMode;
     evMng: PhantomEventManager;
-    initState: Preset;
+    initState: SavedState;
     tags: TagList;
     constructor();
     constructor(opts: EntityOptions);
@@ -1236,7 +1236,7 @@ class Entity {
         this.moveMode = opts?.moveMode ?? "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
-        this.initState = this.preset();
+        this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1550,6 +1550,22 @@ class Entity {
         this.moveMode = m;
     }
     /**
+     * Restores a saved state to this entity.
+     * @param state The state to be restored.
+     * @since v1.0.16
+     * @example
+     * ```
+     * const ent = new Entity({ ... });
+     * const state = ent.saveState();
+     * ent.setPos(random(), random()); // assume pos is needed to stay the same
+     * ent.restoreState(state); // back to normal
+     * // note: this example also works with restoreInitState
+     * ```
+     */
+    restoreState(state: SavedState) {
+        state.restore(this);
+    }
+    /**
      * Restores this `Entity` to the state it was in at the time of construction.
      * @since v1.0.13
      * @example
@@ -1560,7 +1576,15 @@ class Entity {
      * ```
      */
     restoreInitState() {
-        this.apply(this.initState);
+        this.restoreState(this.initState);
+    }
+    /**
+     * Creates a saved state of this entity, which can be later restored.
+     * @param desc The extended, optional description.
+     * @returns A saved state of this entity.
+     */
+    saveState(desc?: string): SavedState {
+        return new SavedState(this, desc);
     }
     /**
      * Returns a new entity, based on options.
@@ -2002,6 +2026,22 @@ class Vector {
         this.x *= factor;
         this.y *= factor;
     }
+    static rotBtwn(a: Vector, b: Vector): number {
+        const a1 = Math.atan2(a.y, a.x);
+        const a2 = Math.atan2(b.y, b.x);
+        let dif = a2 - a1;
+        const pi2 = 2 * Math.PI;
+        if(dif > Math.PI) dif -= pi2;
+        else if(dif < -Math.PI) dif += pi2;
+        return dif;
+    }
+    rotate(rad: number) {
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const nx = this.x * cos - this.y * sin;
+        const ny = this.x * sin + this.y * cos;
+        this.x = nx; this.y = ny;
+    }
 }
 /**
  * A pixel.
@@ -2429,6 +2469,26 @@ class Scene {
     }
     some(cb: PredicateEntity) {
         return this.items.some(cb);
+    }
+    /**
+     * Returns the rotation between two entites.
+     * 
+     * Utilizes `Vector.rotBtwn` to calculate.
+     * @param a The first entity.
+     * @param b The second entity.
+     * @returns The rotation between the two.
+     * @since v1.0.16
+     */
+    rotBtwn(a: Entity, b: Entity): number {
+        return Vector.rotBtwn(a.getPos(), b.getPos());
+    }
+    /**
+     * Returns the rotation between the mouse and a specified entity.
+     * @param ent The entity to test.
+     * @returns The rotation from the mouse to the entity.
+     */
+    rotToMouse(ent: Entity): number {
+        return Vector.rotBtwn(this.mousePos, ent.getPos());
     }
 }
 /**
@@ -3138,6 +3198,28 @@ class Tag {
     }
 }
 class TagList extends ItemBox<Tag> {}
+class Angle {
+    static deg(rad: number): number {
+        return rad * 180 / Math.PI;
+    }
+    static rad(deg: number): number {
+        return deg * Math.PI / 180;
+    }
+}
+class SavedState {
+    atts: { any?: any };
+    timestamp: string;
+    desc?: string;
+    constructor(o: any, desc?: string) {
+        this.atts = {};
+        Object.assign(this.atts, o);
+        this.desc = desc;
+        this.timestamp = (new Date()).toISOString();
+    }
+    restore(o: any) {
+        Object.assign(o, this.atts);
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -3255,6 +3337,13 @@ function chance(max: number, upperBound?: number): boolean {
 function objIs<T>(obj: any): obj is T {
     return obj != undefined && obj instanceof (null as unknown as Constructor<T>);
 }
+/**
+ * Returns a shallow, null value of the type provided.
+ * @returns A shallow, null value.
+ */
+function shallow<T>(): T {
+    return null as unknown as T;
+}
 
 export {
     NoFunc,
@@ -3267,11 +3356,11 @@ export {
     Scene, Character, PlayableCharacter, WallObject,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img,
+    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle,
 
     Config, SceneConfig, ImgConfig,
 
-    isCol, rayInterRect, uvVec, wait, random, chance,
+    isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs,
 
     Local, LocalDeprecated, Session, Clipboard, Cookies
 };
