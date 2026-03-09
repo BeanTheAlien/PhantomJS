@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.12 BETA
+# Phantom 2D v1.0.14 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -63,6 +63,10 @@ npm install @beanthealien/phantomjs
 - Added `WallObject`. (+published)
 ### v1.0.13
 - Added `Entity.initState`, `Entity.restoreInitState()`.
+### v1.0.14
+- Added `Scene.screenshot(string, string?, number?)`.
+- Added `Clipboard`.
+- Added `Tag`, `TagList`.
 
 # Phantom 2D Roadmap
 - Config for classes

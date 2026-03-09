@@ -1190,6 +1190,7 @@ class Entity {
     moveMode: MoveMode;
     evMng: PhantomEventManager;
     initState: Preset;
+    tags: TagList;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts?: EntityOptions) {
@@ -1208,6 +1209,7 @@ class Entity {
         this.comps = new Store();
         this.moveMode = opts?.moveMode ?? "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
+        this.tags = new TagList();
         this.initState = this.preset();
     }
     /**
@@ -2353,6 +2355,25 @@ class Scene {
     __listenOff(e: EventType, h: EventHandle) {
         this.canvas.removeEventListener(e, h);
     }
+    toDataURL(format: string = "image/png", quality: number = 1): string {
+        return this.canvas.toDataURL(format, quality);
+    }
+    /**
+     * Creates a screenshot of the canvas.
+     * 
+     * Uses the canvas's content as the image content.
+     * @param file The file name.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshot(file: string, format: string = "image/png", quality: number = 1) {
+        const save = new Save({
+            mime: format,
+            file,
+            ext: format.split("/")[1]
+        });
+        save.trigger(this.toDataURL(format, quality));
+    }
 }
 /**
  * A collection of items.
@@ -2399,15 +2420,18 @@ class Save {
         this.mime = opts.mime;
         this.ext = opts.ext;
     }
-    save(cont: string) {
-        const blob = new Blob([cont], { type: this.mime });
-        const url = URL.createObjectURL(blob);
+    trigger(url: string) {
         const a = document.createElement("a");
         document.body.appendChild(a);
         a.href = url;
         a.download = `${this.file}.${this.ext}`;
         a.click();
         document.body.removeChild(a);
+    }
+    save(cont: string) {
+        const blob = new Blob([cont], { type: this.mime });
+        const url = URL.createObjectURL(blob);
+        this.trigger(url);
         URL.revokeObjectURL(url);
     }
 }
@@ -3017,6 +3041,44 @@ class SceneEventManager extends EventManager<Scene, EventType, EventHandle> {
     }
 }
 class PhantomEventManager extends EventManager<Entity, PhantomEventType, PhantomEventHandle> {}
+class Clipboard {
+    static read(): Promise<ClipboardItems> {
+        return navigator.clipboard.read();
+    }
+    static reads(): Promise<string> {
+        return navigator.clipboard.readText();
+    }
+    static write(data: ClipboardItems) {
+        navigator.clipboard.write(data);
+    }
+    static writes(data: string) {
+        navigator.clipboard.writeText(data);
+    }
+}
+class Tag {
+    val: string;
+    constructor();
+    constructor(val: string);
+    constructor(val?: string) {
+        this.val = val ?? "";
+    }
+    get(): string {
+        return this.val;
+    }
+    set(v: string) {
+        this.val = v;
+    }
+    test(val: string): boolean;
+    test(tag: Tag): boolean;
+    test(valOrTag: string | Tag): boolean {
+        if(valOrTag instanceof Tag) {
+            return this.val == valOrTag.get();
+        } else {
+            return this.val == valOrTag;
+        }
+    }
+}
+class TagList extends ItemBox<Tag> {}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -3146,11 +3208,11 @@ export {
     Scene, Character, PlayableCharacter, WallObject,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Cooldown, Cookies, FilePicker, DirPicker, Img,
+    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img,
 
     Config, SceneConfig, ImgConfig,
 
     isCol, rayInterRect, uvVec, wait, random, chance,
 
-    Local, LocalDeprecated, Session
+    Local, LocalDeprecated, Session, Clipboard, Cookies
 };
