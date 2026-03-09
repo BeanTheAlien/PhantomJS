@@ -742,6 +742,12 @@ interface PhantomCompMap {
      * @since v1.0.17
      */
     pointat: PointAtComp;
+    /**
+     * The `PointAtMouseComp`.
+     * @see {@link PointAtMouseComp}
+     * @since v1.0.17
+     */
+    pointatmouse: PointAtMouseComp;
 }
 /**
  * The map for `SceneComp`.
@@ -812,10 +818,13 @@ interface SpriteCompOptions extends CompOptions {
     frames?: string[];
     scene?: Scene;
 }
-interface PointAtCompOptions extends CompOptions {
+interface PointAtCompBaseOptions extends CompOptions {
     scene?: Scene;
+}
+interface PointAtCompOptions extends PointAtCompBaseOptions {
     point?: Entity;
 }
+interface PointAtMouseCompOptions extends PointAtCompBaseOptions {}
 /**
  * The options for a `SceneComp`.
  * @since v0.0.0
@@ -1086,12 +1095,17 @@ class SpriteComp extends Comp {
         this.scene.img(c, this.ent.x, this.ent.y, this.ent.width, this.ent.height);
     }
 }
-class PointAtComp extends Comp {
+class PointAtCompBase extends Comp {
     scene?: Scene;
-    point?: Entity;
-    constructor(ent: Entity, opts: PointAtCompOptions) {
+    constructor(ent: Entity, opts: PointAtCompBaseOptions) {
         super(ent);
         this.scene = opts.scene;
+    }
+}
+class PointAtComp extends PointAtCompBase {
+    point?: Entity;
+    constructor(ent: Entity, opts: PointAtCompOptions) {
+        super(ent, opts);
         this.point = opts.point;
     }
     link(ent: Entity) {
@@ -1100,13 +1114,21 @@ class PointAtComp extends Comp {
     unlink() {
         this.point = undefined;
     }
-    upd(): number {
+    upd() {
         if(!this.scene) throw new NoSceneAvailableError();
-        if(!this.point) { console.warn("No linked entity! Please add a link."); return 0; }
-        return this.scene.rotBtwn(this.ent, this.point);
+        if(!this.point) return console.warn("No linked entity! Please add a link.");
+        this.ent.setRot(this.scene.rotBtwn(this.ent, this.point));
     }
-
-} 
+}
+class PointAtMouseComp extends PointAtCompBase {
+    constructor(ent: Entity, opts: PointAtMouseCompOptions) {
+        super(ent, opts);
+    }
+    upd() {
+        if(!this.scene) throw new NoSceneAvailableError();
+        this.ent.setRot(this.scene.rotToMouse(this.ent));
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1115,7 +1137,8 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     health: HealthComp,
     inv: InvComp,
     sprite: SpriteComp,
-    pointat: PointAtComp
+    pointat: PointAtComp,
+    pointatmouse: PointAtMouseComp
 };
 /**
  * The class used for creating components for the scene.
