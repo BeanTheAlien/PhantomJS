@@ -736,6 +736,12 @@ interface PhantomCompMap {
      * @since v0.0.0
      */
     sprite: SpriteComp;
+    /**
+     * The `PointAtComp`.
+     * @see {@link PointAtComp}
+     * @since v1.0.17
+     */
+    pointat: PointAtComp;
 }
 /**
  * The map for `SceneComp`.
@@ -805,6 +811,10 @@ interface InvCompOptions extends CompOptions {
 interface SpriteCompOptions extends CompOptions {
     frames?: string[];
     scene?: Scene;
+}
+interface PointAtCompOptions extends CompOptions {
+    scene?: Scene;
+    point?: Entity;
 }
 /**
  * The options for a `SceneComp`.
@@ -1076,6 +1086,27 @@ class SpriteComp extends Comp {
         this.scene.img(c, this.ent.x, this.ent.y, this.ent.width, this.ent.height);
     }
 }
+class PointAtComp extends Comp {
+    scene?: Scene;
+    point?: Entity;
+    constructor(ent: Entity, opts: PointAtCompOptions) {
+        super(ent);
+        this.scene = opts.scene;
+        this.point = opts.point;
+    }
+    link(ent: Entity) {
+        this.point = ent;
+    }
+    unlink() {
+        this.point = undefined;
+    }
+    upd(): number {
+        if(!this.scene) throw new NoSceneAvailableError();
+        if(!this.point) { console.warn("No linked entity! Please add a link."); return 0; }
+        return this.scene.rotBtwn(this.ent, this.point);
+    }
+
+} 
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1083,7 +1114,8 @@ class SpriteComp extends Comp {
 const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     health: HealthComp,
     inv: InvComp,
-    sprite: SpriteComp
+    sprite: SpriteComp,
+    pointat: PointAtComp
 };
 /**
  * The class used for creating components for the scene.

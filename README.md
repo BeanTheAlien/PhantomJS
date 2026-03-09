@@ -79,6 +79,8 @@ npm install @beanthealien/phantomjs
 - Added `SavedState`, `Entity.saveState()`, `Entity.restoreState(SavedState)`.
 - Changed `Entity.restoreInitState` (and the associated `initState`) to use a `SavedState` with `restoreState`.
 - Added `shallow<T>()`.
+### v1.0.17
+- Added `PointAtComp`. (wip)
 
 # Phantom HTML v0.0.1
 ### 0.0.1
