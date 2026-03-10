@@ -176,6 +176,7 @@ type Frames = Img[];
  */
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
+type FillStyle = string | CanvasGradient | CanvasPattern;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -1999,7 +2000,10 @@ class Character extends Entity {
         if(!this.onGround) {
             this.gspd += this.strength;
             this.y += this.gspd;
+        } else {
+            this.gspd = 0;
         }
+        this.onGround = false;
         super.update();
     }
     /**
@@ -2401,14 +2405,20 @@ class Scene {
         lvl.items = this.items;
         return lvl;
     }
-    get color(): string | CanvasGradient | CanvasPattern {
+    get color(): FillStyle {
         return this.ctx.fillStyle;
     }
-    set color(color: string) {
+    set color(color: FillStyle) {
         this.ctx.fillStyle = color;
     }
+    get alpha(): number {
+        return this.ctx.globalAlpha;
+    }
+    set alpha(alpha: number) {
+        this.ctx.globalAlpha = alpha;
+    }
     img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
-        this.ctx.drawImage(img instanceof HTMLImageElement ? img : img.img, x, y, w, h);
+        this.ctx.drawImage(objIs<HTMLImageElement>(img) ? img : img.img, x, y, w, h);
     }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
@@ -2425,14 +2435,15 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        this.forEach(a => {
-            this.forEach(b => {
-                if(a == b) return;
-                if(isCol(a, b)) {
-                    a.collide(b);
-                }
-            });
-        });
+        const len = this.items.items.length;
+        for(let i = 0; i < len; i++) {
+            for(let j = 0; j < len; j++) {
+                if(i == j) continue;
+                const a = this.items.at(i);
+                const b = this.items.at(j);
+                if(a && b) if(isCol(a, b)) a.collide(b);
+            }
+        }
     }
     render() {
         this.items.forEach(i => {
@@ -2635,6 +2646,11 @@ class Save {
         this.mime = opts.mime;
         this.ext = opts.ext;
     }
+    /**
+     * Triggers the actual download process, provided a URL.
+     * @param url The source URL.
+     * @since v1.0.17
+     */
     trigger(url: string) {
         const a = document.createElement("a");
         document.body.appendChild(a);
@@ -2643,6 +2659,13 @@ class Save {
         a.click();
         document.body.removeChild(a);
     }
+    /**
+     * Saves a set of content.
+     * 
+     * Creates a URL.
+     * @param cont The file's content.
+     * @since v0.0.0
+     */
     save(cont: string) {
         const blob = new Blob([cont], { type: this.mime });
         const url = URL.createObjectURL(blob);
@@ -2973,7 +2996,8 @@ type ConfigTypeExtract<T> = T extends { vals: readonly any[]} ?
     T["vals"][number] : T extends { type: NumberConstructor} ?
     number : T extends { type: StringConstructor } ?
     string : T extends { type: BooleanConstructor } ?
-    boolean : never;
+    boolean : T extends { type: FunctionConstructor } ?
+    Function : never;
 type ConfigType<T extends Record<string, any>> = {
     [K in keyof T]: ConfigTypeExtract<T[K]>
 };
@@ -2991,6 +3015,9 @@ function primString(): { type: StringConstructor } {
 }
 function primBool(): { type: BooleanConstructor } {
     return prim(Boolean);
+}
+function primFn(): { type: FunctionConstructor } {
+    return prim(Function);
 }
 const SceneConfigMap = {
     /**
@@ -3041,7 +3068,14 @@ const SceneConfigMap = {
      * It is highly recommended to leave this enabled.
      * @since v1.0.18
      */
-    osnd: primBool()
+    osnd: primBool(),
+    /**
+     * This is the handler that is called before the unload of the window.
+     * 
+     * Assuming it is a value other than `null`, there will be a listener created.
+     * @since v1.0.18.2
+     */
+    unload: primFn()
 } as const;
 type SceneConfigType = ConfigType<typeof SceneConfigMap>;
 class SceneConfig extends Config<SceneConfigType> {}

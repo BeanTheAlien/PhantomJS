@@ -39,7 +39,7 @@ async function init() {
     }
 
     fs.mkdirSync(projectDir, { recursive: true });
-    const fnm = ver == "legacy" ? "phantom2d.js" : "phantom2d.ts";
+    const fnm = ver == "legacy" ? "phantom2d-legacy.js" : "phantom2d.ts";
     const res = await fetch(`https://raw.githubusercontent.com/BeanTheAlien/PhantomJS/refs/heads/main/${fnm}`);
     if(!res.ok) throw new Error(`Failed to fetch. Status code ${res.status}.`);
     const tx = await res.text();
@@ -57,10 +57,10 @@ async function init() {
     <script src="index.js" type="module"></script>
 </body>
 </html>`);
-    fs.writeFileSync(path.join(projectDir, "index.js"), `import * as p2d from "./phantom2d.js";
-const scene = new p2d.Scene({ canvas: "canvas" });
-scene.start();`);
-    if(useAssets == "y") fs.mkdirSync(path.join(projectDir, "assets"));
+    const shouldAssets = useAssets == "y";
+    if(shouldAssets) fs.mkdirSync(path.join(projectDir, "assets"));
+    fs.writeFileSync(path.join(projectDir, "index.js"), `import * as p2d from "../phantom2d.js";
+const scene = new p2d.Scene({ canvas: "canvas" });` + (shouldAssets ? `\nImg.config.set("root", "assets");` : "") + "\nscene.start();");
 
     console.log(`\nCreated PhantomJS project in: ${projectDir}`);
 }

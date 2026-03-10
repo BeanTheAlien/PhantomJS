@@ -94,6 +94,10 @@ npm install @beanthealien/phantomjs
 - Need to fix an error that causes `Character`s to fall through `WallObject`s.
 ### v1.0.18.1
 - Fixed issue #2.
+### v1.0.18.2
+- Fixed an oversight to properly cancel out `gravspd` when grounded.
+- Added `get`/`set` property `alpha` to `Scene`.
+- Updated `init` command.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
