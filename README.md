@@ -87,6 +87,11 @@ npm install @beanthealien/phantomjs
 - Fixed an error that caused incorrect mouse position calculations.
 - Fixed an error that caused the wrong angle to be returned when comparing entity-to-mouse. (originally mouse-to-entity)
 - Updated documentation regarding the usage of `Sound`.
+### v1.0.18
+- Added `Scene.config.osnd = boolean`. Checks for off-screen position before drawing.
+- Fixed an oversight in `Character` that caused: no gravity updates to occur, no strength to be assigned and the gravity speed to not be updated.
+- Fixed an oversight in `Custom`.
+- Need to fix an error that causes `Character`s to fall through `WallObject`s.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

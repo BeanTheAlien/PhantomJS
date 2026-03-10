@@ -1203,6 +1203,7 @@ class Character extends Entity {
     constructor(opts) {
         super(opts);
         this.gspd = 0;
+        this.strength = opts.strength;
     }
     setGSpd(spd) {
         this.gspd = spd;
@@ -1212,6 +1213,11 @@ class Character extends Entity {
     }
     jump(h) {
         this.gspd = -(h);
+    }
+    update() {
+        this.gspd += this.strength;
+        this.y += this.gspd;
+        super.update();
     }
     static from(opts) {
         if (opts instanceof Preset) {
@@ -1605,7 +1611,19 @@ class Scene {
             this.ctx.save();
             this.ctx.translate(i.x, i.y);
             this.ctx.rotate(i.rot);
-            this.rect(-i.width / 2, -i.height / 2, i.width, i.height, i.color);
+            const nx = -i.width / 2;
+            const ny = -i.height / 2;
+            const w = i.width;
+            const h = i.height;
+            const xw = nx + w;
+            const yh = ny + h;
+            // off-screen no draw check
+            // if the x-coord is less than 0 or more than width
+            // or the y-coord is less than 0 or more than height
+            // then it is not on the canvas
+            if (Scene.config.get("osnd") == true && xw < 0 || this.width < xw || yh < 0 || this.height < yh)
+                return this.ctx.restore();
+            this.rect(nx, ny, w, h, i.color);
             this.ctx.restore();
         });
     }
@@ -2151,7 +2169,16 @@ const SceneConfigMap = {
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    sfx: primNum()
+    sfx: primNum(),
+    /**
+     * Off-screen no draw is useful for preventing overloading of the browser.
+     *
+     * When an entity to be drawn will not show up on the canvas, it will not be drawn.
+     *
+     * It is highly recommended to leave this enabled.
+     * @since v1.0.18
+     */
+    osnd: primBool()
 };
 class SceneConfig extends Config {
 }
@@ -2160,6 +2187,7 @@ Scene.config.set("resolution", "1920x1080");
 Scene.config.set("master", 1);
 Scene.config.set("music", 1);
 Scene.config.set("sfx", 1);
+Scene.config.set("osnd", true);
 const ImgConfigMap = {
     /**
      * Controls the beginning (pre-pended) folder path to all `src` properties.
