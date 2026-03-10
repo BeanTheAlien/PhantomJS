@@ -12,6 +12,15 @@ async function init() {
     const ask = (q) => new Promise(res => rl.question(q, res));
     const name = await ask("Project Name: ");
     rl.close();
+    const yesno = async (name, message, titleA, titleB) => await prompts.prompts({
+        type: "select",
+        name,
+        message,
+        choices: [
+            { title: titleA, value: "y" },
+            { title: titleB, value: "n" }
+        ]
+    })[name];
     const ver = await prompts.prompts({
         type: "select",
         name: "ver",
@@ -21,6 +30,7 @@ async function init() {
             { title: "Phantom2D (TypeScript)", value: "new" }
         ]
     }).ver;
+    const useAssets = await yesno("assets", "Use assets folder?:", "Yes (include 'assets/')", "No (do not include 'assets/')");
 
     const projectDir = path.join(process.cwd(), name);
     if(fs.existsSync(projectDir)) {
@@ -50,6 +60,7 @@ async function init() {
     fs.writeFileSync(path.join(projectDir, "index.js"), `import * as p2d from "./phantom2d.js";
 const scene = new p2d.Scene({ canvas: "canvas" });
 scene.start();`);
+    if(useAssets == "y") fs.mkdirSync(path.join(projectDir, "assets"));
 
     console.log(`\nCreated PhantomJS project in: ${projectDir}`);
 }

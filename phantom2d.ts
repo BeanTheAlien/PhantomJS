@@ -1637,6 +1637,7 @@ class Entity {
      * Creates a saved state of this entity, which can be later restored.
      * @param desc The extended, optional description.
      * @returns A saved state of this entity.
+     * @since v1.0.16
      */
     saveState(desc?: string): SavedState {
         return new SavedState(this, desc);
@@ -2124,7 +2125,7 @@ function SoundOptionsIsSOD(o: any): o is SoundOptionsDeprecated {
 /**
  * An audio source.
  * 
- * Used to play long-lasting sounds, NOT SFX.
+ * Used to play a variety of sounds.
  * @since v0.0.0
  */
 class Sound {
@@ -2267,8 +2268,8 @@ class Scene {
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
         this.canvas.width = opts.w ?? 0;
         this.canvas.height = opts.h ?? 0;
-        this.canvas.style.width = opts.cssW ?? "0px";
-        this.canvas.style.height = opts.cssH ?? "0px";
+        if(opts.cssW) this.canvas.style.width = opts.cssW;
+        if(opts.cssH) this.canvas.style.height = opts.cssH;
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
@@ -2405,6 +2406,7 @@ class Scene {
     render() {
         this.items.forEach(i => {
             this.ctx.save();
+            this.ctx.translate(i.x, i.y);
             this.ctx.rotate(i.rot);
             this.rect(-i.width / 2, -i.height / 2, i.width, i.height, i.color);
             this.ctx.restore();
@@ -2462,19 +2464,21 @@ class Scene {
     }
     mouseAt(e: MouseEvent): Vector {
         const rect = this.bounds();
-        return new Vector(e.clientX - rect.left, e.clientY - rect.top);
+        const sx = this.width / rect.width;
+        const sy = this.height / rect.height;
+        return new Vector((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
     }
     clickFScrOn() {
-        this.on("click", this.fScrOn);
+        this.on("click", () => this.fScrOn());
     }
     clickFScrOff() {
-        this.off("click", this.fScrOn);
+        this.off("click", () => this.fScrOn());
     }
     clickPLockOn() {
-        this.on("click", this.pLockOn);
+        this.on("click", () => this.pLockOn());
     }
     clickPLockOff() {
-        this.off("click", this.pLockOn);
+        this.off("click", () => this.pLockOn());
     }
     __listenOn(e: EventType, h: EventHandle) {
         this.canvas.addEventListener(e, h);
@@ -2504,23 +2508,18 @@ class Scene {
     find(cb: FindPredicateEntity): Entity | undefined {
         return this.items.find(cb);
     }
+    #tagTest(ent: Entity, tagName: Tag | string): boolean {
+        if(objIs<Tag>(tagName)) {
+            return ent.tags.has(tagName);
+        } else {
+            return ent.tags.some((t) => t.test(tagName));
+        }
+    }
     findByTag(tagName: Tag | string): Entity | undefined {
-        return this.find((e): e is Entity => {
-            if(objIs<Tag>(tagName)) {
-                return e.tags.has(tagName);
-            } else {
-                return e.tags.some((t) => t.test(tagName));
-            }
-        });
+        return this.find((e): e is Entity => this.#tagTest(e, tagName));
     }
     hasByTag(tagName: Tag | string): boolean {
-        return this.some((e) => {
-            if(objIs<Tag>(tagName)) {
-                return e.tags.has(tagName);
-            } else {
-                return e.tags.some((t) => t.test(tagName));
-            }
-        });
+        return this.some((e) => this.#tagTest(e, tagName));
     }
     some(cb: PredicateEntity) {
         return this.items.some(cb);
@@ -2538,12 +2537,12 @@ class Scene {
         return Vector.rotBtwn(a.getPos(), b.getPos());
     }
     /**
-     * Returns the rotation between the mouse and a specified entity.
+     * Returns the rotation between the specified entity and the mouse.
      * @param ent The entity to test.
-     * @returns The rotation from the mouse to the entity.
+     * @returns The rotation from the entity to the mouse.
      */
     rotToMouse(ent: Entity): number {
-        return Vector.rotBtwn(this.mousePos, ent.getPos());
+        return Vector.rotBtwn(ent.getPos(), this.mousePos);
     }
 }
 /**
@@ -2706,6 +2705,7 @@ class Runtime {
         if(this.processId == -1) throw new NoProcessError();
         cancelAnimationFrame(this.processId);
         this.delta = 0;
+        this.processId = -1;
     }
 }
 /**
@@ -2972,7 +2972,7 @@ const SceneConfigMap = {
     /**
      * Controls the volume of all music audio in this project.
      * 
-     * Any `Sound` or `SFX` with the tag "music" is controlled by this.
+     * Any `Sound` with the tag "music" is controlled by this.
      * 
      * Accepts a value from 0 - 1.
      * 
@@ -2983,7 +2983,7 @@ const SceneConfigMap = {
     /**
      * Controls the volume of all sound effect audio in this project.
      * 
-     * Any `Sound` with the tag `sfx` or `SFX` is controlled by this.
+     * Any `Sound` with the tag "sfx" is controlled by this.
      * 
      * Accepts a value from 0 - 1.
      * 

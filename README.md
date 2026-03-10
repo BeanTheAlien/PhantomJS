@@ -80,7 +80,13 @@ npm install @beanthealien/phantomjs
 - Changed `Entity.restoreInitState` (and the associated `initState`) to use a `SavedState` with `restoreState`.
 - Added `shallow<T>()`.
 ### v1.0.17
-- Added `PointAtComp`. (wip)
+- Added `PointAtComp`, `PointAtMouseComp`.
+- Scene no longer assigns default `style="width: ...; height: ...`. (don't ask why it set it to "0px" before, I don't know)
+- Fixed some translation issues, fixed some handler function references.
+- Fixed an error that caused `Runtime` to not discard its proccess ID.
+- Fixed an error that caused incorrect mouse position calculations.
+- Fixed an error that caused the wrong angle to be returned when comparing entity-to-mouse. (originally mouse-to-entity)
+- Updated documentation regarding the usage of `Sound`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

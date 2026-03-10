@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Cooldown_instances, _Cooldown_handle;
+var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Cooldown_instances, _Cooldown_handle;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -14,6 +14,9 @@ class Util {
     }
     static clamp(n, min, max) {
         return Math.min(Math.max(n, min), max);
+    }
+    static strOf(o) {
+        return typeof o == "string" ? o : Util.str(o);
     }
 }
 class ArrayUtil {
@@ -103,7 +106,7 @@ class NoProcessError extends ErrRoot {
  * @since v0.0.0
  * @example
  * ```
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("health"); // use HealthComp
  * ent.use("health"); // cannot use again
  * ```
@@ -122,7 +125,7 @@ class AlreadyUsingError extends ErrRoot {
  * ```
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("sprite", { frames: ["frame0.jpg"] }); // no scene property
  * scene.add(ent);
  * scene.start(); // cannot render without scene
@@ -142,7 +145,7 @@ class NoSceneAvailableError extends ErrRoot {
  * ```
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
- * const ent = new Phantom2dEntity({});
+ * const ent = new Entity({});
  * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
@@ -238,7 +241,21 @@ class ItemBox {
     rm(...stuff) {
         ArrayUtil.rm(this.stuff, stuff);
     }
-    forEach(cb) { }
+    forEach(cb) {
+        this.stuff.forEach(cb);
+    }
+    has(...stuff) {
+        return ArrayUtil.has(this.stuff, stuff);
+    }
+    find(cb) {
+        return this.stuff.find(cb);
+    }
+    filter(cb) {
+        return this.stuff.filter(cb);
+    }
+    some(cb) {
+        return this.stuff.some(cb);
+    }
 }
 /**
  * The synthetic event class.
@@ -467,6 +484,41 @@ class SpriteComp extends Comp {
         this.scene.img(c, this.ent.x, this.ent.y, this.ent.width, this.ent.height);
     }
 }
+class PointAtCompBase extends Comp {
+    constructor(ent, opts) {
+        super(ent);
+        this.scene = opts.scene;
+    }
+}
+class PointAtComp extends PointAtCompBase {
+    constructor(ent, opts) {
+        super(ent, opts);
+        this.point = opts.point;
+    }
+    link(ent) {
+        this.point = ent;
+    }
+    unlink() {
+        this.point = undefined;
+    }
+    upd() {
+        if (!this.scene)
+            throw new NoSceneAvailableError();
+        if (!this.point)
+            return console.warn("No linked entity! Please add a link.");
+        this.ent.setRot(this.scene.rotBtwn(this.ent, this.point));
+    }
+}
+class PointAtMouseComp extends PointAtCompBase {
+    constructor(ent, opts) {
+        super(ent, opts);
+    }
+    upd() {
+        if (!this.scene)
+            throw new NoSceneAvailableError();
+        this.ent.setRot(this.scene.rotToMouse(this.ent));
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -474,7 +526,9 @@ class SpriteComp extends Comp {
 const PhantomCompRecord = {
     health: HealthComp,
     inv: InvComp,
-    sprite: SpriteComp
+    sprite: SpriteComp,
+    pointat: PointAtComp,
+    pointatmouse: PointAtMouseComp
 };
 /**
  * The class used for creating components for the scene.
@@ -548,24 +602,27 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
  */
-class Phantom2dEntity {
+class Entity {
     constructor(opts) {
-        var _b, _c, _d, _e, _f, _g, _h, _j, _k;
-        this.collide = (_b = opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
-        this.upd = (_c = opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
-        this.x = (_d = opts.x) !== null && _d !== void 0 ? _d : 0;
-        this.y = (_e = opts.y) !== null && _e !== void 0 ? _e : 0;
-        this.rot = (_f = opts.rot) !== null && _f !== void 0 ? _f : 0;
-        this.width = (_g = opts.width) !== null && _g !== void 0 ? _g : 0;
-        this.height = (_h = opts.height) !== null && _h !== void 0 ? _h : 0;
+        var _b, _c, _d, _f, _g, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+        this.collide = (_b = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
+        this.upd = (_c = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
+        this.x = (_f = (_d = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _d !== void 0 ? _d : Entity.defaults.get("x")) !== null && _f !== void 0 ? _f : 0;
+        this.y = (_j = (_g = opts === null || opts === void 0 ? void 0 : opts.y) !== null && _g !== void 0 ? _g : Entity.defaults.get("y")) !== null && _j !== void 0 ? _j : 0;
+        this.rot = (_l = (_k = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _k !== void 0 ? _k : Entity.defaults.get("rot")) !== null && _l !== void 0 ? _l : 0;
+        this.width = (_o = (_m = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _m !== void 0 ? _m : Entity.defaults.get("width")) !== null && _o !== void 0 ? _o : 0;
+        this.height = (_q = (_p = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _p !== void 0 ? _p : Entity.defaults.get("height")) !== null && _q !== void 0 ? _q : 0;
         this.evStore = new Store();
-        this.color = (_j = opts.color) !== null && _j !== void 0 ? _j : "#fff";
-        if (opts.custom)
+        this.color = (_s = (_r = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _r !== void 0 ? _r : Entity.defaults.get("color")) !== null && _s !== void 0 ? _s : "#fff";
+        if (opts === null || opts === void 0 ? void 0 : opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
         this.comps = new Store();
-        this.moveMode = (_k = opts.moveMode) !== null && _k !== void 0 ? _k : "move";
+        this.moveMode = (_t = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _t !== void 0 ? _t : "move";
+        this.evMng = new PhantomEventManager(this, this.evStore);
+        this.tags = new TagList();
+        this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
     }
     setPos(x, y) {
         if (typeof x == "number" && typeof y == "number") {
@@ -719,10 +776,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     on(event, handle) {
-        var _b;
-        const a = (_b = this.evStore.get(event)) !== null && _b !== void 0 ? _b : [];
-        a.push(handle);
-        this.evStore.set(event, a);
+        this.evMng.on(event, handle);
     }
     /**
      * Removes a listener for an event.
@@ -731,15 +785,7 @@ class Phantom2dEntity {
      * @since v0.0.0
      */
     off(event, handle) {
-        var _b;
-        if (handle) {
-            const a = (_b = this.evStore.get(event)) !== null && _b !== void 0 ? _b : [];
-            ArrayUtil.rm(a, handle);
-            this.evStore.set(event, a);
-        }
-        else {
-            this.evStore.del(event);
-        }
+        this.evMng.off(event, handle);
     }
     /**
      * Consumes an event.
@@ -883,16 +929,54 @@ class Phantom2dEntity {
     setMoveMode(m) {
         this.moveMode = m;
     }
+    /**
+     * Restores a saved state to this entity.
+     * @param state The state to be restored.
+     * @since v1.0.16
+     * @example
+     * ```
+     * const ent = new Entity({ ... });
+     * const state = ent.saveState();
+     * ent.setPos(random(), random()); // assume pos is needed to stay the same
+     * ent.restoreState(state); // back to normal
+     * // note: this example also works with restoreInitState
+     * ```
+     */
+    restoreState(state) {
+        state.restore(this);
+    }
+    /**
+     * Restores this `Entity` to the state it was in at the time of construction.
+     * @since v1.0.13
+     * @example
+     * ```
+     * const ent = new Entity({ ... });
+     * messUpEnt(ent); // assuming this would mess up the entity in some way
+     * ent.restoreInitState(); // back to normal
+     * ```
+     */
+    restoreInitState() {
+        this.restoreState(this.initState);
+    }
+    /**
+     * Creates a saved state of this entity, which can be later restored.
+     * @param desc The extended, optional description.
+     * @returns A saved state of this entity.
+     * @since v1.0.16
+     */
+    saveState(desc) {
+        return new SavedState(this, desc);
+    }
     static from(opts) {
         if (opts instanceof Preset) {
-            const ent = new Phantom2dEntity({});
+            const ent = new Entity({});
             opts.apply(ent);
             return ent;
         }
-        return new Phantom2dEntity(opts);
+        return new Entity(opts);
     }
     /**
-     * Returns whether the object passed is an `Phantom2dEntity`.
+     * Returns whether the object passed is an `Entity`.
      * @param obj The object to test.
      * @returns Whether it is an entity.
      */
@@ -906,7 +990,7 @@ class Phantom2dEntity {
  * This object has no special attributes.
  * @since v0.0.0
  */
-class StaticObject extends Phantom2dEntity {
+class StaticObject extends Entity {
     constructor(opts) {
         super(opts);
         // requires an enforced fixed move mode
@@ -914,7 +998,7 @@ class StaticObject extends Phantom2dEntity {
     }
     static from(opts) {
         if (opts instanceof Preset) {
-            const ent = new StaticObject({ shape: "geom", color: "#fff" });
+            const ent = new StaticObject({ shape: "geom" });
             opts.apply(ent);
             return ent;
         }
@@ -928,7 +1012,7 @@ class StaticObject extends Phantom2dEntity {
  * A simple object that uses physics.
  * @since v0.0.0
  */
-class PhysicsObject extends Phantom2dEntity {
+class PhysicsObject extends Entity {
     constructor(opts) {
         super(opts);
         this.strength = opts.strength;
@@ -957,7 +1041,7 @@ class PhysicsObject extends Phantom2dEntity {
  * Optionally, it can bounce on extent reached.
  * @since v0.0.0
  */
-class MovingObject extends Phantom2dEntity {
+class MovingObject extends Entity {
     constructor(opts) {
         super(opts);
         this.dirX = opts.dirX;
@@ -1018,7 +1102,7 @@ class MovingObject extends Phantom2dEntity {
  * Will automatically destroy itself when reaching an extent.
  * @since v0.0.0
  */
-class BulletObject extends Phantom2dEntity {
+class BulletObject extends Entity {
     constructor(opts) {
         super(opts);
         this.rot = opts.rot;
@@ -1058,12 +1142,64 @@ class BulletObject extends Phantom2dEntity {
     }
 }
 /**
+ * Acts as a barrier to other entities.
+ * @since v1.0.12
+ */
+class WallObject extends Entity {
+    constructor(opts) {
+        super(opts);
+        this.collide = (e) => {
+            // left vs right pen
+            const xl = e.x + e.width - this.x;
+            const xr = this.x + this.width - e.x;
+            const mx = Math.min(xl, xr);
+            // top vs btm pen
+            const yt = e.y + e.height - this.y;
+            const yb = this.y + this.height - e.y;
+            const my = Math.min(yt, yb);
+            const ec = e.center();
+            const wc = this.center();
+            if (mx < my) {
+                if (ec.x < wc.x) {
+                    // push left
+                    e.x = this.x - e.width;
+                }
+                else {
+                    // push right
+                    e.x = this.x + this.width;
+                }
+            }
+            else {
+                if (ec.y < wc.y) {
+                    // push up
+                    e.y = this.y - e.height;
+                }
+                else {
+                    // push down
+                    e.y = this.y + this.height;
+                }
+            }
+        };
+    }
+    static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new WallObject({});
+            opts.apply(ent);
+            return ent;
+        }
+        return new WallObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
+    }
+}
+/**
  * The root class for other character-like classes.
  *
  * Provides functionality for characters; uses physics.
  * @since v0.0.0
  */
-class Character extends Phantom2dEntity {
+class Character extends Entity {
     constructor(opts) {
         super(opts);
         this.gspd = 0;
@@ -1158,6 +1294,25 @@ class Vector {
         this.x *= factor;
         this.y *= factor;
     }
+    static rotBtwn(a, b) {
+        const a1 = Math.atan2(a.y, a.x);
+        const a2 = Math.atan2(b.y, b.x);
+        let dif = a2 - a1;
+        const pi2 = 2 * Math.PI;
+        if (dif > Math.PI)
+            dif -= pi2;
+        else if (dif < -Math.PI)
+            dif += pi2;
+        return dif;
+    }
+    rotate(rad) {
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const nx = this.x * cos - this.y * sin;
+        const ny = this.x * sin + this.y * cos;
+        this.x = nx;
+        this.y = ny;
+    }
 }
 /**
  * A pixel.
@@ -1185,7 +1340,7 @@ function SoundOptionsIsSOD(o) {
 /**
  * An audio source.
  *
- * Used to play long-lasting sounds, NOT SFX.
+ * Used to play a variety of sounds.
  * @since v0.0.0
  */
 class Sound {
@@ -1282,6 +1437,12 @@ class Items {
     at(i) {
         return this.items[i];
     }
+    find(cb) {
+        return this.items.find(cb);
+    }
+    some(cb) {
+        return this.items.some(cb);
+    }
 }
 /**
  * The root canvas to display content.
@@ -1289,7 +1450,8 @@ class Items {
  */
 class Scene {
     constructor(opts) {
-        var _b, _c, _d, _e;
+        var _b, _c;
+        _Scene_instances.add(this);
         if (typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
         }
@@ -1298,8 +1460,10 @@ class Scene {
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas;
         this.canvas.width = (_b = opts.w) !== null && _b !== void 0 ? _b : 0;
         this.canvas.height = (_c = opts.h) !== null && _c !== void 0 ? _c : 0;
-        this.canvas.style.width = (_d = opts.cssW) !== null && _d !== void 0 ? _d : "0px";
-        this.canvas.style.height = (_e = opts.cssH) !== null && _e !== void 0 ? _e : "0px";
+        if (opts.cssW)
+            this.canvas.style.width = opts.cssW;
+        if (opts.cssH)
+            this.canvas.style.height = opts.cssH;
         const ctx = this.canvas.getContext("2d");
         if (!ctx)
             throw new NoContextError();
@@ -1309,10 +1473,11 @@ class Scene {
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
         window.addEventListener("mousemove", (e) => {
-            this.mousePos = new Vector(e.clientX, e.clientY);
+            this.mousePos = this.mouseAt(e);
         });
         this.runtime = new Runtime();
         this.comps = new Store();
+        this.evMng = new SceneEventManager(this, this.evStore);
     }
     get width() {
         return this.canvas.width;
@@ -1354,23 +1519,10 @@ class Scene {
         return this.items.filter(cb);
     }
     on(name, handle) {
-        var _b;
-        const a = (_b = this.evStore.get(name)) !== null && _b !== void 0 ? _b : [];
-        a.push(handle);
-        this.evStore.set(name, a);
-        this.canvas.addEventListener(name, handle);
+        this.evMng.on(name, handle);
     }
     off(name, handle) {
-        var _b;
-        if (handle) {
-            this.canvas.removeEventListener(name, handle);
-            const a = (_b = this.evStore.get(name)) !== null && _b !== void 0 ? _b : [];
-            ArrayUtil.rm(a, handle);
-            this.evStore.set(name, a);
-        }
-        else {
-            this.evStore.del(name);
-        }
+        this.evMng.off(name, handle);
     }
     getImgData(pos) {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);
@@ -1451,6 +1603,7 @@ class Scene {
     render() {
         this.items.forEach(i => {
             this.ctx.save();
+            this.ctx.translate(i.x, i.y);
             this.ctx.rotate(i.rot);
             this.rect(-i.width / 2, -i.height / 2, i.width, i.height, i.color);
             this.ctx.restore();
@@ -1509,21 +1662,88 @@ class Scene {
     }
     mouseAt(e) {
         const rect = this.bounds();
-        return new Vector(e.clientX - rect.left, e.clientY - rect.top);
+        const sx = this.width / rect.width;
+        const sy = this.height / rect.height;
+        return new Vector((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
     }
     clickFScrOn() {
-        this.on("click", this.fScrOn);
+        this.on("click", () => this.fScrOn());
     }
     clickFScrOff() {
-        this.off("click", this.fScrOn);
+        this.off("click", () => this.fScrOn());
     }
     clickPLockOn() {
-        this.on("click", this.pLockOn);
+        this.on("click", () => this.pLockOn());
     }
     clickPLockOff() {
-        this.off("click", this.pLockOn);
+        this.off("click", () => this.pLockOn());
+    }
+    __listenOn(e, h) {
+        this.canvas.addEventListener(e, h);
+    }
+    __listenOff(e, h) {
+        this.canvas.removeEventListener(e, h);
+    }
+    toDataURL(format = "image/png", quality = 1) {
+        return this.canvas.toDataURL(format, quality);
+    }
+    /**
+     * Creates a screenshot of the canvas.
+     *
+     * Uses the canvas's content as the image content.
+     * @param file The file name.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshot(file, format = "image/png", quality = 1) {
+        const save = new Save({
+            mime: format,
+            file,
+            ext: format.split("/")[1]
+        });
+        save.trigger(this.toDataURL(format, quality));
+    }
+    find(cb) {
+        return this.items.find(cb);
+    }
+    findByTag(tagName) {
+        return this.find((e) => __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_tagTest).call(this, e, tagName));
+    }
+    hasByTag(tagName) {
+        return this.some((e) => __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_tagTest).call(this, e, tagName));
+    }
+    some(cb) {
+        return this.items.some(cb);
+    }
+    /**
+     * Returns the rotation between two entites.
+     *
+     * Utilizes `Vector.rotBtwn` to calculate.
+     * @param a The first entity.
+     * @param b The second entity.
+     * @returns The rotation between the two.
+     * @since v1.0.16
+     */
+    rotBtwn(a, b) {
+        return Vector.rotBtwn(a.getPos(), b.getPos());
+    }
+    /**
+     * Returns the rotation between the specified entity and the mouse.
+     * @param ent The entity to test.
+     * @returns The rotation from the entity to the mouse.
+     */
+    rotToMouse(ent) {
+        return Vector.rotBtwn(ent.getPos(), this.mousePos);
     }
 }
+_Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
+    if (objIs(tagName)) {
+        return ent.tags.has(tagName);
+    }
+    else {
+        return ent.tags.some((t) => t.test(tagName));
+    }
+};
 /**
  * A collection of items.
  *
@@ -1552,6 +1772,9 @@ class Level {
     forEach(cb) {
         this.items.forEach(cb);
     }
+    find(cb) {
+        return this.items.find(cb);
+    }
     save(file) {
         const s = new SaveJSON(file);
         s.save(this, 4);
@@ -1567,15 +1790,18 @@ class Save {
         this.mime = opts.mime;
         this.ext = opts.ext;
     }
-    save(cont) {
-        const blob = new Blob([cont], { type: this.mime });
-        const url = URL.createObjectURL(blob);
+    trigger(url) {
         const a = document.createElement("a");
         document.body.appendChild(a);
         a.href = url;
         a.download = `${this.file}.${this.ext}`;
         a.click();
         document.body.removeChild(a);
+    }
+    save(cont) {
+        const blob = new Blob([cont], { type: this.mime });
+        const url = URL.createObjectURL(blob);
+        this.trigger(url);
         URL.revokeObjectURL(url);
     }
 }
@@ -1673,6 +1899,7 @@ class Runtime {
             throw new NoProcessError();
         cancelAnimationFrame(this.processId);
         this.delta = 0;
+        this.processId = -1;
     }
 }
 /**
@@ -1698,11 +1925,37 @@ class GeomRect extends Geom {
 class GeomCircle extends Geom {
     constructor() { super("circle"); }
 }
+class StorageRoot {
+    constructor(obj) {
+        this.storage = obj;
+    }
+    get(k) {
+        return this.storage.getItem(k);
+    }
+    set(k, v) {
+        this.storage.setItem(k, Util.strOf(v));
+    }
+    has(k) {
+        return !!this.get(k);
+    }
+    get len() {
+        return this.storage.length;
+    }
+    del(k) {
+        this.storage.removeItem(k);
+    }
+    clear() {
+        this.storage.clear();
+    }
+}
+const Local = new StorageRoot(localStorage);
+const Session = new StorageRoot(sessionStorage);
 /**
  * An implementation of `localStorage`.
  * @since v1.0.2
+ * @deprecated Replaced by new `Local` object.
  */
-class Local {
+class LocalDeprecated {
     /**
      * Sets a value in `localStorage`.
      * @param k The key.
@@ -1768,8 +2021,7 @@ class Cookies {
      * @since v1.0.6
      */
     static set(k, v) {
-        const str = typeof v == "string" ? v : Util.str(v);
-        cookieStore.set(k, str);
+        cookieStore.set(k, Util.strOf(v));
     }
     /**
      * Returns a list of associated cookie values.
@@ -1850,6 +2102,15 @@ function option(vals) {
 function prim(type) {
     return { type };
 }
+function primNum() {
+    return prim(Number);
+}
+function primString() {
+    return prim(String);
+}
+function primBool() {
+    return prim(Boolean);
+}
 const SceneConfigMap = {
     /**
      * Controls the displayed resolution (outputted textures width and height).
@@ -1868,29 +2129,29 @@ const SceneConfigMap = {
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    master: prim(Number),
+    master: primNum(),
     /**
      * Controls the volume of all music audio in this project.
      *
-     * Any `Sound` or `SFX` with the tag "music" is controlled by this.
+     * Any `Sound` with the tag "music" is controlled by this.
      *
      * Accepts a value from 0 - 1.
      *
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    music: prim(Number),
+    music: primNum(),
     /**
      * Controls the volume of all sound effect audio in this project.
      *
-     * Any `Sound` with the tag `sfx` or `SFX` is controlled by this.
+     * Any `Sound` with the tag "sfx" is controlled by this.
      *
      * Accepts a value from 0 - 1.
      *
      * Part of the sound volume control collection.
      * @since v1.0.7
      */
-    sfx: prim(Number)
+    sfx: primNum()
 };
 class SceneConfig extends Config {
 }
@@ -1909,12 +2170,47 @@ const ImgConfigMap = {
      * const img = new Img("cool.png"); // this would be transformed to be 'assets/cool.png'
      * ```
      */
-    root: prim(String)
+    root: primString()
 };
 class ImgConfig extends Config {
 }
 Img.config = new ImgConfig();
 Img.config.set("root", "");
+const EntityDefaultsMap = {
+    /**
+     * Controls the x-coordinate.
+     * @since v1.0.11
+     */
+    x: primNum(),
+    /**
+     * Controls the y-coordinate.
+     * @since v1.0.11
+     */
+    y: primNum(),
+    /**
+     * Controls the rotation, in radians.
+     * @since v1.0.11
+     */
+    rot: primNum(),
+    /**
+     * Controls the width.
+     * @since v1.0.11
+     */
+    width: primNum(),
+    /**
+     * Controls the height.
+     * @since v1.0.11
+     */
+    height: primNum(),
+    /**
+     * Controls the color.
+     * @since v1.0.11
+     */
+    color: primString()
+};
+class EntityDefaults extends Config {
+}
+Entity.defaults = new EntityDefaults();
 class Picker {
     clean(opts) {
         return { id: opts.id, startIn: opts.start };
@@ -1980,6 +2276,106 @@ class DirPicker extends Picker {
     }
     cleanOpts(opts) {
         return Object.assign(Object.assign({}, this.clean(opts)), { mode: opts.mode ? { "r": "read", "rw": "readwrite" }[opts.mode] : undefined });
+    }
+}
+class EventManager {
+    constructor(self, store) {
+        this.self = self;
+        this.store = store;
+    }
+    on(e, h, thenExec = NoFunc) {
+        var _b;
+        const a = (_b = this.store.get(e)) !== null && _b !== void 0 ? _b : [];
+        ArrayUtil.add(a, h);
+        this.store.set(e, a);
+        thenExec();
+    }
+    off(e, h, hExist = NoFunc, notHExist = NoFunc) {
+        var _b;
+        if (h) {
+            const a = (_b = this.store.get(e)) !== null && _b !== void 0 ? _b : [];
+            ArrayUtil.rm(a, h);
+            this.store.set(e, a);
+            hExist();
+        }
+        else {
+            notHExist();
+            this.store.del(e);
+        }
+    }
+}
+class SceneEventManager extends EventManager {
+    on(e, h) {
+        super.on(e, h, () => {
+            this.self.__listenOn(e, h);
+        });
+    }
+    off(e, h) {
+        super.off(e, h, () => {
+            if (h)
+                this.self.__listenOff(e, h);
+        }, () => {
+            for (const [_e, _h] of this.self.evStore.items()) {
+                for (const __h of _h)
+                    this.self.__listenOff(_e, __h);
+            }
+        });
+    }
+}
+class PhantomEventManager extends EventManager {
+}
+class Clipboard {
+    static read() {
+        return navigator.clipboard.read();
+    }
+    static reads() {
+        return navigator.clipboard.readText();
+    }
+    static write(data) {
+        navigator.clipboard.write(data);
+    }
+    static writes(data) {
+        navigator.clipboard.writeText(data);
+    }
+}
+class Tag {
+    constructor(val) {
+        this.val = val !== null && val !== void 0 ? val : "";
+    }
+    get() {
+        return this.val;
+    }
+    set(v) {
+        this.val = v;
+    }
+    test(valOrTag) {
+        if (valOrTag instanceof Tag) {
+            return this.val == valOrTag.get();
+        }
+        else {
+            return this.val == valOrTag;
+        }
+    }
+}
+class TagList extends ItemBox {
+}
+class Angle {
+    static deg(rad) {
+        return rad * 180 / Math.PI;
+    }
+    static rad(deg) {
+        return deg * Math.PI / 180;
+    }
+}
+class SavedState {
+    constructor(o, desc) {
+        this.atts = {};
+        Object.assign(this.atts, o);
+        this.desc = desc;
+        this.timestamp = (new Date()).toISOString();
+    }
+    restore(o) {
+        Object.assign(o, this.atts);
     }
 }
 /**
@@ -2066,7 +2462,17 @@ function random(a, b) {
     }
     return Math.floor(Math.random() * (max - min)) + min;
 }
+function chance(max, upperBound) {
+    return max <= random((upperBound !== null && upperBound !== void 0 ? upperBound : 100) + 1);
+}
 function objIs(obj) {
     return obj != undefined && obj instanceof null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Phantom2dEntity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Local, Cooldown, Cookies, FilePicker, DirPicker, Img, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random };
+/**
+ * Returns a shallow, null value of the type provided.
+ * @returns A shallow, null value.
+ */
+function shallow() {
+    return null;
+}
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };
