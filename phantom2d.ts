@@ -2286,6 +2286,7 @@ class Items {
  */
 class Scene {
     static config: SceneConfig;
+    static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     items: Items;
@@ -2969,9 +2970,14 @@ class Cooldown {
         this.ready = true;
     }
 }
+type ConfigOnValueSetHandler<T> = (k: keyof T, v: T[keyof T]) => void;
 class Config<T extends Record<string, any>> {
     config: Store<keyof T, T[keyof T]>;
-
+    /**
+     * Fired when a value of this config is changed.
+     * @since v1.0.19
+     */
+    onValueSet?: ConfigOnValueSetHandler<T>;
     constructor() {
         this.config = new Store();
     }
@@ -2982,6 +2988,9 @@ class Config<T extends Record<string, any>> {
 
     set<K extends keyof T>(k: K, v: T[K]) {
         this.config.set(k, v);
+        if(this.onValueSet) {
+            this.onValueSet(k, v);
+        }
     }
 
     has<K extends keyof T>(k: K): boolean {
@@ -3073,12 +3082,29 @@ const SceneConfigMap = {
      * This is the handler that is called before the unload of the window.
      * 
      * Assuming it is a value other than `null`, there will be a listener created.
+     * 
+     * Listener utilizes `BeforeUnloadEvent.returnValue` to display a confirmation popup.
      * @since v1.0.18.2
      */
     unload: primFn()
 } as const;
 type SceneConfigType = ConfigType<typeof SceneConfigMap>;
-class SceneConfig extends Config<SceneConfigType> {}
+class SceneConfig extends Config<SceneConfigType> {
+    constructor() {
+        super();
+        this.onValueSet = (k, v) => {
+            if(k == "unload") {
+                if(Scene.unloadListenerCreated) return console.warn("There is already an unload listener!");
+                Scene.unloadListenerCreated = true;
+                window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
+                    e.preventDefault();
+                    e.returnValue = "";
+                    if(typeof v == "function") v();
+                });
+            }
+        }
+    }
+}
 Scene.config = new SceneConfig();
 Scene.config.set("resolution", "1920x1080");
 Scene.config.set("master", 1);
@@ -3161,11 +3187,12 @@ interface PickerOptions {
     start?: FileSystemStartPosition;
 }
 type WellKnownDir = "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
-type Accepted = { desc?: string, accept: { string: string[] } };
+type AcceptBase = { accept: { [x: string]: string[] } };
+type Accepted = { desc?: string } & AcceptBase;
 type OpenDirectoryAccessMode = "r" | "rw";
 type OpenDirectoryFinalAccessMode = "read" | "readwrite";
 type FileSystemStartPosition = FileSystemHandle | WellKnownDir;
-type AcceptedFinal = { description?: string, accept: { string: string[] } };
+type AcceptedFinal = { description?: string } & AcceptBase;
 interface FilePickerOptions extends PickerOptions {
     all?: boolean;
     mult?: boolean;

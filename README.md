@@ -98,6 +98,8 @@ npm install @beanthealien/phantomjs
 - Fixed an oversight to properly cancel out `gravspd` when grounded.
 - Added `get`/`set` property `alpha` to `Scene`.
 - Updated `init` command.
+### v1.0.19
+- Added `onValueSet` event trigger to configs.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
