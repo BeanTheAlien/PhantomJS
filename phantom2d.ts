@@ -3086,21 +3086,34 @@ const SceneConfigMap = {
      * Listener utilizes `BeforeUnloadEvent.returnValue` to display a confirmation popup.
      * @since v1.0.18.2
      */
-    unload: primFn()
+    unload: primFn(),
+    /**
+     * Handler for uncaught `ErrorEvent`s.
+     * @since v1.0.19
+     */
+    error: primFn()
 } as const;
 type SceneConfigType = ConfigType<typeof SceneConfigMap>;
 class SceneConfig extends Config<SceneConfigType> {
     constructor() {
         super();
         this.onValueSet = (k, v) => {
-            if(k == "unload") {
-                if(Scene.unloadListenerCreated) return console.warn("There is already an unload listener!");
-                Scene.unloadListenerCreated = true;
-                window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
-                    e.preventDefault();
-                    e.returnValue = "";
-                    if(typeof v == "function") v();
-                });
+            if(k == "unload" || k == "error") {
+                if(typeof v != "function") return console.warn("Invalid type passed as handle.");
+                if(k == "unload") {
+                    if(Scene.config.get("unload")) return console.warn("There is already an unload listener!");
+                    Scene.unloadListenerCreated = true;
+                    window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
+                        e.preventDefault();
+                        e.returnValue = "";
+                        v();
+                    });
+                } else if(k == "error") {
+                    if(Scene.config.get("error")) return console.warn("There is already an error listener!");
+                    window.addEventListener("error", (e: ErrorEvent) => {
+                        v(e);
+                    });
+                }
             }
         }
     }

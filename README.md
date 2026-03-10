@@ -100,6 +100,7 @@ npm install @beanthealien/phantomjs
 - Updated `init` command.
 ### v1.0.19
 - Added `onValueSet` event trigger to configs.
+- Added `ErrorEvent` listener for scene.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
