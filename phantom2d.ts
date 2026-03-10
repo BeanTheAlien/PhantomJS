@@ -1905,6 +1905,10 @@ class WallObject extends Entity {
             const my = Math.min(yt, yb);
             const ec = e.center();
             const wc = this.center();
+            // is a character
+            const ic = objIs<Character>(e);
+            // is a floor
+            const isf = this.tags.some(t => t.test("floor"));
             if(mx < my) {
                 if(ec.x < wc.x) {
                     // push left
@@ -1913,13 +1917,29 @@ class WallObject extends Entity {
                     // push right
                     e.x = this.x + this.width;
                 }
+                if(ic) {
+                    // if its colliding on the left,
+                    // then its not on ground
+                    // (not on the top of object)
+                    e.onGround = false;
+                }
             } else {
                 if(ec.y < wc.y) {
                     // push up
                     e.y = this.y - e.height;
+                    // test if its a character
+                    // and has "floor" tag
+                    if(isf && ic) {
+                        // ...then we set onGround to true
+                        e.onGround = true;
+                    }
                 } else {
                     // push down
                     e.y = this.y + this.height;
+                    if(ic) {
+                        // not on ground (on bottom)
+                        e.onGround = false;
+                    }
                 }
             }
         }
@@ -1959,10 +1979,12 @@ class WallObject extends Entity {
 class Character extends Entity {
     gspd: number;
     strength: number;
+    onGround: boolean;
     constructor(opts: CharacterOptions) {
         super(opts);
         this.gspd = 0;
         this.strength = opts.strength;
+        this.onGround = false;
     }
     setGSpd(spd: number) {
         this.gspd = spd;
@@ -1974,8 +1996,10 @@ class Character extends Entity {
         this.gspd = -(h);
     }
     update() {
-        this.gspd += this.strength;
-        this.y += this.gspd;
+        if(!this.onGround) {
+            this.gspd += this.strength;
+            this.y += this.gspd;
+        }
         super.update();
     }
     /**

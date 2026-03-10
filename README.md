@@ -92,6 +92,8 @@ npm install @beanthealien/phantomjs
 - Fixed an oversight in `Character` that caused: no gravity updates to occur, no strength to be assigned and the gravity speed to not be updated.
 - Fixed an oversight in `Custom`.
 - Need to fix an error that causes `Character`s to fall through `WallObject`s.
+### v1.0.18.1
+- Fixed issue #2.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
