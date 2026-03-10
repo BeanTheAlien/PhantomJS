@@ -6,6 +6,7 @@ scene.canvas.style.border = "2px solid red";
 const fh = 50;
 const floor = new p2d.WallObject({ width: scene.width, height: fh, y: scene.height - fh, color: "green" });
 scene.add(floor);
+floor.tags.add(new p2d.Tag("floor"));
 
 class Merc extends p2d.Entity {
     weap: p2d.Img;
@@ -17,7 +18,7 @@ class Merc extends p2d.Entity {
     }
 }
 const player = new p2d.PlayableCharacter({ strength: 0.5, width: 10, height: 30, color: "red", custom: { spd: 5 } });
-player.bind("w", () => player.jump(player.spd));
+player.bind("w", () => { console.log("hello"); if(player.onGround) player.jump(player.spd); });
 player.bind("a", () => player.moveX(-player.spd));
 player.bind("d", () => player.moveX(player.spd));
 scene.add(player);

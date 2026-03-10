@@ -236,16 +236,16 @@ class ItemBox {
         this.stuff = [];
     }
     add(...stuff) {
-        ArrayUtil.add(this.stuff, stuff);
+        ArrayUtil.add(this.stuff, ...stuff);
     }
     rm(...stuff) {
-        ArrayUtil.rm(this.stuff, stuff);
+        ArrayUtil.rm(this.stuff, ...stuff);
     }
     forEach(cb) {
         this.stuff.forEach(cb);
     }
     has(...stuff) {
-        return ArrayUtil.has(this.stuff, stuff);
+        return ArrayUtil.has(this.stuff, ...stuff);
     }
     find(cb) {
         return this.stuff.find(cb);
@@ -1159,6 +1159,8 @@ class WallObject extends Entity {
             const my = Math.min(yt, yb);
             const ec = e.center();
             const wc = this.center();
+            // is a floor
+            const isf = this.tags.some(t => t.test("floor"));
             if (mx < my) {
                 if (ec.x < wc.x) {
                     // push left
@@ -1168,15 +1170,31 @@ class WallObject extends Entity {
                     // push right
                     e.x = this.x + this.width;
                 }
+                if (e instanceof Character) {
+                    // if its colliding on the left,
+                    // then its not on ground
+                    // (not on the top of object)
+                    e.onGround = false;
+                }
             }
             else {
                 if (ec.y < wc.y) {
                     // push up
                     e.y = this.y - e.height;
+                    // test if its a character
+                    // and has "floor" tag
+                    if (isf && e instanceof Character) {
+                        // ...then we set onGround to true
+                        e.onGround = true;
+                    }
                 }
                 else {
                     // push down
                     e.y = this.y + this.height;
+                    if (e instanceof Character) {
+                        // not on ground (on bottom)
+                        e.onGround = false;
+                    }
                 }
             }
         };
@@ -1204,6 +1222,7 @@ class Character extends Entity {
         super(opts);
         this.gspd = 0;
         this.strength = opts.strength;
+        this.onGround = false;
     }
     setGSpd(spd) {
         this.gspd = spd;
@@ -1215,8 +1234,14 @@ class Character extends Entity {
         this.gspd = -(h);
     }
     update() {
-        this.gspd += this.strength;
-        this.y += this.gspd;
+        console.log(this.onGround);
+        if (!this.onGround) {
+            this.gspd += this.strength;
+            this.y += this.gspd;
+        }
+        else {
+            this.gspd = 0;
+        }
         super.update();
     }
     static from(opts) {
@@ -1578,8 +1603,14 @@ class Scene {
     set color(color) {
         this.ctx.fillStyle = color;
     }
+    get alpha() {
+        return this.ctx.globalAlpha;
+    }
+    set alpha(alpha) {
+        this.ctx.globalAlpha = alpha;
+    }
     img(img, x, y, w, h) {
-        this.ctx.drawImage(img instanceof HTMLImageElement ? img : img.img, x, y, w, h);
+        this.ctx.drawImage(objIs(img) ? img : img.img, x, y, w, h);
     }
     rect(x, y, w, h, color) {
         this.color = color;
@@ -1596,15 +1627,18 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        this.forEach(a => {
-            this.forEach(b => {
-                if (a == b)
-                    return;
-                if (isCol(a, b)) {
-                    a.collide(b);
-                }
-            });
-        });
+        const len = this.items.items.length;
+        for (let i = 0; i < len; i++) {
+            for (let j = 0; j < len; j++) {
+                if (i == j)
+                    continue;
+                const a = this.items.at(i);
+                const b = this.items.at(j);
+                if (a && b)
+                    if (isCol(a, b))
+                        a.collide(b);
+            }
+        }
     }
     render() {
         this.items.forEach(i => {
@@ -1763,6 +1797,16 @@ _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, 
     }
 };
 /**
+ * This was used in v1.0.18.2 briefly.
+ *
+ * It was used to determine whether an unload listener already existed.
+ *
+ * It has been since replaced.
+ * @since v1.0.18.2
+ * @deprecated Since v1.0.19. Opted to using `Config.get` instead.
+ */
+Scene.unloadListenerCreated = false;
+/**
  * A collection of items.
  *
  * Can be used as a `Preset` for `Scene`.
@@ -1808,6 +1852,11 @@ class Save {
         this.mime = opts.mime;
         this.ext = opts.ext;
     }
+    /**
+     * Triggers the actual download process, provided a URL.
+     * @param url The source URL.
+     * @since v1.0.17
+     */
     trigger(url) {
         const a = document.createElement("a");
         document.body.appendChild(a);
@@ -1816,6 +1865,13 @@ class Save {
         a.click();
         document.body.removeChild(a);
     }
+    /**
+     * Saves a set of content.
+     *
+     * Creates a URL.
+     * @param cont The file's content.
+     * @since v0.0.0
+     */
     save(cont) {
         const blob = new Blob([cont], { type: this.mime });
         const url = URL.createObjectURL(blob);
@@ -2106,6 +2162,9 @@ class Config {
     }
     set(k, v) {
         this.config.set(k, v);
+        if (this.onValueSet) {
+            this.onValueSet(k, v);
+        }
     }
     has(k) {
         return this.config.has(k);
@@ -2128,6 +2187,9 @@ function primString() {
 }
 function primBool() {
     return prim(Boolean);
+}
+function primFn() {
+    return prim(Function);
 }
 const SceneConfigMap = {
     /**
@@ -2178,9 +2240,49 @@ const SceneConfigMap = {
      * It is highly recommended to leave this enabled.
      * @since v1.0.18
      */
-    osnd: primBool()
+    osnd: primBool(),
+    /**
+     * This is the handler that is called before the unload of the window.
+     *
+     * Assuming it is a value other than `null`, there will be a listener created.
+     *
+     * Listener utilizes `BeforeUnloadEvent.returnValue` to display a confirmation popup.
+     * @since v1.0.18.2
+     */
+    unload: primFn(),
+    /**
+     * Handler for uncaught `ErrorEvent`s.
+     * @since v1.0.19
+     */
+    error: primFn()
 };
 class SceneConfig extends Config {
+    constructor() {
+        super();
+        this.onValueSet = (k, v) => {
+            if (k == "unload" || k == "error") {
+                if (typeof v != "function")
+                    return console.warn("Invalid type passed as handle.");
+                if (k == "unload") {
+                    if (Scene.config.get("unload"))
+                        return console.warn("There is already an unload listener!");
+                    Scene.unloadListenerCreated = true;
+                    window.addEventListener("beforeunload", (e) => {
+                        e.preventDefault();
+                        e.returnValue = "";
+                        v();
+                    });
+                }
+                else if (k == "error") {
+                    if (Scene.config.get("error"))
+                        return console.warn("There is already an error listener!");
+                    window.addEventListener("error", (e) => {
+                        v(e);
+                    });
+                }
+            }
+        };
+    }
 }
 Scene.config = new SceneConfig();
 Scene.config.set("resolution", "1920x1080");
@@ -2503,4 +2605,4 @@ function objIs(obj) {
 function shallow() {
     return null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };

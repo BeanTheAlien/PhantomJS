@@ -383,16 +383,16 @@ class ItemBox<T> {
         this.stuff = [];
     }
     add(...stuff: T[]) {
-        ArrayUtil.add(this.stuff, stuff);
+        ArrayUtil.add(this.stuff, ...stuff);
     }
     rm(...stuff: T[]) {
-        ArrayUtil.rm(this.stuff, stuff);
+        ArrayUtil.rm(this.stuff, ...stuff);
     }
     forEach(cb: Callback<T>) {
         this.stuff.forEach(cb);
     }
     has(...stuff: T[]): boolean {
-        return ArrayUtil.has(this.stuff, stuff);
+        return ArrayUtil.has(this.stuff, ...stuff);
     }
     find(cb: FindPredicate<T>): T | undefined {
         return this.stuff.find(cb);
@@ -1906,8 +1906,6 @@ class WallObject extends Entity {
             const my = Math.min(yt, yb);
             const ec = e.center();
             const wc = this.center();
-            // is a character
-            const ic = objIs<Character>(e);
             // is a floor
             const isf = this.tags.some(t => t.test("floor"));
             if(mx < my) {
@@ -1918,7 +1916,7 @@ class WallObject extends Entity {
                     // push right
                     e.x = this.x + this.width;
                 }
-                if(ic) {
+                if(e instanceof Character) {
                     // if its colliding on the left,
                     // then its not on ground
                     // (not on the top of object)
@@ -1930,14 +1928,14 @@ class WallObject extends Entity {
                     e.y = this.y - e.height;
                     // test if its a character
                     // and has "floor" tag
-                    if(isf && ic) {
+                    if(isf && e instanceof Character) {
                         // ...then we set onGround to true
                         e.onGround = true;
                     }
                 } else {
                     // push down
                     e.y = this.y + this.height;
-                    if(ic) {
+                    if(e instanceof Character) {
                         // not on ground (on bottom)
                         e.onGround = false;
                     }
@@ -1997,13 +1995,13 @@ class Character extends Entity {
         this.gspd = -(h);
     }
     update() {
+        console.log(this.onGround);
         if(!this.onGround) {
             this.gspd += this.strength;
             this.y += this.gspd;
         } else {
             this.gspd = 0;
         }
-        this.onGround = false;
         super.update();
     }
     /**
@@ -2286,6 +2284,15 @@ class Items {
  */
 class Scene {
     static config: SceneConfig;
+    /**
+     * This was used in v1.0.18.2 briefly.
+     * 
+     * It was used to determine whether an unload listener already existed.
+     * 
+     * It has been since replaced.
+     * @since v1.0.18.2
+     * @deprecated Since v1.0.19. Opted to using `Config.get` instead.
+     */
     static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
@@ -3537,7 +3544,7 @@ export {
     Scene, Character, PlayableCharacter, WallObject,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle,
+    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag,
 
     Config, SceneConfig, ImgConfig,
 
