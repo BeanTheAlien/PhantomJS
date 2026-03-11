@@ -2650,6 +2650,15 @@ class Scene {
     rotToMouse(ent: Entity): number {
         return Vector.rotBtwn(ent.getPos(), this.mousePos);
     }
+    style(styles: CSSStyleDeclaration) {
+        Object.assign(this.canvas.style, styles);
+    }
+    center(): Vector {
+        return new Vector(this.width / 2, this.height / 2);
+    }
+    clientCenter(): Vector {
+        return new Vector(this.canvas.clientWidth / 2, this.canvas.clientHeight / 2);
+    }
 }
 /**
  * A collection of items.

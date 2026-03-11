@@ -1,7 +1,6 @@
 import * as p2d from "../../phantom2d.js";
 p2d.Img.config.set("root", "assets");
-const scene = new p2d.Scene({ canvas: "tf", w: 750, h: 750 });
-scene.canvas.style.border = "2px solid red";
+const scene = new p2d.Scene({ canvas: "tf", w: 750, h: 750, border: "2px solid red" });
 const fh = 50;
 const floor = new p2d.FloorObject({ width: scene.width, height: fh, y: scene.height - fh, color: "green" });
 scene.add(floor);

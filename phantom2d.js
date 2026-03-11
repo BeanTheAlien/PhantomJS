@@ -1813,6 +1813,15 @@ class Scene {
     rotToMouse(ent) {
         return Vector.rotBtwn(ent.getPos(), this.mousePos);
     }
+    style(styles) {
+        Object.assign(this.canvas.style, styles);
+    }
+    center() {
+        return new Vector(this.width / 2, this.height / 2);
+    }
+    clientCenter() {
+        return new Vector(this.canvas.clientWidth / 2, this.canvas.clientHeight / 2);
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName)) {

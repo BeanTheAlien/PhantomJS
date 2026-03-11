@@ -107,6 +107,8 @@ npm install @beanthealien/phantomjs
 - Added `FloorObject`.
 - Added `SceneOptions.border`.
 - Updated `Scene` constructor to not assign `canvas.width` and `canvas.height` to 0 if they are not passed.
+- Added `Scene.style(CSSStyleDeclaration)` to streamline adding styles.
+- Added `Scene.center()`, `Scene.clientCenter()`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
