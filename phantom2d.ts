@@ -551,6 +551,7 @@ interface BulletObjectOptions extends EntityOptions, Extent {
      * @since v0.0.0
      */
     scene: Scene;
+    onDest?: PhantomEventHandle;
 }
 /**
  * The options for a `Scene`.
@@ -634,6 +635,12 @@ interface PhantomEventMap {
      * @since v0.0.0
      */
     heal: PhantomHealthCompHealEvent;
+    /**
+     * The `DestroyedEvent`.
+     * @see {@link PhantomDestroyedEvent}
+     * @since v1.0.21
+     */
+    destroyed: PhantomDestroyedEvent;
 }
 /**
  * The options for a `Save`.
@@ -918,6 +925,7 @@ class PhantomHealthCompDieEvent extends PhantomEvent { constructor() { super("di
  * @since v0.0.0
  */
 class PhantomHealthCompHealEvent extends PhantomEvent { constructor() { super("heal"); } }
+class PhantomDestroyedEvent extends PhantomEvent { constructor() { super("destroyed"); } }
 /**
  * The component class.
  * @since v0.0.0
@@ -1844,6 +1852,7 @@ class BulletObject extends Entity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     scene: Scene;
+    onDest: PhantomEventHandle;
     constructor(opts: BulletObjectOptions) {
         super(opts);
         this.rot = opts.rot;
@@ -1853,6 +1862,7 @@ class BulletObject extends Entity {
         this.extTop = opts.extTop;
         this.spd = opts.spd;
         this.scene = opts.scene;
+        this.onDest = opts.onDest ?? ((e: PhantomEvent) => {});
     }
     update() {
         const fVec = this.getFVec();
@@ -1867,6 +1877,7 @@ class BulletObject extends Entity {
         if(x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
             // self-destruct if its not
             this.scene.rm(this);
+            this.onDest(new PhantomDestroyedEvent());
         }
     }
     /**
@@ -3163,7 +3174,6 @@ class SceneConfig extends Config<SceneConfigType> {
                 if(typeof v != "function") return console.warn("Invalid type passed as handle.");
                 if(k == "unload") {
                     if(Scene.config.get("unload")) return console.warn("There is already an unload listener!");
-                    Scene.unloadListenerCreated = true;
                     window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
                         e.preventDefault();
                         e.returnValue = "";

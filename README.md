@@ -102,13 +102,15 @@ npm install @beanthealien/phantomjs
 - Added `onValueSet` event trigger to configs.
 - Added `ErrorEvent` listener for scene.
 ### v1.0.20
-- UPGRADE NOW!
-- Fixes `Character.onGround` issues.
+- Fixed `Character.onGround` issues.
 - Added `FloorObject`.
 - Added `SceneOptions.border`.
 - Updated `Scene` constructor to not assign `canvas.width` and `canvas.height` to 0 if they are not passed.
 - Added `Scene.style(CSSStyleDeclaration)` to streamline adding styles.
 - Added `Scene.center()`, `Scene.clientCenter()`.
+### v1.0.21
+- Added `PhantomDestroyedEvent`.
+- `BulletObject` now fires `PhantomDestroyedEvent` upon being destroyed.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
