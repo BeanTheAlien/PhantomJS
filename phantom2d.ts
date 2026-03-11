@@ -584,6 +584,13 @@ interface SceneOptions {
      * @since v0.0.0
      */
     cssH?: string;
+    /**
+     * A border to be applied.
+     * 
+     * It's good practice to add a border to prevent canvas collapse on load.
+     * @since v1.0.20
+     */
+    border?: CSSStyleDeclaration["border"];
 }
 interface WallObjectOptions extends EntityOptions {}
 /**
@@ -2346,10 +2353,11 @@ class Scene {
         }
         if(!opts.canvas) throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
-        this.canvas.width = opts.w ?? 0;
-        this.canvas.height = opts.h ?? 0;
+        if(opts.w) this.canvas.width = opts.w;
+        if(opts.h) this.canvas.height = opts.h;
         if(opts.cssW) this.canvas.style.width = opts.cssW;
         if(opts.cssH) this.canvas.style.height = opts.cssH;
+        if(opts.border) this.canvas.style.border = opts.border;
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;

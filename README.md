@@ -105,6 +105,8 @@ npm install @beanthealien/phantomjs
 - UPGRADE NOW!
 - Fixes `Character.onGround` issues.
 - Added `FloorObject`.
+- Added `SceneOptions.border`.
+- Updated `Scene` constructor to not assign `canvas.width` and `canvas.height` to 0 if they are not passed.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

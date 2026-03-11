@@ -1504,7 +1504,6 @@ class Items {
  */
 class Scene {
     constructor(opts) {
-        var _b, _c;
         _Scene_instances.add(this);
         if (typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -1512,12 +1511,16 @@ class Scene {
         if (!opts.canvas)
             throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas;
-        this.canvas.width = (_b = opts.w) !== null && _b !== void 0 ? _b : 0;
-        this.canvas.height = (_c = opts.h) !== null && _c !== void 0 ? _c : 0;
+        if (opts.w)
+            this.canvas.width = opts.w;
+        if (opts.h)
+            this.canvas.height = opts.h;
         if (opts.cssW)
             this.canvas.style.width = opts.cssW;
         if (opts.cssH)
             this.canvas.style.height = opts.cssH;
+        if (opts.border)
+            this.canvas.style.border = opts.border;
         const ctx = this.canvas.getContext("2d");
         if (!ctx)
             throw new NoContextError();
