@@ -101,8 +101,10 @@ npm install @beanthealien/phantomjs
 ### v1.0.19
 - Added `onValueSet` event trigger to configs.
 - Added `ErrorEvent` listener for scene.
-### v1.0.19.1
-- Worked on resolving some errors.
+### v1.0.20
+- UPGRADE NOW!
+- Fixes `Character.onGround` issues.
+- Added `FloorObject`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

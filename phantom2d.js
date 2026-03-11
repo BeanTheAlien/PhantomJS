@@ -1212,6 +1212,29 @@ class WallObject extends Entity {
     }
 }
 /**
+ * Simple `WallObject` extension.
+ *
+ * Auto-adds "floor" tag.
+ * @since v1.0.20
+ */
+class FloorObject extends WallObject {
+    constructor(opts) {
+        super(opts);
+        this.tags.add(new Tag("floor"));
+    }
+    static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new FloorObject({});
+            opts.apply(ent);
+            return ent;
+        }
+        return new WallObject(opts);
+    }
+    static is(obj) {
+        return objIs(obj);
+    }
+}
+/**
  * The root class for other character-like classes.
  *
  * Provides functionality for characters; uses physics.
@@ -1232,9 +1255,9 @@ class Character extends Entity {
     }
     jump(h) {
         this.gspd = -(h);
+        this.onGround = false;
     }
     update() {
-        console.log(this.onGround);
         if (!this.onGround) {
             this.gspd += this.strength;
             this.y += this.gspd;
@@ -2596,7 +2619,8 @@ function chance(max, upperBound) {
     return max <= random((upperBound !== null && upperBound !== void 0 ? upperBound : 100) + 1);
 }
 function objIs(obj) {
-    return obj != undefined && obj instanceof null;
+    const c = null;
+    return obj != undefined && obj instanceof c;
 }
 /**
  * Returns a shallow, null value of the type provided.
@@ -2605,4 +2629,4 @@ function objIs(obj) {
 function shallow() {
     return null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };
