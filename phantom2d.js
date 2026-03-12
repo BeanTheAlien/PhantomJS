@@ -522,6 +522,46 @@ class PointAtMouseComp extends PointAtCompBase {
         this.ent.setRot(this.scene.rotToMouse(this.ent));
     }
 }
+class EnhancedPhysicsComp extends Comp {
+    constructor(ent, opts) {
+        var _b, _c, _d, _f, _g;
+        super(ent);
+        this.scene = opts.scene;
+        // represent inital velocity and acceleration
+        // recommended to remain at 0
+        this.vx = (_b = opts.vx) !== null && _b !== void 0 ? _b : 0;
+        this.vy = (_c = opts.vy) !== null && _c !== void 0 ? _c : 0;
+        this.ax = (_d = opts.ax) !== null && _d !== void 0 ? _d : 0;
+        this.ay = (_f = opts.ay) !== null && _f !== void 0 ? _f : 0;
+        this.fric = (_g = opts.fric) !== null && _g !== void 0 ? _g : 0.95;
+    }
+    addForce(fx, fy) {
+        this.ax += fx;
+        this.ay += fy;
+    }
+    addForceX(fx) {
+        this.addForce(fx, 0);
+    }
+    addForceY(fy) {
+        this.addForce(0, fy);
+    }
+    upd() {
+        if (!this.scene)
+            throw new NoSceneAvailableError();
+        // add accl
+        this.vx += this.ax;
+        this.vy += this.ay;
+        // dampen velocity with friction
+        this.vx *= this.fric;
+        this.vy *= this.fric;
+        // add vel to pos
+        this.ent.x += this.vx;
+        this.ent.y += this.vy;
+        // clear accl
+        this.ax = 0;
+        this.ay = 0;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -531,7 +571,8 @@ const PhantomCompRecord = {
     inv: InvComp,
     sprite: SpriteComp,
     pointat: PointAtComp,
-    pointatmouse: PointAtMouseComp
+    pointatmouse: PointAtMouseComp,
+    enhancedphys: EnhancedPhysicsComp
 };
 /**
  * The class used for creating components for the scene.
@@ -894,10 +935,11 @@ class Entity {
      * @since v0.0.0
      * @throws {AlreadyUsingError} If this component is already in use.
      */
-    use(c, opts = {}) {
+    use(c, opts) {
         if (this.uses(c))
             throw new AlreadyUsingError();
-        this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
+        const _opts = (opts !== null && opts !== void 0 ? opts : {});
+        this.comps.set(c, new (PhantomCompRecord[c])(this, _opts));
     }
     /**
      * Removes a component.
@@ -2645,4 +2687,4 @@ function objIs(obj, ctor) {
 function shallow() {
     return null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies };
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp };

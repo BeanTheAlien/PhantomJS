@@ -113,6 +113,11 @@ npm install @beanthealien/phantomjs
 - `BulletObject` now fires `PhantomDestroyedEvent` upon being destroyed.
 ### v1.0.22
 - Fixed the usage of `objIs` to properly accept a constructor.
+### v1.0.23
+- Added `EnhancedPhysicsComp`.
+- Added `PhantomCompOptionsMap` to enforce correct `CompOptions` instead of serving the default `CompOptions`.
+- Added `EnhancedPhysicsComp.fric` to dampen velocity output.
+- Added cooldowns for key presses.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

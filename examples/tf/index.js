@@ -11,10 +11,12 @@ class Merc extends p2d.Entity {
         this.merc = new p2d.Img(merc);
     }
 }
-const player = new p2d.PlayableCharacter({ strength: 0.4, width: 10, height: 30, color: "red", custom: { spd: 5, jh: 10 }, x: 10 });
+const player = new p2d.PlayableCharacter({ strength: 0.4, width: 10, height: 30, color: "red", custom: { spd: 3, jh: 10 }, x: 10 });
+player.use("enhancedphys", { scene, fric: 0.88 });
 player.bind("w", () => { if (player.onGround)
     player.jump(player.jh); });
-player.bind("a", () => player.moveX(-player.spd));
-player.bind("d", () => player.moveX(player.spd));
+player.bind("a", () => player.comp("enhancedphys").addForceX(-1));
+player.bind("d", () => player.comp("enhancedphys").addForceX(1));
 scene.add(player);
+player.bind("1", () => { scene.screenshot("helloworld.png"); });
 scene.start();

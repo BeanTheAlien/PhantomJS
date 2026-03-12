@@ -763,6 +763,12 @@ interface PhantomCompMap {
      * @since v1.0.17
      */
     pointatmouse: PointAtMouseComp;
+    /**
+     * The `EnhancedPhysicsComp`.
+     * @see {@link EnhancedPhysicsComp}
+     * @since v1.0.23
+     */
+    enhancedphys: EnhancedPhysicsComp;
 }
 /**
  * The map for `SceneComp`.
@@ -781,6 +787,9 @@ interface PhantomSceneCompMap {
  * @since v0.0.0
  */
 interface CompOptions {}
+interface CompUseScene {
+    scene?: Scene;
+}
 /**
  * The options for a `HealthComp`.
  * @since v0.0.0
@@ -829,17 +838,21 @@ interface InvCompOptions extends CompOptions {
      */
     size?: number;
 }
-interface SpriteCompOptions extends CompOptions {
+interface SpriteCompOptions extends CompOptions, CompUseScene {
     frames?: string[];
-    scene?: Scene;
 }
-interface PointAtCompBaseOptions extends CompOptions {
-    scene?: Scene;
-}
+interface PointAtCompBaseOptions extends CompOptions, CompUseScene {}
 interface PointAtCompOptions extends PointAtCompBaseOptions {
     point?: Entity;
 }
 interface PointAtMouseCompOptions extends PointAtCompBaseOptions {}
+interface EnhancedPhysicsOptions extends CompOptions, CompUseScene {
+    vx?: number;
+    vy?: number;
+    ax?: number;
+    ay?: number;
+    fric?: number;
+}
 /**
  * The options for a `SceneComp`.
  * @since v0.0.0
@@ -1145,6 +1158,48 @@ class PointAtMouseComp extends PointAtCompBase {
         this.ent.setRot(this.scene.rotToMouse(this.ent));
     }
 }
+class EnhancedPhysicsComp extends Comp {
+    scene?: Scene;
+    vx: number; vy: number;
+    ax: number; ay: number;
+    fric: number;
+    constructor(ent: Entity, opts: EnhancedPhysicsOptions) {
+        super(ent);
+        this.scene = opts.scene;
+        // represent inital velocity and acceleration
+        // recommended to remain at 0
+        this.vx = opts.vx ?? 0;
+        this.vy = opts.vy ?? 0;
+        this.ax = opts.ax ?? 0;
+        this.ay = opts.ay ?? 0;
+        this.fric = opts.fric ?? 0.95;
+    }
+    addForce(fx: number, fy: number) {
+        this.ax += fx;
+        this.ay += fy;
+    }
+    addForceX(fx: number) {
+        this.addForce(fx, 0);
+    }
+    addForceY(fy: number) {
+        this.addForce(0, fy);
+    }
+    upd() {
+        if(!this.scene) throw new NoSceneAvailableError();
+        // add accl
+        this.vx += this.ax;
+        this.vy += this.ay;
+        // dampen velocity with friction
+        this.vx *= this.fric;
+        this.vy *= this.fric;
+        // add vel to pos
+        this.ent.x += this.vx;
+        this.ent.y += this.vy;
+        // clear accl
+        this.ax = 0;
+        this.ay = 0;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1154,8 +1209,21 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     inv: InvComp,
     sprite: SpriteComp,
     pointat: PointAtComp,
-    pointatmouse: PointAtMouseComp
+    pointatmouse: PointAtMouseComp,
+    enhancedphys: EnhancedPhysicsComp
 };
+/**
+ * Maps components to their respective option interface.
+ * @since v1.0.23
+ */
+interface PhantomCompOptionsMap {
+    health: HealthCompOptions;
+    inv: InvCompOptions;
+    sprite: SpriteCompOptions;
+    pointat: PointAtCompOptions;
+    pointatmouse: PointAtMouseCompOptions;
+    enhancedphys: EnhancedPhysicsOptions;
+}
 /**
  * The class used for creating components for the scene.
  * @since v0.0.0
@@ -1583,9 +1651,10 @@ class Entity {
      * @since v0.0.0
      * @throws {AlreadyUsingError} If this component is already in use.
      */
-    use(c: PhantomCompType, opts: CompOptions = {}) {
+    use<K extends PhantomCompType>(c: K, opts?: PhantomCompOptionsMap[K]) {
         if(this.uses(c)) throw new AlreadyUsingError();
-        this.comps.set(c, new (PhantomCompRecord[c])(this, opts));
+        const _opts = (opts ?? {}) as CompOptions;
+        this.comps.set(c, new (PhantomCompRecord[c])(this, _opts));
     }
     /**
      * Removes a component.
@@ -2094,10 +2163,12 @@ class Character extends Entity {
 class PlayableCharacter extends Character {
     binds: Store<KeyCode, Function>;
     keys: Store<string, boolean>;
+    bindCD: Store<KeyCode, Cooldown>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
         this.binds = opts.binds ?? new Store();
         this.keys = new Store();
+        this.bindCD = new Store();
         window.addEventListener("keydown", (e) => {
             this.keys.set(e.code, true);
         });
@@ -2105,8 +2176,13 @@ class PlayableCharacter extends Character {
             this.keys.set(e.code, false);
         });
     }
-    bind(code: KeyCode, exec: Function) {
+    bind(code: KeyCode, exec: Function): void;
+    bind(code: KeyCode, exec: Function, cd: number): void;
+    bind(code: KeyCode, exec: Function, cd?: number) {
         this.binds.set(code, exec);
+        if(cd) {
+            this.bindCD.set(code, new Cooldown(cd));
+        }
     }
     unbind(code: KeyCode) {
         this.binds.del(code);
@@ -2120,9 +2196,16 @@ class PlayableCharacter extends Character {
     update() {
         for(const [k, v] of this.keys.items()) {
             if(v) {
-                const exec = this.binds.get(KeyCodeMapReverse[k] as KeyCode);
-                if(exec) {
+                const _k = KeyCodeMapReverse[k] as KeyCode;
+                const exec = this.binds.get(_k);
+                const cd = this.bindCD.get(_k);
+                if(exec && !cd) {
                     exec();
+                } else if(exec && cd) {
+                    if(cd.ready) {
+                        cd.consume();
+                        exec();
+                    }
                 }
             }
         }
@@ -3614,5 +3697,7 @@ export {
 
     isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs,
 
-    Local, LocalDeprecated, Session, Clipboard, Cookies
+    Local, LocalDeprecated, Session, Clipboard, Cookies,
+
+    HealthComp, InvComp, EnhancedPhysicsComp
 };
