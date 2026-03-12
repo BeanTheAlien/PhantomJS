@@ -120,6 +120,8 @@ npm install @beanthealien/phantomjs
 - Added cooldowns for key presses.
 ### v1.0.23.1
 - Fixed some oversights in `PlayabaleCharacter.bindCD` handling.
+### v1.0.24
+- Updated some handling for components.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

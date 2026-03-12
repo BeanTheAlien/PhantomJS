@@ -18,8 +18,8 @@ class Merc extends p2d.Entity {
 const player = new p2d.PlayableCharacter({ strength: 0.4, width: 10, height: 30, color: "red", custom: { spd: 3, jh: 10 }, x: 10 });
 player.use("enhancedphys", { scene, fric: 0.88 });
 player.bind("w", () => { if(player.onGround) player.jump(player.jh); });
-player.bind("a", () => (player.comp("enhancedphys") as p2d.EnhancedPhysicsComp).addForceX(-1));
-player.bind("d", () => (player.comp("enhancedphys") as p2d.EnhancedPhysicsComp).addForceX(1));
+player.bind("a", () => player.comp("enhancedphys").addForceX(-1));
+player.bind("d", () => player.comp("enhancedphys").addForceX(1));
 scene.add(player);
 player.bind("1", () => scene.screenshot("helloworld.png"), 500);
 

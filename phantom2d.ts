@@ -1677,11 +1677,11 @@ class Entity {
     /**
      * Returns a reference to this component.
      * @param c The component type.
-     * @returns The component (or nothing).
+     * @returns The component (or `undefined`, if it's not in use).
      * @since v0.0.0
      */
-    comp(c: PhantomCompType): Comp | undefined {
-        return this.comps.get(c);
+    comp<K extends PhantomCompType, T extends PhantomCompMap[K]>(c: K): T {
+        return this.comps.get(c) as T;
     }
     getMoveMode(): MoveMode {
         return this.moveMode;
@@ -3559,6 +3559,28 @@ class SavedState {
     }
     restore(o: any) {
         Object.assign(o, this.atts);
+    }
+}
+interface TriggerOptions {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    trig: Function;
+    active?: boolean;
+}
+class Trigger {
+    x: number; y: number;
+    w: number; h: number;
+    trig: Function;
+    active: boolean;
+    constructor(opts: TriggerOptions) {
+        this.x = opts.x;
+        this.y = opts.y;
+        this.w = opts.w;
+        this.h = opts.h;
+        this.trig = opts.trig;
+        this.active = opts.active ?? true;
     }
 }
 
