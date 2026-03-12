@@ -6,7 +6,7 @@ const floor = new p2d.FloorObject({ width: scene.width, height: fh, y: scene.hei
 scene.add(floor);
 class Merc extends p2d.Entity {
     constructor(weap, merc) {
-        super({ width: 10, height: 30, color: "red" });
+        super({ width: 10, height: 30 });
         this.weap = new p2d.Img(weap);
         this.merc = new p2d.Img(merc);
     }

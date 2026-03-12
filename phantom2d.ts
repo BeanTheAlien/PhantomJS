@@ -1686,7 +1686,7 @@ class Entity {
      * @returns Whether it is an entity.
      */
     static is(obj: any): obj is Entity {
-        return objIs<Entity>(obj);
+        return objIs(obj, Entity);
     }
 }
 /**
@@ -1724,7 +1724,7 @@ class StaticObject extends Entity {
         return new StaticObject(opts);
     }
     static is(obj: any): obj is StaticObject {
-        return objIs<StaticObject>(obj);
+        return objIs(obj, StaticObject);
     }
 }
 /**
@@ -1766,7 +1766,7 @@ class PhysicsObject extends Entity {
         return new PhysicsObject(opts);
     }
     static is(obj: any): obj is PhysicsObject {
-        return objIs<PhysicsObject>(obj);
+        return objIs(obj, PhysicsObject);
     }
 }
 /**
@@ -1839,7 +1839,7 @@ class MovingObject extends Entity {
         return new MovingObject(opts);
     }
     static is(obj: any): obj is MovingObject {
-        return objIs<MovingObject>(obj);
+        return objIs(obj, MovingObject);
     }
 }
 /**
@@ -1852,7 +1852,7 @@ class BulletObject extends Entity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     scene: Scene;
-    onDest: PhantomEventHandle;
+    onDest?: PhantomEventHandle;
     constructor(opts: BulletObjectOptions) {
         super(opts);
         this.rot = opts.rot;
@@ -1862,7 +1862,7 @@ class BulletObject extends Entity {
         this.extTop = opts.extTop;
         this.spd = opts.spd;
         this.scene = opts.scene;
-        this.onDest = opts.onDest ?? ((e: PhantomEvent) => {});
+        this.onDest = opts.onDest;
     }
     update() {
         const fVec = this.getFVec();
@@ -1877,7 +1877,7 @@ class BulletObject extends Entity {
         if(x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
             // self-destruct if its not
             this.scene.rm(this);
-            this.onDest(new PhantomDestroyedEvent());
+            if(this.onDest) this.onDest(new PhantomDestroyedEvent());
         }
     }
     /**
@@ -1903,7 +1903,7 @@ class BulletObject extends Entity {
         return new BulletObject(opts);
     }
     static is(obj: any): obj is BulletObject {
-        return objIs<BulletObject>(obj);
+        return objIs(obj, BulletObject);
     }
 }
 /**
@@ -1984,7 +1984,7 @@ class WallObject extends Entity {
         return new WallObject(opts);
     }
     static is(obj: any): obj is WallObject {
-        return objIs<WallObject>(obj);
+        return objIs(obj, WallObject);
     }
 }
 /**
@@ -2021,7 +2021,7 @@ class FloorObject extends WallObject {
         return new WallObject(opts);
     }
     static is(obj: any): obj is FloorObject {
-        return objIs<FloorObject>(obj);
+        return objIs(obj, FloorObject);
     }
 }
 /**
@@ -2082,7 +2082,7 @@ class Character extends Entity {
         return new Character(opts);
     }
     static is(obj: any): obj is Character {
-        return objIs<Character>(obj);
+        return objIs(obj, Character);
     }
 }
 /**
@@ -2151,7 +2151,7 @@ class PlayableCharacter extends Character {
         return new PlayableCharacter(opts);
     }
     static is(obj: any): obj is PlayableCharacter {
-        return objIs<PlayableCharacter>(obj);
+        return objIs(obj, PlayableCharacter);
     }
 }
 /**
@@ -2482,7 +2482,7 @@ class Scene {
         this.ctx.globalAlpha = alpha;
     }
     img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
-        this.ctx.drawImage(objIs<HTMLImageElement>(img) ? img : img.img, x, y, w, h);
+        this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
@@ -2626,7 +2626,7 @@ class Scene {
         return this.items.find(cb);
     }
     #tagTest(ent: Entity, tagName: Tag | string): boolean {
-        if(objIs<Tag>(tagName)) {
+        if(objIs(tagName, Tag)) {
             return ent.tags.has(tagName);
         } else {
             return ent.tags.some((t) => t.test(tagName));
@@ -3586,9 +3586,8 @@ function chance(max: number, upperBound: number): boolean;
 function chance(max: number, upperBound?: number): boolean {
     return max <= random((upperBound ?? 100) + 1);
 }
-function objIs<T>(obj: any): obj is T {
-    const c = null as unknown as Constructor<T>;
-    return obj != undefined && obj instanceof c;
+function objIs<T>(obj: any, ctor: Constructor<T>): obj is T {
+    return obj != undefined && obj instanceof ctor;
 }
 /**
  * Returns a shallow, null value of the type provided.

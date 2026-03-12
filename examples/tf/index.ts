@@ -10,7 +10,7 @@ class Merc extends p2d.Entity {
     weap: p2d.Img;
     merc: p2d.Img;
     constructor(weap: string, merc: string) {
-        super({ width: 10, height: 30, color: "red" });
+        super({ width: 10, height: 30 });
         this.weap = new p2d.Img(weap);
         this.merc = new p2d.Img(merc);
     }

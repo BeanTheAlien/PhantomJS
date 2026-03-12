@@ -111,6 +111,8 @@ npm install @beanthealien/phantomjs
 ### v1.0.21
 - Added `PhantomDestroyedEvent`.
 - `BulletObject` now fires `PhantomDestroyedEvent` upon being destroyed.
+### v1.0.22
+- Fixed the usage of `objIs` to properly accept a constructor.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -308,6 +308,9 @@ class PhantomHealthCompDieEvent extends PhantomEvent {
 class PhantomHealthCompHealEvent extends PhantomEvent {
     constructor() { super("heal"); }
 }
+class PhantomDestroyedEvent extends PhantomEvent {
+    constructor() { super("destroyed"); }
+}
 /**
  * The component class.
  * @since v0.0.0
@@ -981,7 +984,7 @@ class Entity {
      * @returns Whether it is an entity.
      */
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, Entity);
     }
 }
 /**
@@ -1005,7 +1008,7 @@ class StaticObject extends Entity {
         return new StaticObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, StaticObject);
     }
 }
 /**
@@ -1032,7 +1035,7 @@ class PhysicsObject extends Entity {
         return new PhysicsObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, PhysicsObject);
     }
 }
 /**
@@ -1093,7 +1096,7 @@ class MovingObject extends Entity {
         return new MovingObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, MovingObject);
     }
 }
 /**
@@ -1112,6 +1115,7 @@ class BulletObject extends Entity {
         this.extTop = opts.extTop;
         this.spd = opts.spd;
         this.scene = opts.scene;
+        this.onDest = opts.onDest;
     }
     update() {
         const fVec = this.getFVec();
@@ -1127,6 +1131,8 @@ class BulletObject extends Entity {
         if (x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
             // self-destruct if its not
             this.scene.rm(this);
+            if (this.onDest)
+                this.onDest(new PhantomDestroyedEvent());
         }
     }
     static from(opts) {
@@ -1138,7 +1144,7 @@ class BulletObject extends Entity {
         return new BulletObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, BulletObject);
     }
 }
 /**
@@ -1208,7 +1214,7 @@ class WallObject extends Entity {
         return new WallObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, WallObject);
     }
 }
 /**
@@ -1231,7 +1237,7 @@ class FloorObject extends WallObject {
         return new WallObject(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, FloorObject);
     }
 }
 /**
@@ -1276,7 +1282,7 @@ class Character extends Entity {
         return new Character(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, Character);
     }
 }
 /**
@@ -1330,7 +1336,7 @@ class PlayableCharacter extends Character {
         return new PlayableCharacter(opts);
     }
     static is(obj) {
-        return objIs(obj);
+        return objIs(obj, PlayableCharacter);
     }
 }
 /**
@@ -1636,7 +1642,7 @@ class Scene {
         this.ctx.globalAlpha = alpha;
     }
     img(img, x, y, w, h) {
-        this.ctx.drawImage(objIs(img) ? img : img.img, x, y, w, h);
+        this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
     rect(x, y, w, h, color) {
         this.color = color;
@@ -1824,7 +1830,7 @@ class Scene {
     }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
-    if (objIs(tagName)) {
+    if (objIs(tagName, Tag)) {
         return ent.tags.has(tagName);
     }
     else {
@@ -2301,7 +2307,6 @@ class SceneConfig extends Config {
                 if (k == "unload") {
                     if (Scene.config.get("unload"))
                         return console.warn("There is already an unload listener!");
-                    Scene.unloadListenerCreated = true;
                     window.addEventListener("beforeunload", (e) => {
                         e.preventDefault();
                         e.returnValue = "";
@@ -2630,9 +2635,8 @@ function random(a, b) {
 function chance(max, upperBound) {
     return max <= random((upperBound !== null && upperBound !== void 0 ? upperBound : 100) + 1);
 }
-function objIs(obj) {
-    const c = null;
-    return obj != undefined && obj instanceof c;
+function objIs(obj, ctor) {
+    return obj != undefined && obj instanceof ctor;
 }
 /**
  * Returns a shallow, null value of the type provided.
