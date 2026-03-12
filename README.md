@@ -118,6 +118,8 @@ npm install @beanthealien/phantomjs
 - Added `PhantomCompOptionsMap` to enforce correct `CompOptions` instead of serving the default `CompOptions`.
 - Added `EnhancedPhysicsComp.fric` to dampen velocity output.
 - Added cooldowns for key presses.
+### v1.0.23.1
+- Fixed some oversights in `PlayabaleCharacter.bindCD` handling.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

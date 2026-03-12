@@ -2186,9 +2186,13 @@ class PlayableCharacter extends Character {
     }
     unbind(code: KeyCode) {
         this.binds.del(code);
+        this.bindCD.del(code);
     }
     isBind(code: KeyCode): boolean {
         return this.binds.has(code);
+    }
+    isBindCD(code: KeyCode): boolean {
+        return this.bindCD.has(code);
     }
     bindOf(code: KeyCode): Function | undefined {
         return this.binds.get(code);
@@ -2199,11 +2203,13 @@ class PlayableCharacter extends Character {
                 const _k = KeyCodeMapReverse[k] as KeyCode;
                 const exec = this.binds.get(_k);
                 const cd = this.bindCD.get(_k);
-                if(exec && !cd) {
-                    exec();
-                } else if(exec && cd) {
-                    if(cd.ready) {
-                        cd.consume();
+                if(exec) {
+                    if(cd) {
+                        if(cd.ready) {
+                            cd.consume();
+                            exec();
+                        }
+                    } else {
                         exec();
                     }
                 }

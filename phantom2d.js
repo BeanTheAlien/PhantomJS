@@ -648,22 +648,22 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  */
 class Entity {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u;
         this.collide = (_b = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
         this.upd = (_c = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
         this.x = (_f = (_d = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _d !== void 0 ? _d : Entity.defaults.get("x")) !== null && _f !== void 0 ? _f : 0;
         this.y = (_j = (_g = opts === null || opts === void 0 ? void 0 : opts.y) !== null && _g !== void 0 ? _g : Entity.defaults.get("y")) !== null && _j !== void 0 ? _j : 0;
-        this.rot = (_l = (_k = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _k !== void 0 ? _k : Entity.defaults.get("rot")) !== null && _l !== void 0 ? _l : 0;
-        this.width = (_o = (_m = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _m !== void 0 ? _m : Entity.defaults.get("width")) !== null && _o !== void 0 ? _o : 0;
-        this.height = (_q = (_p = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _p !== void 0 ? _p : Entity.defaults.get("height")) !== null && _q !== void 0 ? _q : 0;
+        this.rot = (_m = (_l = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _l !== void 0 ? _l : Entity.defaults.get("rot")) !== null && _m !== void 0 ? _m : 0;
+        this.width = (_p = (_o = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _o !== void 0 ? _o : Entity.defaults.get("width")) !== null && _p !== void 0 ? _p : 0;
+        this.height = (_r = (_q = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _q !== void 0 ? _q : Entity.defaults.get("height")) !== null && _r !== void 0 ? _r : 0;
         this.evStore = new Store();
-        this.color = (_s = (_r = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _r !== void 0 ? _r : Entity.defaults.get("color")) !== null && _s !== void 0 ? _s : "#fff";
+        this.color = (_t = (_s = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _s !== void 0 ? _s : Entity.defaults.get("color")) !== null && _t !== void 0 ? _t : "#fff";
         if (opts === null || opts === void 0 ? void 0 : opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
         this.comps = new Store();
-        this.moveMode = (_t = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _t !== void 0 ? _t : "move";
+        this.moveMode = (_u = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _u !== void 0 ? _u : "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
@@ -1339,6 +1339,7 @@ class PlayableCharacter extends Character {
         super(opts);
         this.binds = (_b = opts.binds) !== null && _b !== void 0 ? _b : new Store();
         this.keys = new Store();
+        this.bindCD = new Store();
         window.addEventListener("keydown", (e) => {
             this.keys.set(e.code, true);
         });
@@ -1346,14 +1347,21 @@ class PlayableCharacter extends Character {
             this.keys.set(e.code, false);
         });
     }
-    bind(code, exec) {
+    bind(code, exec, cd) {
         this.binds.set(code, exec);
+        if (cd) {
+            this.bindCD.set(code, new Cooldown(cd));
+        }
     }
     unbind(code) {
         this.binds.del(code);
+        this.bindCD.del(code);
     }
     isBind(code) {
         return this.binds.has(code);
+    }
+    isBindCD(code) {
+        return this.bindCD.has(code);
     }
     bindOf(code) {
         return this.binds.get(code);
@@ -1361,9 +1369,19 @@ class PlayableCharacter extends Character {
     update() {
         for (const [k, v] of this.keys.items()) {
             if (v) {
-                const exec = this.binds.get(KeyCodeMapReverse[k]);
+                const _k = KeyCodeMapReverse[k];
+                const exec = this.binds.get(_k);
+                const cd = this.bindCD.get(_k);
                 if (exec) {
-                    exec();
+                    if (cd) {
+                        if (cd.ready) {
+                            cd.consume();
+                            exec();
+                        }
+                    }
+                    else {
+                        exec();
+                    }
                 }
             }
         }

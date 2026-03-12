@@ -21,6 +21,6 @@ player.bind("w", () => { if(player.onGround) player.jump(player.jh); });
 player.bind("a", () => (player.comp("enhancedphys") as p2d.EnhancedPhysicsComp).addForceX(-1));
 player.bind("d", () => (player.comp("enhancedphys") as p2d.EnhancedPhysicsComp).addForceX(1));
 scene.add(player);
-player.bind("1", () => {scene.screenshot("helloworld.png");});
+player.bind("1", () => scene.screenshot("helloworld.png"), 500);
 
 scene.start();
