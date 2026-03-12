@@ -122,6 +122,10 @@ npm install @beanthealien/phantomjs
 - Fixed some oversights in `PlayabaleCharacter.bindCD` handling.
 ### v1.0.24
 - Updated some handling for components.
+### v1.0.24.1
+- Updated `SoundOptionsIsSOD` to use `o: SoundOptions` instead of `o: any`.
+- Added `tol` property to `BulletObject`.
+- Added `Scene.onScrn`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

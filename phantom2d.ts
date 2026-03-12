@@ -552,6 +552,7 @@ interface BulletObjectOptions extends EntityOptions, Extent {
      */
     scene: Scene;
     onDest?: PhantomEventHandle;
+    tol?: number;
 }
 /**
  * The options for a `Scene`.
@@ -1922,6 +1923,7 @@ class BulletObject extends Entity {
     spd: number;
     scene: Scene;
     onDest?: PhantomEventHandle;
+    tol: number;
     constructor(opts: BulletObjectOptions) {
         super(opts);
         this.rot = opts.rot;
@@ -1932,18 +1934,19 @@ class BulletObject extends Entity {
         this.spd = opts.spd;
         this.scene = opts.scene;
         this.onDest = opts.onDest;
+        this.tol = opts.tol ?? 15;
     }
     update() {
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x; this.y += fVec.y;
         // test if its on-screen
-        // tolerance of 15px
+        // tolerance of 15px (or tol)
         const x = this.scrX();
         const y = this.scrY();
         const w = this.scene.width;
         const h = this.scene.height;
-        if(x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
+        if(x - this.tol < w || x + this.tol > w || y + this.tol > h || y - this.tol < h) {
             // self-destruct if its not
             this.scene.rm(this);
             if(this.onDest) this.onDest(new PhantomDestroyedEvent());
@@ -1965,7 +1968,7 @@ class BulletObject extends Entity {
     static from(preset: Preset): BulletObject;
     static from(opts: BulletObjectOptions | Preset): BulletObject {
         if(opts instanceof Preset) {
-            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: null as unknown as Scene });
+            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: shallow<Scene>() });
             opts.apply(ent);
             return ent;
         }
@@ -2255,9 +2258,11 @@ class Vector {
         this.x = x;
         this.y = y;
     }
-    scale(factor: number) {
-        this.x *= factor;
-        this.y *= factor;
+    scale(fx: number, fy: number): void;
+    scale(factor: number): void;
+    scale(fx: number, fy?: number) {
+        this.x *= fx;
+        this.y *= fy ?? fx;
     }
     static rotBtwn(a: Vector, b: Vector): number {
         const a1 = Math.atan2(a.y, a.x);
@@ -2296,7 +2301,7 @@ class Pixel {
         }
     }
 }
-function SoundOptionsIsSOD(o: any): o is SoundOptionsDeprecated {
+function SoundOptionsIsSOD(o: SoundOptions): o is SoundOptionsDeprecated {
     return "mime" in o;
 }
 /**
@@ -2758,6 +2763,11 @@ class Scene {
     }
     clientCenter(): Vector {
         return new Vector(this.canvas.clientWidth / 2, this.canvas.clientHeight / 2);
+    }
+    onScrn(vec: Vector, w: number, h: number) {
+        const x = vec.x + w;
+        const y = vec.y + h;
+        return x > 0 || x < this.width || y > 0 || y < this.height;
     }
 }
 /**
@@ -3582,13 +3592,19 @@ class Trigger {
         this.trig = opts.trig;
         this.active = opts.active ?? true;
     }
+    activate() {
+        this.active = true;
+    }
+    deactivate() {
+        this.active = false;
+    }
 }
 
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
  * @param b Object 2.
- * @returns {boolean} If they collide.
+ * @returns If they collide.
  * @since v0.0.0
  */
 function isCol(a: Entity, b: Entity): boolean {
@@ -3727,5 +3743,7 @@ export {
 
     Local, LocalDeprecated, Session, Clipboard, Cookies,
 
-    HealthComp, InvComp, EnhancedPhysicsComp
+    HealthComp, InvComp, EnhancedPhysicsComp,
+
+    Trigger
 };
