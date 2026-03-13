@@ -128,6 +128,7 @@ npm install @beanthealien/phantomjs
 - Added `Scene.onScrn`.
 ## v1.0.25
 - FIxed `PlayableCharacter.bindCD` handling.
+- Published latest.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

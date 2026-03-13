@@ -12,7 +12,7 @@ async function init() {
     const ask = (q) => new Promise(res => rl.question(q, res));
     const name = await ask("Project Name: ");
     rl.close();
-    const yesno = async (name, message, titleA, titleB) => await prompts.prompts({
+    const yesno = async (name, message, titleA, titleB) => await prompts({
         type: "select",
         name,
         message,
@@ -21,7 +21,7 @@ async function init() {
             { title: titleB, value: "n" }
         ]
     })[name];
-    const ver = await prompts.prompts({
+    const ver = await prompts({
         type: "select",
         name: "ver",
         message: "Choose the framework version to use:",
