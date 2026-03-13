@@ -3605,6 +3605,18 @@ class Trigger {
         this.active = false;
     }
 }
+interface MaterialOptions {
+    fric?: number;
+    color?: string;
+}
+class Material {
+    fric: number;
+    color: string;
+    constructor(opts: MaterialOptions) {
+        this.fric = opts.fric ?? 1;
+        this.color = opts.color ?? "#fff";
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
