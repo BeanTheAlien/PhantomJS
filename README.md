@@ -129,6 +129,8 @@ npm install @beanthealien/phantomjs
 ## v1.0.25
 - FIxed `PlayableCharacter.bindCD` handling.
 - Published latest.
+## v1.0.26
+- Added `Scene.follow`, `Scene.unfollow` for camera following.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

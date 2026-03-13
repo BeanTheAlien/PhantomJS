@@ -2456,6 +2456,7 @@ class Scene {
     runtime: Runtime;
     comps: Store<PhantomSceneCompType, SceneComp>;
     evMng: SceneEventManager;
+    fol?: Entity;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2608,21 +2609,33 @@ class Scene {
         }
     }
     render() {
+        let ox = 0;
+        let oy = 0;
+        if(this.fol) {
+            const fcx = this.fol.x + this.fol.width / 2;
+            const fcy = this.fol.y + this.fol.height / 2;
+            ox = this.width / 2 - fcx;
+            oy = this.height / 2 - fcy;
+        }
         this.items.forEach(i => {
+            const dx = i.x + ox;
+            const dy = i.y + oy;
             this.ctx.save();
-            this.ctx.translate(i.x, i.y);
-            this.ctx.rotate(i.rot);
-            const nx = -i.width / 2;
-            const ny = -i.height / 2;
             const w = i.width;
             const h = i.height;
+            const w2 = w/2;
+            const h2 = h/2;
+            this.ctx.translate(dx + w2, dy + h2);
+            this.ctx.rotate(i.rot);
+            const nx = -w / 2;
+            const ny = -h / 2;
             const xw = nx + w;
             const yh = ny + h;
             // off-screen no draw check
             // if the x-coord is less than 0 or more than width
             // or the y-coord is less than 0 or more than height
             // then it is not on the canvas
-            if(Scene.config.get("osnd") == true && xw < 0 || this.width < xw || yh < 0 || this.height < yh) return this.ctx.restore();
+            if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
             this.rect(nx, ny, w, h, i.color);
             this.ctx.restore();
         });
@@ -2772,6 +2785,12 @@ class Scene {
         const x = vec.x + w;
         const y = vec.y + h;
         return x > 0 || x < this.width || y > 0 || y < this.height;
+    }
+    follow(ent: Entity) {
+        this.fol = ent;
+    }
+    unfollow() {
+        this.fol = undefined;
     }
 }
 /**
@@ -3616,6 +3635,27 @@ class Material {
         this.fric = opts.fric ?? 1;
         this.color = opts.color ?? "#fff";
     }
+}
+type CameraMode = "fixed" | "follow";
+class Camera {
+    x: number;
+    y: number;
+    mode: CameraMode;
+    fol?: Entity;
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.mode = "fixed";
+    }
+    follow(follow: Entity) {
+        this.mode = "follow";
+        this.fol = follow;
+    }
+    unfollow() {
+        this.mode = "fixed";
+        this.fol = undefined;
+    }
+    render(scene: Scene) {}
 }
 
 /**
