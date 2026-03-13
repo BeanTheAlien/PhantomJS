@@ -962,7 +962,7 @@ class Entity {
     /**
      * Returns a reference to this component.
      * @param c The component type.
-     * @returns The component (or nothing).
+     * @returns The component (or `undefined`, if it's not in use).
      * @since v0.0.0
      */
     comp(c) {
@@ -1149,6 +1149,7 @@ class MovingObject extends Entity {
  */
 class BulletObject extends Entity {
     constructor(opts) {
+        var _b;
         super(opts);
         this.rot = opts.rot;
         this.extLeft = opts.extLeft;
@@ -1158,6 +1159,7 @@ class BulletObject extends Entity {
         this.spd = opts.spd;
         this.scene = opts.scene;
         this.onDest = opts.onDest;
+        this.tol = (_b = opts.tol) !== null && _b !== void 0 ? _b : 15;
     }
     update() {
         const fVec = this.getFVec();
@@ -1165,12 +1167,12 @@ class BulletObject extends Entity {
         this.x += fVec.x;
         this.y += fVec.y;
         // test if its on-screen
-        // tolerance of 15px
+        // tolerance of 15px (or tol)
         const x = this.scrX();
         const y = this.scrY();
         const w = this.scene.width;
         const h = this.scene.height;
-        if (x - 15 < w || x + 15 > w || y + 15 > h || y - 15 < h) {
+        if (x - this.tol < w || x + this.tol > w || y + this.tol > h || y - this.tol < h) {
             // self-destruct if its not
             this.scene.rm(this);
             if (this.onDest)
@@ -1179,7 +1181,7 @@ class BulletObject extends Entity {
     }
     static from(opts) {
         if (opts instanceof Preset) {
-            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: null });
+            const ent = new BulletObject({ rot: 0, extBtm: 0, extLeft: 0, extRight: 0, extTop: 0, spd: 0, scene: shallow() });
             opts.apply(ent);
             return ent;
         }
@@ -1348,9 +1350,11 @@ class PlayableCharacter extends Character {
         });
     }
     bind(code, exec, cd) {
-        this.binds.set(code, exec);
-        if (cd) {
-            this.bindCD.set(code, new Cooldown(cd));
+        if (cd == undefined) {
+            this.binds.set(code, exec);
+        }
+        else {
+            this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
     unbind(code) {
@@ -1366,21 +1370,23 @@ class PlayableCharacter extends Character {
     bindOf(code) {
         return this.binds.get(code);
     }
+    bindCDOf(code) {
+        return this.bindCD.get(code);
+    }
     update() {
         for (const [k, v] of this.keys.items()) {
             if (v) {
                 const _k = KeyCodeMapReverse[k];
                 const exec = this.binds.get(_k);
-                const cd = this.bindCD.get(_k);
+                const cdExec = this.bindCD.get(_k);
+                console.log(`exec: ${exec}, cd: ${cdExec === null || cdExec === void 0 ? void 0 : cdExec[0]} + ${JSON.stringify(cdExec === null || cdExec === void 0 ? void 0 : cdExec[1])}`);
                 if (exec) {
-                    if (cd) {
-                        if (cd.ready) {
-                            cd.consume();
-                            exec();
-                        }
-                    }
-                    else {
-                        exec();
+                    exec();
+                }
+                else if (cdExec) {
+                    if (cdExec[1].ready) {
+                        cdExec[0]();
+                        cdExec[1].consume();
                     }
                 }
             }
@@ -1410,9 +1416,9 @@ class Vector {
         this.x = x;
         this.y = y;
     }
-    scale(factor) {
-        this.x *= factor;
-        this.y *= factor;
+    scale(fx, fy) {
+        this.x *= fx;
+        this.y *= fy !== null && fy !== void 0 ? fy : fx;
     }
     static rotBtwn(a, b) {
         const a1 = Math.atan2(a.y, a.x);
@@ -1888,6 +1894,11 @@ class Scene {
     clientCenter() {
         return new Vector(this.canvas.clientWidth / 2, this.canvas.clientHeight / 2);
     }
+    onScrn(vec, w, h) {
+        const x = vec.x + w;
+        const y = vec.y + h;
+        return x > 0 || x < this.width || y > 0 || y < this.height;
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -2239,7 +2250,8 @@ class Cooldown {
     on(ms) {
         if (this.id != -1)
             throw new ExistingProcessError();
-        this.id = setInterval(__classPrivateFieldGet(this, _Cooldown_instances, "m", _Cooldown_handle), ms);
+        this.ms = ms;
+        this.id = setInterval(() => __classPrivateFieldGet(this, _Cooldown_instances, "m", _Cooldown_handle).call(this), ms);
     }
     off() {
         if (this.id == -1)
@@ -2608,11 +2620,28 @@ class SavedState {
         Object.assign(o, this.atts);
     }
 }
+class Trigger {
+    constructor(opts) {
+        var _b;
+        this.x = opts.x;
+        this.y = opts.y;
+        this.w = opts.w;
+        this.h = opts.h;
+        this.trig = opts.trig;
+        this.active = (_b = opts.active) !== null && _b !== void 0 ? _b : true;
+    }
+    activate() {
+        this.active = true;
+    }
+    deactivate() {
+        this.active = false;
+    }
+}
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
  * @param b Object 2.
- * @returns {boolean} If they collide.
+ * @returns If they collide.
  * @since v0.0.0
  */
 function isCol(a, b) {
@@ -2705,4 +2734,4 @@ function objIs(obj, ctor) {
 function shallow() {
     return null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp };
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger };

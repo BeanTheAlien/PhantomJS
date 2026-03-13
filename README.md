@@ -126,6 +126,8 @@ npm install @beanthealien/phantomjs
 - Updated `SoundOptionsIsSOD` to use `o: SoundOptions` instead of `o: any`.
 - Added `tol` property to `BulletObject`.
 - Added `Scene.onScrn`.
+## v1.0.25
+- FIxed `PlayableCharacter.bindCD` handling.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -177,6 +177,8 @@ type Frames = Img[];
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
 type FillStyle = string | CanvasGradient | CanvasPattern;
+type Pair<A, B> = [A, B];
+type PCExecCDPair = Pair<Function, Cooldown>;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -2166,7 +2168,7 @@ class Character extends Entity {
 class PlayableCharacter extends Character {
     binds: Store<KeyCode, Function>;
     keys: Store<string, boolean>;
-    bindCD: Store<KeyCode, Cooldown>;
+    bindCD: Store<KeyCode, PCExecCDPair>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
         this.binds = opts.binds ?? new Store();
@@ -2182,9 +2184,10 @@ class PlayableCharacter extends Character {
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
-        this.binds.set(code, exec);
-        if(cd) {
-            this.bindCD.set(code, new Cooldown(cd));
+        if(cd == undefined) {
+            this.binds.set(code, exec);
+        } else {
+            this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
     unbind(code: KeyCode) {
@@ -2200,20 +2203,21 @@ class PlayableCharacter extends Character {
     bindOf(code: KeyCode): Function | undefined {
         return this.binds.get(code);
     }
+    bindCDOf(code: KeyCode): PCExecCDPair | undefined {
+        return this.bindCD.get(code);
+    }
     update() {
         for(const [k, v] of this.keys.items()) {
             if(v) {
                 const _k = KeyCodeMapReverse[k] as KeyCode;
                 const exec = this.binds.get(_k);
-                const cd = this.bindCD.get(_k);
+                const cdExec = this.bindCD.get(_k);
                 if(exec) {
-                    if(cd) {
-                        if(cd.ready) {
-                            cd.consume();
-                            exec();
-                        }
-                    } else {
-                        exec();
+                    exec();
+                } else if(cdExec) {
+                    if(cdExec[1].ready) {
+                        cdExec[0]();
+                        cdExec[1].consume();
                     }
                 }
             }
@@ -3089,6 +3093,7 @@ class Cookies {
 class Cooldown {
     id: number;
     ready: boolean;
+    ms?: number;
     /**
      * A constructor that won't start the cooldown.
      * @since v1.0.6
@@ -3127,7 +3132,8 @@ class Cooldown {
     }
     on(ms: number) {
         if(this.id != -1) throw new ExistingProcessError();
-        this.id = setInterval(this.#handle, ms);
+        this.ms = ms;
+        this.id = setInterval(() => this.#handle(), ms);
     }
     off() {
         if(this.id == -1) throw new NoProcessError();

@@ -18,5 +18,5 @@ player.bind("w", () => { if (player.onGround)
 player.bind("a", () => player.comp("enhancedphys").addForceX(-1));
 player.bind("d", () => player.comp("enhancedphys").addForceX(1));
 scene.add(player);
-player.bind("1", () => scene.screenshot("helloworld.png"), 500);
+player.bind("1", () => { console.log("hello"); scene.screenshot("helloworld.png"); }, 500);
 scene.start();
