@@ -131,6 +131,10 @@ npm install @beanthealien/phantomjs
 - Published latest.
 ## v1.0.26
 - Added `Scene.follow`, `Scene.unfollow` for camera following.
+## v1.0.27
+- Enhanced `BulletObject` to have its speed be reduced over time.
+- TODO: have the scene's gravity direction be enacted upon objects with gravity.
+- Fixed a typo in some error documentation.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

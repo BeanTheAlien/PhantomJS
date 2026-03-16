@@ -292,7 +292,7 @@ class NoSceneAvailableError extends ErrRoot {
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
  * const ent = new Entity({});
- * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
+ * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefined)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
  * ```
@@ -315,7 +315,7 @@ class Store<TI, TO> {
     /**
      * Retrieves an entry.
      * @param key The key to get.
-     * @returns {TO | undefined} The entry or nothing.
+     * @returns The entry (or nothing).
      * @since v0.0.0
      */
     get(key: TI): TO | undefined {
@@ -333,7 +333,7 @@ class Store<TI, TO> {
     /**
      * Returns whether this store contains an item.
      * @param key The key to get.
-     * @returns {boolean} If this item is contained.
+     * @returns If this item is contained.
      * @since v0.0.0
      */
     has(key: TI): boolean {
@@ -342,7 +342,7 @@ class Store<TI, TO> {
     /**
      * Removes an entry from this storage.
      * @param key The key to delete.
-     * @returns {boolean} If the key was deleted.
+     * @returns If the key was deleted.
      * @since v0.0.0
      */
     del(key: TI): boolean {
@@ -350,7 +350,7 @@ class Store<TI, TO> {
     }
     /**
      * Returns an iterator for this keys.
-     * @returns {Iter<TI>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     keys(): Iter<TI> {
@@ -358,7 +358,7 @@ class Store<TI, TO> {
     }
     /**
      * Returns an iterator for this values.
-     * @returns {Iter<TI>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     values(): Iter<TO> {
@@ -366,7 +366,7 @@ class Store<TI, TO> {
     }
     /**
      * Returns an iterator for this entries.
-     * @returns {Iter<[TI, TO]>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     items(): Iter<[TI, TO]> {
@@ -555,6 +555,13 @@ interface BulletObjectOptions extends EntityOptions, Extent {
     scene: Scene;
     onDest?: PhantomEventHandle;
     tol?: number;
+    /**
+     * The rate of decay (to simulate a bullet's loss of speed over time).
+     * 
+     * A decay rate of 0 would never decay.
+     * @since v1.0.27
+     */
+    decay?: number;
 }
 /**
  * The options for a `Scene`.
@@ -1926,6 +1933,8 @@ class BulletObject extends Entity {
     scene: Scene;
     onDest?: PhantomEventHandle;
     tol: number;
+    decay: number;
+    initSpd: number;
     constructor(opts: BulletObjectOptions) {
         super(opts);
         this.rot = opts.rot;
@@ -1937,11 +1946,18 @@ class BulletObject extends Entity {
         this.scene = opts.scene;
         this.onDest = opts.onDest;
         this.tol = opts.tol ?? 15;
+        this.decay = opts.decay ?? 0;
+        this.initSpd = this.spd;
     }
     update() {
+        // decay the speed by using exponential decay formula
+        // y = a(1-r)^t
+        // a = inital; r = decay rate; t = time
+        this.spd = this.initSpd * (Math.pow(1 - this.decay, this.scene.delta));
         const fVec = this.getFVec();
         fVec.scale(this.spd);
-        this.x += fVec.x; this.y += fVec.y;
+        this.x += fVec.x;
+        this.y += fVec.y;
         // test if its on-screen
         // tolerance of 15px (or tol)
         const x = this.scrX();
@@ -3287,7 +3303,14 @@ const SceneConfigMap = {
      * Handler for uncaught `ErrorEvent`s.
      * @since v1.0.19
      */
-    error: primFn()
+    error: primFn(),
+    /**
+     * The direction gravity should be facing in (in radians).
+     * 
+     * A direction of PI/2 would be directly down, whereas 3PI/2 would be directly up.
+     * @since v1.0.27
+     */
+    gravdir: primNum()
 } as const;
 type SceneConfigType = ConfigType<typeof SceneConfigMap>;
 class SceneConfig extends Config<SceneConfigType> {
@@ -3319,6 +3342,7 @@ Scene.config.set("master", 1);
 Scene.config.set("music", 1);
 Scene.config.set("sfx", 1);
 Scene.config.set("osnd", true);
+Scene.config.set("gravdir", Math.PI / 2);
 const ImgConfigMap = {
     /**
      * Controls the beginning (pre-pended) folder path to all `src` properties.
@@ -3580,6 +3604,9 @@ class Angle {
     }
     static rad(deg: number): number {
         return deg * Math.PI / 180;
+    }
+    static toVector(rad: number): Vector {
+        return new Vector(Math.cos(rad), Math.sin(rad));
     }
 }
 class SavedState {
