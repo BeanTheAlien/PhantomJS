@@ -135,6 +135,8 @@ npm install @beanthealien/phantomjs
 - Enhanced `BulletObject` to have its speed be reduced over time.
 - TODO: have the scene's gravity direction be enacted upon objects with gravity.
 - Fixed a typo in some error documentation.
+## v1.0.28
+- Added `GravityComp` (needs testing).
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -779,6 +779,12 @@ interface PhantomCompMap {
      * @since v1.0.23
      */
     enhancedphys: EnhancedPhysicsComp;
+    /**
+     * The `GravityComp`.
+     * @see {@link GravityComp}
+     * @since v1.0.28
+     */
+    grav: GravityComp;
 }
 /**
  * The map for `SceneComp`.
@@ -862,6 +868,10 @@ interface EnhancedPhysicsOptions extends CompOptions, CompUseScene {
     ax?: number;
     ay?: number;
     fric?: number;
+}
+interface GravityCompOptions extends CompOptions {
+    strength?: number;
+    gspd?: number;
 }
 /**
  * The options for a `SceneComp`.
@@ -1210,6 +1220,21 @@ class EnhancedPhysicsComp extends Comp {
         this.ay = 0;
     }
 }
+class GravityComp extends Comp {
+    strength: number;
+    gspd: number;
+    constructor(ent: Entity, opts: GravityCompOptions) {
+        super(ent);
+        this.strength = opts.strength ?? 0;
+        this.gspd = opts.gspd ?? 0;
+    }
+    upd() {
+        this.gspd += this.strength;
+        const vec = Angle.toVector(Scene.config.get("gravdir") ?? Angle.rad(270));
+        this.ent.x += vec.x * this.gspd;
+        this.ent.y += vec.y * this.gspd;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1220,7 +1245,8 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     sprite: SpriteComp,
     pointat: PointAtComp,
     pointatmouse: PointAtMouseComp,
-    enhancedphys: EnhancedPhysicsComp
+    enhancedphys: EnhancedPhysicsComp,
+    grav: GravityComp
 };
 /**
  * Maps components to their respective option interface.
@@ -1233,6 +1259,7 @@ interface PhantomCompOptionsMap {
     pointat: PointAtCompOptions;
     pointatmouse: PointAtMouseCompOptions;
     enhancedphys: EnhancedPhysicsOptions;
+    grav: GravityCompOptions;
 }
 /**
  * The class used for creating components for the scene.
@@ -3182,6 +3209,17 @@ class Cooldown {
         this.ready = true;
     }
 }
+class Angle {
+    static deg(rad: number): number {
+        return rad * 180 / Math.PI;
+    }
+    static rad(deg: number): number {
+        return deg * Math.PI / 180;
+    }
+    static toVector(rad: number): Vector {
+        return new Vector(Math.cos(rad), Math.sin(rad));
+    }
+}
 type ConfigOnValueSetHandler<T> = (k: keyof T, v: T[keyof T]) => void;
 class Config<T extends Record<string, any>> {
     config: Store<keyof T, T[keyof T]>;
@@ -3306,8 +3344,6 @@ const SceneConfigMap = {
     error: primFn(),
     /**
      * The direction gravity should be facing in (in radians).
-     * 
-     * A direction of PI/2 would be directly down, whereas 3PI/2 would be directly up.
      * @since v1.0.27
      */
     gravdir: primNum()
@@ -3342,7 +3378,7 @@ Scene.config.set("master", 1);
 Scene.config.set("music", 1);
 Scene.config.set("sfx", 1);
 Scene.config.set("osnd", true);
-Scene.config.set("gravdir", Math.PI / 2);
+Scene.config.set("gravdir", Angle.rad(270));
 const ImgConfigMap = {
     /**
      * Controls the beginning (pre-pended) folder path to all `src` properties.
@@ -3598,17 +3634,6 @@ class Tag {
     }
 }
 class TagList extends ItemBox<Tag> {}
-class Angle {
-    static deg(rad: number): number {
-        return rad * 180 / Math.PI;
-    }
-    static rad(deg: number): number {
-        return deg * Math.PI / 180;
-    }
-    static toVector(rad: number): Vector {
-        return new Vector(Math.cos(rad), Math.sin(rad));
-    }
-}
 class SavedState {
     atts: { any?: any };
     timestamp: string;
@@ -3808,6 +3833,14 @@ function objIs<T>(obj: any, ctor: Constructor<T>): obj is T {
 function shallow<T>(): T {
     return null as unknown as T;
 }
+/**
+ * Returns a random item from an array.
+ * @param arr The array.
+ * @returns A random item.
+ */
+function randItem<T>(arr: T[]): T {
+    return arr[random(0, arr.length)];
+}
 
 export {
     NoFunc,
@@ -3824,7 +3857,7 @@ export {
 
     Config, SceneConfig, ImgConfig,
 
-    isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs,
+    isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem,
 
     Local, LocalDeprecated, Session, Clipboard, Cookies,
 
