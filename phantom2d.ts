@@ -2384,6 +2384,9 @@ class Vector {
         const ny = this.x * sin + this.y * cos;
         this.x = nx; this.y = ny;
     }
+    static dist(a: Vector, b: Vector): number {
+        return Math.hypot(b.x - a.x, b.y - a.y);
+    }
 }
 /**
  * A pixel.
@@ -2461,6 +2464,12 @@ class Sound {
     }
     static from(opts: SoundOptions): Sound {
         return new Sound(opts);
+    }
+    get vol(): number {
+        return this.aud.volume;
+    }
+    set vol(vol: number) {
+        this.aud.volume = vol;
     }
 }
 /**
@@ -2557,6 +2566,7 @@ class Scene {
     comps: Store<PhantomSceneCompType, SceneComp>;
     evMng: SceneEventManager;
     fol?: Entity;
+    ui: ItemBox<SceneUI>;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2581,6 +2591,7 @@ class Scene {
         this.runtime = new Runtime();
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
+        this.ui = new ItemBox();
     }
     get width(): number {
         return this.canvas.width;
@@ -2609,17 +2620,32 @@ class Scene {
     add(...items: Entity[]) {
         this.items.add(...items);
     }
+    addUI(...items: SceneUI[]) {
+        this.ui.add(...items);
+    }
     rm(...items: Entity[]) {
         this.items.rm(...items);
+    }
+    rmUI(...items: SceneUI[]) {
+        this.ui.rm(...items);
     }
     has(...items: Entity[]): boolean {
         return this.items.has(...items);
     }
+    hasUI(...items: SceneUI[]): boolean {
+        return this.ui.has(...items);
+    }
     idxOf(item: Entity): number {
         return this.items.idxOf(item);
     }
+    idxOfUI(item: SceneUI): number {
+        return this.ui.stuff.indexOf(item);
+    }
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
+    }
+    filterUI(cb: Predicate<SceneUI>): SceneUI[] {
+        return this.ui.filter(cb);
     }
     on(name: EventType, handle: EventHandle) {
         this.evMng.on(name, handle);
@@ -2646,6 +2672,9 @@ class Scene {
     }
     forEach(cb: CallbackEntity) {
         this.items.forEach(cb);
+    }
+    forEachUI(cb: Callback<SceneUI>) {
+        this.ui.forEach(cb);
     }
     getLvl(lvlName: string): Level | undefined {
         return this.lvlStore.get(lvlName);
@@ -2695,6 +2724,7 @@ class Scene {
     }
     update() {
         this.forEach(i => i.update());
+        this.forEachUI(u => u.update());
         this.testCols();
     }
     testCols() {
@@ -2738,6 +2768,19 @@ class Scene {
             if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
             this.rect(nx, ny, w, h, i.color);
             this.ctx.restore();
+        });
+        // UI will be rendered in a fixed position
+        this.ui.forEach(u => {
+            this.ctx.save();
+            const w2 = u.width / 2;
+            const h2 = u.height / 2;
+            this.ctx.translate(u.x + w2, u.y + h2);
+            this.ctx.rotate(u.rot);
+            this.rect(-w2, -h2, u.width, u.height, u.color);
+            this.ctx.restore();
+            // for other rendering (other than a core rectangle)
+            // call the UI's render method
+            u.render();
         });
     }
     start(postUpd: Function = NoFunc) {
@@ -3765,6 +3808,61 @@ class Camera {
         this.fol = undefined;
     }
     render(scene: Scene) {}
+}
+interface SceneUIOptions {
+    scene: Scene;
+    x?: number;
+    y?: number;
+    w?: number;
+    h?: number;
+    rot?: number;
+    color?: string;
+}
+class SceneUI {
+    scene: Scene;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rot: number;
+    color: string;
+    constructor(opts: SceneUIOptions) {
+        this.scene = opts.scene;
+        this.x = opts.x ?? 0;
+        this.y = opts.y ?? 0;
+        this.width = opts.w ?? 0;
+        this.height = opts.h ?? 0;
+        this.rot = opts.rot ?? 0;
+        this.color = opts.color ?? "#fff";
+    }
+    render() {}
+    update() {}
+}
+interface ButtonUIMouseInteractionStyling {
+    /**
+     * Applied when there is no interactions from the mouse.
+     * 
+     * This is the color to revert to after an event.
+     * @since v1.0.30
+     */
+    idle?: string;
+    hover?: string;
+    click?: string;
+    reset?: number;
+}
+interface ButtonUIOptions extends SceneUIOptions {
+    click?: Function;
+    styles?: ButtonUIMouseInteractionStyling;
+}
+class ButtonUI extends SceneUI {
+    click: Function;
+    styles: ButtonUIMouseInteractionStyling;
+    constructor(opts: ButtonUIOptions) {
+        super(opts);
+        this.click = opts.click ?? NoFunc;
+        this.styles = opts.styles ?? {};
+        if(this.styles.idle) this.color = this.styles.idle;
+    }
 }
 
 /**
