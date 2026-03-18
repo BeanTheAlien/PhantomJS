@@ -785,6 +785,8 @@ interface PhantomCompMap {
      * @since v1.0.28
      */
     grav: GravityComp;
+    arcmoveorbit: ArcMoveOrbitComp;
+    arcmovesling: ArcMoveSlingComp;
 }
 /**
  * The map for `SceneComp`.
@@ -872,6 +874,16 @@ interface EnhancedPhysicsOptions extends CompOptions, CompUseScene {
 interface GravityCompOptions extends CompOptions {
     strength?: number;
     gspd?: number;
+}
+interface ArcMoveOptions extends CompOptions {}
+interface ArcMoveOrbitOptions extends ArcMoveOptions {
+    origin?: Entity | Vector;
+    spd?: number;
+    angle?: number;
+    rad?: number;
+}
+interface ArcMoveSlingOptions extends ArcMoveOptions {
+    strength?: number;
 }
 /**
  * The options for a `SceneComp`.
@@ -1235,6 +1247,47 @@ class GravityComp extends Comp {
         this.ent.y += vec.y * this.gspd;
     }
 }
+class ArcMoveOrbitComp extends Comp {
+    origin: Entity | Vector;
+    spd: number;
+    angle: number;
+    rad: number;
+    constructor(ent: Entity, opts: ArcMoveOrbitOptions) {
+        super(ent);
+        this.origin = opts.origin ?? new Vector(0, 0);
+        this.spd = opts.spd ?? 0;
+        this.angle = opts.angle ?? 0;
+        this.rad = opts.rad ?? 0;
+    }
+    upd() {
+        // calculate angular velocity
+        const ang = this.spd / this.rad;
+        this.angle += ang;
+        // update transform
+        this.ent.x = this.origin.x + this.rad * Math.cos(this.angle);
+        this.ent.y = this.origin.y + this.rad * Math.sin(this.angle);
+    }
+}
+class ArcMoveSlingComp extends Comp {
+    strength: number;
+    vx: number;
+    vy: number;
+    constructor(ent: Entity, opts: ArcMoveSlingOptions) {
+        super(ent);
+        this.strength = opts.strength ?? 0;
+        this.vx = 0;
+        this.vy = 0;
+    }
+    launch(spd: number, angle: number) {
+        this.vx = spd * Math.cos(angle);
+        this.vy = -spd * Math.sin(angle);
+    }
+    upd() {
+        this.vy += this.strength;
+        this.ent.x += this.vx;
+        this.ent.y += this.vy;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1246,7 +1299,9 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     pointat: PointAtComp,
     pointatmouse: PointAtMouseComp,
     enhancedphys: EnhancedPhysicsComp,
-    grav: GravityComp
+    grav: GravityComp,
+    arcmoveorbit: ArcMoveOrbitComp,
+    arcmovesling: ArcMoveSlingComp
 };
 /**
  * Maps components to their respective option interface.
@@ -1260,6 +1315,8 @@ interface PhantomCompOptionsMap {
     pointatmouse: PointAtMouseCompOptions;
     enhancedphys: EnhancedPhysicsOptions;
     grav: GravityCompOptions;
+    arcmoveorbit: ArcMoveOrbitOptions;
+    arcmovesling: ArcMoveSlingOptions;
 }
 /**
  * The class used for creating components for the scene.

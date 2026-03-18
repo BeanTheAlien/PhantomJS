@@ -137,6 +137,8 @@ npm install @beanthealien/phantomjs
 - Fixed a typo in some error documentation.
 ## v1.0.28
 - Added `GravityComp` (needs testing).
+## v1.0.29
+- Added `ArcMoveOrbitComp`, `ArcMoveSlingComp` for orbit and slingshot arc movement.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
