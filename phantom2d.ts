@@ -1341,6 +1341,9 @@ class SceneTilesComp extends SceneComp {
         this.nth = opts.nth;
     }
 }
+interface PhantomSceneCompOptionsMap {
+    tiles: SceneTilesCompOptions;
+}
 /**
  * The record used to create scene components.
  * @since v0.0.0
@@ -2822,9 +2825,10 @@ class Scene {
     get delta(): number {
         return this.runtime.delta;
     }
-    use(c: PhantomSceneCompType, opts: SceneCompOptions = {}) {
+    use<K extends PhantomSceneCompType, T extends PhantomSceneCompOptionsMap[K]>(c: K, opts?: T) {
         if(this.uses(c)) throw new AlreadyUsingError();
-        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, opts));
+        const _opts = opts ?? {};
+        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, _opts));
     }
     unuse(c: PhantomSceneCompType) {
         this.comps.del(c);
@@ -2832,8 +2836,8 @@ class Scene {
     uses(c: PhantomSceneCompType): boolean {
         return this.comps.has(c);
     }
-    comp(c: PhantomSceneCompType): SceneComp | undefined {
-        return this.comps.get(c);
+    comp<K extends PhantomSceneCompType, T extends PhantomSceneCompMap[K]>(c: K): T {
+        return this.comps.get(c) as T;
     }
     bounds(): DOMRect {
         return this.canvas.getBoundingClientRect();
@@ -2932,7 +2936,7 @@ class Scene {
     onScrn(vec: Vector, w: number, h: number) {
         const x = vec.x + w;
         const y = vec.y + h;
-        return x > 0 || x < this.width || y > 0 || y < this.height;
+        return x >= 0 && x <= this.width && y >= 0 && y <= this.height;
     }
     follow(ent: Entity) {
         this.fol = ent;

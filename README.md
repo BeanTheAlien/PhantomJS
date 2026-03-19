@@ -155,6 +155,8 @@ npm install @beanthealien/phantomjs
 ## v1.1.1
 - Fixed an error in `Items` that didn't spread the passed items.
 - Added `lerp`.
+## v1.1.2
+- Updated `Scene` to use the newer method of components and component management.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
