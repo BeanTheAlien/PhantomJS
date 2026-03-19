@@ -152,6 +152,9 @@ npm install @beanthealien/phantomjs
 ## v1.1.0.1
 - Added `disabled` property to `ButtonUI`.
 - Updated `Scene.on` listener attached in `ButtonUI` to check for `disabled`.
+## v1.1.1
+- Fixed an error in `Items` that didn't spread the passed items.
+- Added `lerp`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

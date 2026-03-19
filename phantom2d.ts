@@ -2524,7 +2524,7 @@ class Items {
         }
     }
     has(...items: Entity[]): boolean {
-        return ArrayUtil.has(this.items, items);
+        return ArrayUtil.has(this.items, ...items);
     }
     idxOf(item: Entity): number {
         return this.items.indexOf(item);
@@ -4060,9 +4060,15 @@ class Itvl {
     }
 }
 class FixedItvl extends Itvl {
+    cb: TimerHandler;
+    ms: number;
     constructor(cb: TimerHandler, ms: number) {
         super();
-        this.start(cb, ms);
+        this.cb = cb;
+        this.ms = ms;
+    }
+    start() {
+        super.start(this.cb, this.ms);
     }
 }
 
@@ -4197,6 +4203,9 @@ function shallow<T>(): T {
 function randItem<T>(arr: T[]): T {
     return arr[random(0, arr.length)];
 }
+function lerp(start: number, end: number, amount: number): number {
+    return start + (end - start) * amount;
+}
 
 export {
     NoFunc,
@@ -4216,6 +4225,7 @@ export {
     Config, SceneConfig, ImgConfig,
 
     isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem,
+    lerp,
 
     Local, LocalDeprecated, Session, Clipboard, Cookies,
 

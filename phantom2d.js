@@ -1626,7 +1626,7 @@ class Items {
         }
     }
     has(...items) {
-        return ArrayUtil.has(this.items, items);
+        return ArrayUtil.has(this.items, ...items);
     }
     idxOf(item) {
         return this.items.indexOf(item);
@@ -2835,6 +2835,10 @@ class Camera {
     }
     render(scene) { }
 }
+/**
+ * The core class for UI elements.
+ * @since v1.0.30
+ */
 class SceneUI {
     constructor(opts) {
         var _b, _c, _d, _f, _g, _j, _l, _m;
@@ -2902,15 +2906,15 @@ class ButtonUI extends SceneUI {
         _ButtonUI_instances.add(this);
         this.click = (_b = opts.click) !== null && _b !== void 0 ? _b : NoFunc;
         this.styles = (_c = opts.styles) !== null && _c !== void 0 ? _c : {};
-        if (this.styles.idle)
-            this.color = this.styles.idle;
+        __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorIdle).call(this);
         this.resetCD = new Cooldown();
-        // TODO: tweak value
         this.cdTime = 250;
+        this.disabled = false;
         this.scene.on("click", () => {
             var _b;
             if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
-                this.click();
+                if (!this.disabled)
+                    this.click();
                 this.resetCD.on((_b = this.styles.reset) !== null && _b !== void 0 ? _b : this.cdTime);
             }
         });
@@ -2951,6 +2955,10 @@ _ButtonUI_instances = new WeakSet(), _ButtonUI_boundsTest = function _ButtonUI_b
 }, _ButtonUI_colorClick = function _ButtonUI_colorClick() {
     __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_applyColor).call(this, "click");
 };
+/**
+ * Primitive text component for UI.
+ * @since v1.1.0
+ */
 class TextUI extends SceneUI {
     constructor(opts) {
         var _b;
@@ -2965,6 +2973,32 @@ class TextUI extends SceneUI {
             this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
         super.render();
+    }
+}
+class Itvl {
+    constructor() {
+        this.id = -1;
+    }
+    start(cb, ms) {
+        if (this.id != -1)
+            throw new ExistingProcessError();
+        this.id = setInterval(cb, ms);
+    }
+    stop() {
+        if (this.id == -1)
+            throw new NoProcessError();
+        clearInterval(this.id);
+        this.id = -1;
+    }
+}
+class FixedItvl extends Itvl {
+    constructor(cb, ms) {
+        super();
+        this.cb = cb;
+        this.ms = ms;
+    }
+    start() {
+        super.start(this.cb, this.ms);
     }
 }
 /**
@@ -3072,4 +3106,7 @@ function shallow() {
 function randItem(arr) {
     return arr[random(0, arr.length)];
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger };
+function lerp(start, end, amount) {
+    return start + (end - start) * amount;
+}
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger, Itvl, FixedItvl };
