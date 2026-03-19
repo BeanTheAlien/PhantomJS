@@ -3963,16 +3963,18 @@ class ButtonUI extends SceneUI {
     styles: ButtonUIMouseInteractionStyling;
     resetCD: Cooldown;
     cdTime: number;
+    disabled: boolean;
     constructor(opts: ButtonUIOptions) {
         super(opts);
         this.click = opts.click ?? NoFunc;
         this.styles = opts.styles ?? {};
-        if(this.styles.idle) this.color = this.styles.idle;
+        this.#colorIdle();
         this.resetCD = new Cooldown();
         this.cdTime = 250;
+        this.disabled = false;
         this.scene.on("click", () => {
             if(this.#boundsTest()) {
-                this.click();
+                if(!this.disabled) this.click();
                 this.resetCD.on(this.styles.reset ?? this.cdTime);
             }
         });

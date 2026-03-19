@@ -149,6 +149,9 @@ npm install @beanthealien/phantomjs
 - Fixed button color changing.
 - Fixed user interactions with button firing invalid effects.
 - Added `Itvl`, `FixedItvl`.
+## v1.1.0.1
+- Added `disabled` property to `ButtonUI`.
+- Updated `Scene.on` listener attached in `ButtonUI` to check for `disabled`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
