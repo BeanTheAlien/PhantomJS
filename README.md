@@ -16,7 +16,7 @@ npm install @beanthealien/phantomjs
 - Fixed some errors of legacy usage of Scene.width(), Scene.height(), replaced with Scene.width, Scene.height.
 [Docs](https://docs.google.com/document/d/1928QiduJZWzF_hCdbAx2s4jWh1d92vtkKphrdU-Qttk/edit?usp=sharing)
 
-# Phantom 2D v1.0.16 BETA
+# Phantom 2D v1.1.0 BETA
 ### v1.0.1
 - Open beta now open!
 - Ported most legacy content
@@ -141,6 +141,14 @@ npm install @beanthealien/phantomjs
 - Added `ArcMoveOrbitComp`, `ArcMoveSlingComp` for orbit and slingshot arc movement.
 ## v1.0.30
 - Started adding UI support.
+## v1.1.0
+- Includes major additions to add UI support.
+- Added text property getters and setters for `Scene`.
+- Added support for UI children.
+- Fixed an issue where text wouldn't properly receive a color.
+- Fixed button color changing.
+- Fixed user interactions with button firing invalid effects.
+- Added `Itvl`, `FixedItvl`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -2387,6 +2387,11 @@ class Vector {
     static dist(a: Vector, b: Vector): number {
         return Math.hypot(b.x - a.x, b.y - a.y);
     }
+    static inRect(source: Vector, rectPos: Vector, rectW: number, rectH: number): boolean {
+        const sx = source.x; const sy = source.y; const rx = rectPos.x; const ry = rectPos.y;
+        const w = rectW; const h = rectH;
+        return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
+    }
 }
 /**
  * A pixel.
@@ -2934,6 +2939,45 @@ class Scene {
     }
     unfollow() {
         this.fol = undefined;
+    }
+    text(text: string, x: number, y: number, maxWidth?: number) {
+        this.ctx.fillText(text, x, y, maxWidth);
+    }
+    get align(): CanvasTextAlign {
+        return this.ctx.textAlign;
+    }
+    set align(align: CanvasTextAlign) {
+        this.ctx.textAlign = align;
+    }
+    get font(): string {
+        return this.ctx.font;
+    }
+    set font(font: string) {
+        this.ctx.font = font;
+    }
+    #fontSplit(): string[] {
+        return this.font.split(" ");
+    }
+    get fontSize(): string {
+        return this.#fontSplit()[0];
+    }
+    set fontSize(size: string) {
+        this.font = `${size} ${this.fontFamily}`;
+    }
+    get fontFamily(): string {
+        return this.#fontSplit().slice(1).join(" ");
+    }
+    set fontFamily(family: string) {
+        this.font = `${this.fontSize} ${family}`;
+    }
+    get baseline(): CanvasTextBaseline {
+        return this.ctx.textBaseline;
+    }
+    set baseline(baseline: CanvasTextBaseline) {
+        this.ctx.textBaseline = baseline;
+    }
+    mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
+        return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
 }
 /**
@@ -3817,7 +3861,13 @@ interface SceneUIOptions {
     h?: number;
     rot?: number;
     color?: string;
+    rend?: Function;
+    upd?: Function;
 }
+/**
+ * The core class for UI elements.
+ * @since v1.0.30
+ */
 class SceneUI {
     scene: Scene;
     x: number;
@@ -3826,6 +3876,15 @@ class SceneUI {
     height: number;
     rot: number;
     color: string;
+    rend: Function;
+    upd: Function;
+    /**
+     * A list of the children to this UI element.
+     * 
+     * Childrens' positions are set relative to their parent's position.
+     * @since v1.1.0
+     */
+    child: ChildUI;
     constructor(opts: SceneUIOptions) {
         this.scene = opts.scene;
         this.x = opts.x ?? 0;
@@ -3834,10 +3893,55 @@ class SceneUI {
         this.height = opts.h ?? 0;
         this.rot = opts.rot ?? 0;
         this.color = opts.color ?? "#fff";
+        this.rend = opts.rend ?? NoFunc;
+        this.upd = opts.upd ?? NoFunc;
+        this.child = new ChildUI();
     }
-    render() {}
-    update() {}
+    render() {
+        this.rend();
+        this.child.forEach((c) => {
+            // to avoid overwriting original pos
+            // in the case of detachment at later stage
+            // store the original position
+            // then set it back following rendering
+            const cx = c.x;
+            const cy = c.y;
+            // apply position relative
+            // to this position
+            c.x = this.x + cx;
+            c.y = this.y + cy;
+            c.render();
+            // restore original position
+            c.x = cx;
+            c.y = cy;
+        });
+    }
+    update() {
+        this.upd();
+        this.child.forEach((c) => {
+            c.update();
+        });
+    }
+    addChild(child: SceneUI) {
+        this.child.add(child);
+    }
+    addChilds(...childs: SceneUI[]) {
+        this.child.add(...childs);
+    }
+    rmChild(child: SceneUI) {
+        this.child.rm(child);
+    }
+    rmChilds(...childs: SceneUI[]) {
+        this.child.rm(...childs);
+    }
+    hasChild(child: SceneUI): boolean {
+        return this.child.has(child);
+    }
+    hasChilds(...childs: SceneUI[]): boolean {
+        return this.child.has(...childs);
+    }
 }
+class ChildUI extends ItemBox<SceneUI> {}
 interface ButtonUIMouseInteractionStyling {
     /**
      * Applied when there is no interactions from the mouse.
@@ -3857,11 +3961,106 @@ interface ButtonUIOptions extends SceneUIOptions {
 class ButtonUI extends SceneUI {
     click: Function;
     styles: ButtonUIMouseInteractionStyling;
+    resetCD: Cooldown;
+    cdTime: number;
     constructor(opts: ButtonUIOptions) {
         super(opts);
         this.click = opts.click ?? NoFunc;
         this.styles = opts.styles ?? {};
         if(this.styles.idle) this.color = this.styles.idle;
+        this.resetCD = new Cooldown();
+        this.cdTime = 250;
+        this.scene.on("click", () => {
+            if(this.#boundsTest()) {
+                this.click();
+                this.resetCD.on(this.styles.reset ?? this.cdTime);
+            }
+        });
+    }
+    #boundsTest(): boolean {
+        return this.scene.mouseInRect(new Vector(this.x, this.y), this.width, this.height);
+    }
+    #applyColor<T extends keyof ButtonUIMouseInteractionStyling>(k: T) {
+        if(this.styles[k]) {
+            this.color = this.styles[k] as string;
+        }
+    }
+    #colorIdle() {
+        this.#applyColor("idle");
+    }
+    #colorHover() {
+        this.#applyColor("hover");
+    }
+    #colorClick() {
+        this.#applyColor("click");
+    }
+    update() {
+        if(this.#boundsTest()) {
+            if(this.resetCD.id == -1) {
+                this.#colorHover();
+            }
+        } else {
+            if(this.resetCD.id == -1) {
+                this.#colorIdle();
+            }
+        }
+        if(this.resetCD.id != -1) {
+            if(this.resetCD.ready) {
+                this.#colorIdle();
+                this.resetCD.consume();
+                this.resetCD.off();
+            } else {
+                this.#colorClick();
+            }
+        }
+    }
+}
+interface TextUIOptions extends SceneUIOptions {
+    tx?: string;
+    font?: string;
+    mw?: number;
+}
+/**
+ * Primitive text component for UI.
+ * @since v1.1.0
+ */
+class TextUI extends SceneUI {
+    tx: string;
+    font?: string;
+    mw?: number;
+    constructor(opts: TextUIOptions) {
+        super(opts);
+        this.tx = opts.tx ?? "";
+        this.font = opts.font;
+        this.mw = opts.mw;
+    }
+    render() {
+        this.scene.color = this.color;
+        if(this.font) this.scene.font = this.font;
+        this.scene.text(this.tx, this.x, this.y, this.mw);
+        super.render();
+    }
+}
+
+class Itvl {
+    id: number;
+    constructor() {
+        this.id = -1;
+    }
+    start(cb: TimerHandler, ms: number) {
+        if(this.id != -1) throw new ExistingProcessError();
+        this.id = setInterval(cb, ms);
+    }
+    stop() {
+        if(this.id == -1) throw new NoProcessError();
+        clearInterval(this.id);
+        this.id = -1;
+    }
+}
+class FixedItvl extends Itvl {
+    constructor(cb: TimerHandler, ms: number) {
+        super();
+        this.start(cb, ms);
     }
 }
 
@@ -4006,6 +4205,8 @@ export {
 
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter, WallObject, FloorObject,
+
+    SceneUI, ButtonUI, TextUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
     RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag,
@@ -4018,5 +4219,7 @@ export {
 
     HealthComp, InvComp, EnhancedPhysicsComp,
 
-    Trigger
+    Trigger,
+
+    Itvl, FixedItvl
 };

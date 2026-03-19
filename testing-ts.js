@@ -6,5 +6,29 @@ scene.add(ent);
 ent.use("pointatmouse", {
     scene: scene
 });
+const ui = new p2d.SceneUI({
+    scene,
+    x: 10,
+    y: 30,
+    w: 100,
+    h: 50,
+    color: "#00367c"
+});
+const tx = new p2d.TextUI({ scene, tx: "Hello", font: "24px Comic Sans MS", y: 30, color: "red" }); // rend: () => scene.color = "red"
+ui.addChild(tx);
+scene.addUI(ui);
+const btn = new p2d.ButtonUI({
+    scene,
+    x: 100,
+    y: 50,
+    w: 100,
+    h: 50,
+    click: () => console.log("hi"),
+    styles: {
+        idle: "#085ddd",
+        hover: "#02fab0",
+        click: "#fd0404"
+    }
+});
+scene.addUI(btn);
 scene.start();
-console.log(ent);

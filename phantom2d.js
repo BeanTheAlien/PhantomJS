@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Cooldown_instances, _Cooldown_handle;
+var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_fontSplit, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -146,7 +146,7 @@ class NoSceneAvailableError extends ErrRoot {
  * const canvas = document.getElementById("canvas");
  * const scene = new Scene({ canvas });
  * const ent = new Entity({});
- * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefineds)
+ * ent.use("sprite", { scene: canvas }); // no frames property (frames[0] is undefined)
  * scene.add(ent);
  * scene.start(); // throws error on first tick of ent
  * ```
@@ -167,7 +167,7 @@ class Store {
     /**
      * Retrieves an entry.
      * @param key The key to get.
-     * @returns {TO | undefined} The entry or nothing.
+     * @returns The entry (or nothing).
      * @since v0.0.0
      */
     get(key) {
@@ -185,7 +185,7 @@ class Store {
     /**
      * Returns whether this store contains an item.
      * @param key The key to get.
-     * @returns {boolean} If this item is contained.
+     * @returns If this item is contained.
      * @since v0.0.0
      */
     has(key) {
@@ -194,7 +194,7 @@ class Store {
     /**
      * Removes an entry from this storage.
      * @param key The key to delete.
-     * @returns {boolean} If the key was deleted.
+     * @returns If the key was deleted.
      * @since v0.0.0
      */
     del(key) {
@@ -202,7 +202,7 @@ class Store {
     }
     /**
      * Returns an iterator for this keys.
-     * @returns {Iter<TI>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     keys() {
@@ -210,7 +210,7 @@ class Store {
     }
     /**
      * Returns an iterator for this values.
-     * @returns {Iter<TI>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     values() {
@@ -218,7 +218,7 @@ class Store {
     }
     /**
      * Returns an iterator for this entries.
-     * @returns {Iter<[TI, TO]>} The iterator.
+     * @returns The iterator.
      * @since v0.0.0
      */
     items() {
@@ -562,6 +562,57 @@ class EnhancedPhysicsComp extends Comp {
         this.ay = 0;
     }
 }
+class GravityComp extends Comp {
+    constructor(ent, opts) {
+        var _b, _c;
+        super(ent);
+        this.strength = (_b = opts.strength) !== null && _b !== void 0 ? _b : 0;
+        this.gspd = (_c = opts.gspd) !== null && _c !== void 0 ? _c : 0;
+    }
+    upd() {
+        var _b;
+        this.gspd += this.strength;
+        const vec = Angle.toVector((_b = Scene.config.get("gravdir")) !== null && _b !== void 0 ? _b : Angle.rad(270));
+        this.ent.x += vec.x * this.gspd;
+        this.ent.y += vec.y * this.gspd;
+    }
+}
+class ArcMoveOrbitComp extends Comp {
+    constructor(ent, opts) {
+        var _b, _c, _d, _f;
+        super(ent);
+        this.origin = (_b = opts.origin) !== null && _b !== void 0 ? _b : new Vector(0, 0);
+        this.spd = (_c = opts.spd) !== null && _c !== void 0 ? _c : 0;
+        this.angle = (_d = opts.angle) !== null && _d !== void 0 ? _d : 0;
+        this.rad = (_f = opts.rad) !== null && _f !== void 0 ? _f : 0;
+    }
+    upd() {
+        // calculate angular velocity
+        const ang = this.spd / this.rad;
+        this.angle += ang;
+        // update transform
+        this.ent.x = this.origin.x + this.rad * Math.cos(this.angle);
+        this.ent.y = this.origin.y + this.rad * Math.sin(this.angle);
+    }
+}
+class ArcMoveSlingComp extends Comp {
+    constructor(ent, opts) {
+        var _b;
+        super(ent);
+        this.strength = (_b = opts.strength) !== null && _b !== void 0 ? _b : 0;
+        this.vx = 0;
+        this.vy = 0;
+    }
+    launch(spd, angle) {
+        this.vx = spd * Math.cos(angle);
+        this.vy = -spd * Math.sin(angle);
+    }
+    upd() {
+        this.vy += this.strength;
+        this.ent.x += this.vx;
+        this.ent.y += this.vy;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -572,7 +623,10 @@ const PhantomCompRecord = {
     sprite: SpriteComp,
     pointat: PointAtComp,
     pointatmouse: PointAtMouseComp,
-    enhancedphys: EnhancedPhysicsComp
+    enhancedphys: EnhancedPhysicsComp,
+    grav: GravityComp,
+    arcmoveorbit: ArcMoveOrbitComp,
+    arcmovesling: ArcMoveSlingComp
 };
 /**
  * The class used for creating components for the scene.
@@ -1149,7 +1203,7 @@ class MovingObject extends Entity {
  */
 class BulletObject extends Entity {
     constructor(opts) {
-        var _b;
+        var _b, _c;
         super(opts);
         this.rot = opts.rot;
         this.extLeft = opts.extLeft;
@@ -1160,8 +1214,14 @@ class BulletObject extends Entity {
         this.scene = opts.scene;
         this.onDest = opts.onDest;
         this.tol = (_b = opts.tol) !== null && _b !== void 0 ? _b : 15;
+        this.decay = (_c = opts.decay) !== null && _c !== void 0 ? _c : 0;
+        this.initSpd = this.spd;
     }
     update() {
+        // decay the speed by using exponential decay formula
+        // y = a(1-r)^t
+        // a = inital; r = decay rate; t = time
+        this.spd = this.initSpd * (Math.pow(1 - this.decay, this.scene.delta));
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x;
@@ -1379,7 +1439,6 @@ class PlayableCharacter extends Character {
                 const _k = KeyCodeMapReverse[k];
                 const exec = this.binds.get(_k);
                 const cdExec = this.bindCD.get(_k);
-                console.log(`exec: ${exec}, cd: ${cdExec === null || cdExec === void 0 ? void 0 : cdExec[0]} + ${JSON.stringify(cdExec === null || cdExec === void 0 ? void 0 : cdExec[1])}`);
                 if (exec) {
                     exec();
                 }
@@ -1438,6 +1497,18 @@ class Vector {
         const ny = this.x * sin + this.y * cos;
         this.x = nx;
         this.y = ny;
+    }
+    static dist(a, b) {
+        return Math.hypot(b.x - a.x, b.y - a.y);
+    }
+    static inRect(source, rectPos, rectW, rectH) {
+        const sx = source.x;
+        const sy = source.y;
+        const rx = rectPos.x;
+        const ry = rectPos.y;
+        const w = rectW;
+        const h = rectH;
+        return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
     }
 }
 /**
@@ -1501,6 +1572,12 @@ class Sound {
     }
     static from(opts) {
         return new Sound(opts);
+    }
+    get vol() {
+        return this.aud.volume;
+    }
+    set vol(vol) {
+        this.aud.volume = vol;
     }
 }
 /**
@@ -1607,6 +1684,7 @@ class Scene {
         this.runtime = new Runtime();
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
+        this.ui = new ItemBox();
     }
     get width() {
         return this.canvas.width;
@@ -1635,17 +1713,32 @@ class Scene {
     add(...items) {
         this.items.add(...items);
     }
+    addUI(...items) {
+        this.ui.add(...items);
+    }
     rm(...items) {
         this.items.rm(...items);
+    }
+    rmUI(...items) {
+        this.ui.rm(...items);
     }
     has(...items) {
         return this.items.has(...items);
     }
+    hasUI(...items) {
+        return this.ui.has(...items);
+    }
     idxOf(item) {
         return this.items.idxOf(item);
     }
+    idxOfUI(item) {
+        return this.ui.stuff.indexOf(item);
+    }
     filter(cb) {
         return this.items.filter(cb);
+    }
+    filterUI(cb) {
+        return this.ui.filter(cb);
     }
     on(name, handle) {
         this.evMng.on(name, handle);
@@ -1672,6 +1765,9 @@ class Scene {
     }
     forEach(cb) {
         this.items.forEach(cb);
+    }
+    forEachUI(cb) {
+        this.ui.forEach(cb);
     }
     getLvl(lvlName) {
         return this.lvlStore.get(lvlName);
@@ -1722,6 +1818,7 @@ class Scene {
     }
     update() {
         this.forEach(i => i.update());
+        this.forEachUI(u => u.update());
         this.testCols();
     }
     testCols() {
@@ -1739,24 +1836,49 @@ class Scene {
         }
     }
     render() {
+        let ox = 0;
+        let oy = 0;
+        if (this.fol) {
+            const fcx = this.fol.x + this.fol.width / 2;
+            const fcy = this.fol.y + this.fol.height / 2;
+            ox = this.width / 2 - fcx;
+            oy = this.height / 2 - fcy;
+        }
         this.items.forEach(i => {
+            const dx = i.x + ox;
+            const dy = i.y + oy;
             this.ctx.save();
-            this.ctx.translate(i.x, i.y);
-            this.ctx.rotate(i.rot);
-            const nx = -i.width / 2;
-            const ny = -i.height / 2;
             const w = i.width;
             const h = i.height;
+            const w2 = w / 2;
+            const h2 = h / 2;
+            this.ctx.translate(dx + w2, dy + h2);
+            this.ctx.rotate(i.rot);
+            const nx = -w / 2;
+            const ny = -h / 2;
             const xw = nx + w;
             const yh = ny + h;
             // off-screen no draw check
             // if the x-coord is less than 0 or more than width
             // or the y-coord is less than 0 or more than height
             // then it is not on the canvas
-            if (Scene.config.get("osnd") == true && xw < 0 || this.width < xw || yh < 0 || this.height < yh)
+            if (Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh))
                 return this.ctx.restore();
             this.rect(nx, ny, w, h, i.color);
             this.ctx.restore();
+        });
+        // UI will be rendered in a fixed position
+        this.ui.forEach(u => {
+            this.ctx.save();
+            const w2 = u.width / 2;
+            const h2 = u.height / 2;
+            this.ctx.translate(u.x + w2, u.y + h2);
+            this.ctx.rotate(u.rot);
+            this.rect(-w2, -h2, u.width, u.height, u.color);
+            this.ctx.restore();
+            // for other rendering (other than a core rectangle)
+            // call the UI's render method
+            u.render();
         });
     }
     start(postUpd = NoFunc) {
@@ -1899,6 +2021,48 @@ class Scene {
         const y = vec.y + h;
         return x > 0 || x < this.width || y > 0 || y < this.height;
     }
+    follow(ent) {
+        this.fol = ent;
+    }
+    unfollow() {
+        this.fol = undefined;
+    }
+    text(text, x, y, maxWidth) {
+        this.ctx.fillText(text, x, y, maxWidth);
+    }
+    get align() {
+        return this.ctx.textAlign;
+    }
+    set align(align) {
+        this.ctx.textAlign = align;
+    }
+    get font() {
+        return this.ctx.font;
+    }
+    set font(font) {
+        this.ctx.font = font;
+    }
+    get fontSize() {
+        return __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_fontSplit).call(this)[0];
+    }
+    set fontSize(size) {
+        this.font = `${size} ${this.fontFamily}`;
+    }
+    get fontFamily() {
+        return __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_fontSplit).call(this).slice(1).join(" ");
+    }
+    set fontFamily(family) {
+        this.font = `${this.fontSize} ${family}`;
+    }
+    get baseline() {
+        return this.ctx.textBaseline;
+    }
+    set baseline(baseline) {
+        this.ctx.textBaseline = baseline;
+    }
+    mouseInRect(rectPos, rectW, rectH) {
+        return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -1907,6 +2071,8 @@ _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, 
     else {
         return ent.tags.some((t) => t.test(tagName));
     }
+}, _Scene_fontSplit = function _Scene_fontSplit() {
+    return this.font.split(" ");
 };
 /**
  * This was used in v1.0.18.2 briefly.
@@ -2266,6 +2432,17 @@ class Cooldown {
 _Cooldown_instances = new WeakSet(), _Cooldown_handle = function _Cooldown_handle() {
     this.ready = true;
 };
+class Angle {
+    static deg(rad) {
+        return rad * 180 / Math.PI;
+    }
+    static rad(deg) {
+        return deg * Math.PI / 180;
+    }
+    static toVector(rad) {
+        return new Vector(Math.cos(rad), Math.sin(rad));
+    }
+}
 class Config {
     constructor() {
         this.config = new Store();
@@ -2367,7 +2544,12 @@ const SceneConfigMap = {
      * Handler for uncaught `ErrorEvent`s.
      * @since v1.0.19
      */
-    error: primFn()
+    error: primFn(),
+    /**
+     * The direction gravity should be facing in (in radians).
+     * @since v1.0.27
+     */
+    gravdir: primNum()
 };
 class SceneConfig extends Config {
     constructor() {
@@ -2402,6 +2584,7 @@ Scene.config.set("master", 1);
 Scene.config.set("music", 1);
 Scene.config.set("sfx", 1);
 Scene.config.set("osnd", true);
+Scene.config.set("gravdir", Angle.rad(270));
 const ImgConfigMap = {
     /**
      * Controls the beginning (pre-pended) folder path to all `src` properties.
@@ -2601,14 +2784,6 @@ class Tag {
 }
 class TagList extends ItemBox {
 }
-class Angle {
-    static deg(rad) {
-        return rad * 180 / Math.PI;
-    }
-    static rad(deg) {
-        return deg * Math.PI / 180;
-    }
-}
 class SavedState {
     constructor(o, desc) {
         this.atts = {};
@@ -2635,6 +2810,161 @@ class Trigger {
     }
     deactivate() {
         this.active = false;
+    }
+}
+class Material {
+    constructor(opts) {
+        var _b, _c;
+        this.fric = (_b = opts.fric) !== null && _b !== void 0 ? _b : 1;
+        this.color = (_c = opts.color) !== null && _c !== void 0 ? _c : "#fff";
+    }
+}
+class Camera {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.mode = "fixed";
+    }
+    follow(follow) {
+        this.mode = "follow";
+        this.fol = follow;
+    }
+    unfollow() {
+        this.mode = "fixed";
+        this.fol = undefined;
+    }
+    render(scene) { }
+}
+class SceneUI {
+    constructor(opts) {
+        var _b, _c, _d, _f, _g, _j, _l, _m;
+        this.scene = opts.scene;
+        this.x = (_b = opts.x) !== null && _b !== void 0 ? _b : 0;
+        this.y = (_c = opts.y) !== null && _c !== void 0 ? _c : 0;
+        this.width = (_d = opts.w) !== null && _d !== void 0 ? _d : 0;
+        this.height = (_f = opts.h) !== null && _f !== void 0 ? _f : 0;
+        this.rot = (_g = opts.rot) !== null && _g !== void 0 ? _g : 0;
+        this.color = (_j = opts.color) !== null && _j !== void 0 ? _j : "#fff";
+        this.rend = (_l = opts.rend) !== null && _l !== void 0 ? _l : NoFunc;
+        this.upd = (_m = opts.upd) !== null && _m !== void 0 ? _m : NoFunc;
+        this.child = new ChildUI();
+    }
+    render() {
+        this.rend();
+        this.child.forEach((c) => {
+            // to avoid overwriting original pos
+            // in the case of detachment at later stage
+            // store the original position
+            // then set it back following rendering
+            const cx = c.x;
+            const cy = c.y;
+            // apply position relative
+            // to this position
+            c.x = this.x + cx;
+            c.y = this.y + cy;
+            c.render();
+            // restore original position
+            c.x = cx;
+            c.y = cy;
+        });
+    }
+    update() {
+        this.upd();
+        this.child.forEach((c) => {
+            c.update();
+        });
+    }
+    addChild(child) {
+        this.child.add(child);
+    }
+    addChilds(...childs) {
+        this.child.add(...childs);
+    }
+    rmChild(child) {
+        this.child.rm(child);
+    }
+    rmChilds(...childs) {
+        this.child.rm(...childs);
+    }
+    hasChild(child) {
+        return this.child.has(child);
+    }
+    hasChilds(...childs) {
+        return this.child.has(...childs);
+    }
+}
+class ChildUI extends ItemBox {
+}
+class ButtonUI extends SceneUI {
+    constructor(opts) {
+        var _b, _c;
+        super(opts);
+        _ButtonUI_instances.add(this);
+        this.click = (_b = opts.click) !== null && _b !== void 0 ? _b : NoFunc;
+        this.styles = (_c = opts.styles) !== null && _c !== void 0 ? _c : {};
+        if (this.styles.idle)
+            this.color = this.styles.idle;
+        this.resetCD = new Cooldown();
+        // TODO: tweak value
+        this.cdTime = 250;
+        this.scene.on("click", () => {
+            var _b;
+            if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
+                this.click();
+                this.resetCD.on((_b = this.styles.reset) !== null && _b !== void 0 ? _b : this.cdTime);
+            }
+        });
+    }
+    update() {
+        if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
+            if (this.resetCD.id == -1) {
+                __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorHover).call(this);
+            }
+        }
+        else {
+            if (this.resetCD.id == -1) {
+                __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorIdle).call(this);
+            }
+        }
+        if (this.resetCD.id != -1) {
+            if (this.resetCD.ready) {
+                __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorIdle).call(this);
+                this.resetCD.consume();
+                this.resetCD.off();
+            }
+            else {
+                __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorClick).call(this);
+            }
+        }
+    }
+}
+_ButtonUI_instances = new WeakSet(), _ButtonUI_boundsTest = function _ButtonUI_boundsTest() {
+    return this.scene.mouseInRect(new Vector(this.x, this.y), this.width, this.height);
+}, _ButtonUI_applyColor = function _ButtonUI_applyColor(k) {
+    if (this.styles[k]) {
+        this.color = this.styles[k];
+    }
+}, _ButtonUI_colorIdle = function _ButtonUI_colorIdle() {
+    __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_applyColor).call(this, "idle");
+}, _ButtonUI_colorHover = function _ButtonUI_colorHover() {
+    __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_applyColor).call(this, "hover");
+}, _ButtonUI_colorClick = function _ButtonUI_colorClick() {
+    __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_applyColor).call(this, "click");
+};
+class TextUI extends SceneUI {
+    constructor(opts) {
+        var _b;
+        super(opts);
+        this.tx = (_b = opts.tx) !== null && _b !== void 0 ? _b : "";
+        this.font = opts.font;
+        this.mw = opts.mw;
+    }
+    render() {
+        this.scene.color = this.color;
+        if (this.font)
+            this.scene.font = this.font;
+        this.scene.text(this.tx, this.x, this.y, this.mw);
+        super.render();
     }
 }
 /**
@@ -2734,4 +3064,12 @@ function objIs(obj, ctor) {
 function shallow() {
     return null;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger };
+/**
+ * Returns a random item from an array.
+ * @param arr The array.
+ * @returns A random item.
+ */
+function randItem(arr) {
+    return arr[random(0, arr.length)];
+}
+export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger };
