@@ -1915,10 +1915,11 @@ class Scene {
     get delta() {
         return this.runtime.delta;
     }
-    use(c, opts = {}) {
+    use(c, opts) {
         if (this.uses(c))
             throw new AlreadyUsingError();
-        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, opts));
+        const _opts = opts !== null && opts !== void 0 ? opts : {};
+        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, _opts));
     }
     unuse(c) {
         this.comps.del(c);
@@ -2019,7 +2020,7 @@ class Scene {
     onScrn(vec, w, h) {
         const x = vec.x + w;
         const y = vec.y + h;
-        return x > 0 || x < this.width || y > 0 || y < this.height;
+        return x >= 0 && x <= this.width && y >= 0 && y <= this.height;
     }
     follow(ent) {
         this.fol = ent;

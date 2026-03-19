@@ -41,9 +41,10 @@ player.bind("w", () => { if (player.onGround)
 player.bind("a", () => { phys.addForceX(-1); player.face = 1; });
 player.bind("d", () => { phys.addForceX(1); player.face = 0; });
 const weap = new Weap("mc.png");
-const enemy = new p2d.Character({ strength: 0.4, x: 20, color: "#1448f0" });
+const enemy = new p2d.Character({ strength: 0.4, x: 20, color: "#1448f0", width: 15, height: 40 });
 enemy.use("health", { mhp: 5, hp: 5 });
 scene.add(player, enemy);
+scene.on("click", () => weap.shoot());
 scene.start(() => {
     weap.render();
 });
