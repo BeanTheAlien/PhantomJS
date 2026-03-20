@@ -180,6 +180,7 @@ type FillStyle = string | CanvasGradient | CanvasPattern;
 type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
 type Real<T> = Exclude<T, null | undefined>;
+type Nullish<T> = T | null | undefined;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -4053,6 +4054,7 @@ interface ButtonUIMouseInteractionStyling {
 interface ButtonUIOptions extends SceneUIOptions {
     click?: Function;
     styles?: ButtonUIMouseInteractionStyling;
+    clickCD?: number;
 }
 class ButtonUI extends SceneUI {
     click: Function;
@@ -4060,6 +4062,7 @@ class ButtonUI extends SceneUI {
     resetCD: Cooldown;
     cdTime: number;
     disabled: boolean;
+    clickCD?: Cooldown;
     constructor(opts: ButtonUIOptions) {
         super(opts);
         this.click = opts.click ?? NoFunc;
@@ -4070,10 +4073,16 @@ class ButtonUI extends SceneUI {
         this.disabled = false;
         this.scene.on("click", () => {
             if(this.#boundsTest()) {
-                if(!this.disabled) this.click();
+                if(!this.disabled) {
+                    if(this.clickCD && !this.clickCD.ready) return;
+                    this.click();
+                }
                 this.resetCD.on(this.styles.reset ?? this.cdTime);
             }
         });
+        if(opts.clickCD) {
+            this.clickCD = new Cooldown(opts.clickCD);
+        }
     }
     #boundsTest(): boolean {
         return this.scene.mouseInRect(new Vector(this.x, this.y), this.width, this.height);
@@ -4165,6 +4174,24 @@ class FixedItvl extends Itvl {
     }
     start() {
         super.start(this.cb, this.ms);
+    }
+}
+class Params {
+    params: URLSearchParams;
+    constructor() {
+        this.params = new URLSearchParams(window.location.search);
+    }
+    get(k: string): Nullish<string> {
+        return this.params.get(k);
+    }
+    getAll(k: string): string[] {
+        return this.params.getAll(k);
+    }
+    has(k: string): boolean;
+    has(k: string, v: any): boolean;
+    has(k: string, v?: any): boolean {
+        if(v) return this.params.has(k, Util.strOf(v));
+        else return this.params.has(k);
     }
 }
 
@@ -4304,12 +4331,6 @@ function lerp(start: number, end: number, amount: number): number {
 }
 
 export {
-    NoFunc,
-
-    NoContextError, ExistingProcessError, NoCanvasError, NoProcessError,
-    
-    PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent,
-
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter, WallObject, FloorObject,
 
@@ -4323,9 +4344,9 @@ export {
     isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem,
     lerp,
 
-    Local, LocalDeprecated, Session, Clipboard, Cookies,
+    Local, LocalDeprecated, Session, Clipboard, Cookies, Params,
 
-    HealthComp, InvComp, EnhancedPhysicsComp,
+    Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp,
 
     Trigger,
 
