@@ -3002,18 +3002,18 @@ class Scene {
             this.ctx.font = `${font.style ?? "normal"} ${font.variant ?? "normal"} ${font.weight ?? "normal"} ${font.stretch ?? "normal"} ${font.size} ${font.lineHeight ?? "normal"} ${font.family}`;
         }
     }
-    useFont(size: FontSize): void;
-    useFont(size: FontSize, family: FontFamily): void;
-    useFont(style: Real<FontStyle>, size: FontSize, family: FontFamily): void;
-    useFont(style: Real<FontStyle>, variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
-    useFont(style: Real<FontStyle>, weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
-    useFont(style: Real<FontStyle>, stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
-    useFont(variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
-    useFont(weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
-    useFont(stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
-    useFont(lineHeight: Real<FontLineHeight>, size: FontSize, family: FontFamily): void;
-    useFont(): void;
-    useFont() {}
+    // useFont(size: FontSize): void;
+    // useFont(size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(lineHeight: Real<FontLineHeight>, size: FontSize, family: FontFamily): void;
+    // useFont(): void;
+    // useFont() {}
     get fontSize(): FontSize {
         return this.fontControl.size;
     }
