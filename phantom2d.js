@@ -721,6 +721,7 @@ class Entity {
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
+        this.child = new ItemBox();
     }
     setPos(x, y) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1844,18 +1845,18 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        this.items.forEach(i => {
-            const dx = i.x + ox;
-            const dy = i.y + oy;
+        const entRend = (e, offX, offY) => {
+            const dx = e.x + ox + offX;
+            const dy = e.y + oy + offY;
             this.ctx.save();
-            const w = i.width;
-            const h = i.height;
+            const w = e.width;
+            const h = e.height;
             const w2 = w / 2;
             const h2 = h / 2;
             this.ctx.translate(dx + w2, dy + h2);
-            this.ctx.rotate(i.rot);
-            const nx = -w / 2;
-            const ny = -h / 2;
+            this.ctx.rotate(e.rot);
+            const nx = -w2;
+            const ny = -h2;
             const xw = nx + w;
             const yh = ny + h;
             // off-screen no draw check
@@ -1864,8 +1865,14 @@ class Scene {
             // then it is not on the canvas
             if (Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh))
                 return this.ctx.restore();
-            this.rect(nx, ny, w, h, i.color);
+            this.rect(nx, ny, w, h, e.color);
             this.ctx.restore();
+        };
+        this.items.forEach(i => {
+            entRend(i, 0, 0);
+            i.child.forEach(c => {
+                entRend(c, i.x, i.y);
+            });
         });
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {

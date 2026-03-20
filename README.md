@@ -157,6 +157,9 @@ npm install @beanthealien/phantomjs
 - Added `lerp`.
 ## v1.1.2
 - Updated `Scene` to use the newer method of components and component management.
+## v1.2.0
+- Updated `Entity` to properly accept children.
+- Started adding `SceneFont` interface for internal font management.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
