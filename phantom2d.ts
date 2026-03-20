@@ -179,6 +179,7 @@ type Constructor<T> = new (...args: any[]) => T;
 type FillStyle = string | CanvasGradient | CanvasPattern;
 type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
+type Real<T> = Exclude<T, null | undefined>;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -2551,16 +2552,30 @@ class Items {
     }
 }
 // TODO: add values to this
+type FontSizeAbsolute = "xx-small" | "x-small" | "small" | "medium" | "large" | "x-large" | "xx-large" | "xxx-large";
+type FontSizeRelative = "larger" | "smaller";
 interface SceneFont {
+    style?: "normal" | "italic" | "oblique";
+    variant?: CanvasFontVariantCaps;
+    weight?: "normal" | "bold" | "lighter" | "bolder" | number;
+    stretch?: CanvasFontStretch;
     /**
      * The size of the font. (in pixels)
      * 
      * A number will be converted to Npx.
      * @since v1.2.0
      */
-    size: string | number;
+    size: FontSizeAbsolute | FontSizeRelative | number;
+    lineHeight?: "normal" | number;
     family: string;
 }
+type FontStyle = SceneFont["style"];
+type FontVariant = SceneFont["variant"];
+type FontWeight = SceneFont["weight"];
+type FontStretch = SceneFont["stretch"];
+type FontSize = SceneFont["size"];
+type FontLineHeight = SceneFont["lineHeight"];
+type FontFamily = SceneFont["family"];
 /**
  * The root canvas to display content.
  * @since v0.0.0
@@ -2588,6 +2603,7 @@ class Scene {
     evMng: SceneEventManager;
     fol?: Entity;
     ui: ItemBox<SceneUI>;
+    fontControl: SceneFont;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2613,6 +2629,10 @@ class Scene {
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
         this.ui = new ItemBox();
+        this.fontControl = {
+            size: 10,
+            family: "sans-serif"
+        };
     }
     get width(): number {
         return this.canvas.width;
@@ -2975,29 +2995,82 @@ class Scene {
     get font(): string {
         return this.ctx.font;
     }
-    set font(font: string) {
-        this.ctx.font = font;
+    set font(font: string | SceneFont) {
+        if(typeof font == "string") {
+            this.ctx.font = font;
+        } else {
+            this.ctx.font = `${font.style ?? "normal"} ${font.variant ?? "normal"} ${font.weight ?? "normal"} ${font.stretch ?? "normal"} ${font.size} ${font.lineHeight ?? "normal"} ${font.family}`;
+        }
     }
-    #fontSplit(): string[] {
-        return this.font.split(" ");
+    useFont(size: FontSize): void;
+    useFont(size: FontSize, family: FontFamily): void;
+    useFont(style: Real<FontStyle>, size: FontSize, family: FontFamily): void;
+    useFont(style: Real<FontStyle>, variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    useFont(style: Real<FontStyle>, weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    useFont(style: Real<FontStyle>, stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    useFont(variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    useFont(weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    useFont(stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    useFont(lineHeight: Real<FontLineHeight>, size: FontSize, family: FontFamily): void;
+    useFont(): void;
+    useFont() {}
+    get fontSize(): FontSize {
+        return this.fontControl.size;
     }
-    get fontSize(): string {
-        return this.#fontSplit()[0];
+    set fontSize(size: FontSize) {
+        this.fontControl.size = size;
+        this.#buildFont();
     }
-    set fontSize(size: string) {
-        this.font = `${size} ${this.fontFamily}`;
+    get fontFamily(): FontFamily {
+        return this.fontControl.family;
     }
-    get fontFamily(): string {
-        return this.#fontSplit().slice(1).join(" ");
-    }
-    set fontFamily(family: string) {
-        this.font = `${this.fontSize} ${family}`;
+    set fontFamily(family: FontFamily) {
+        this.fontControl.family = family;
+        this.#buildFont();
     }
     get baseline(): CanvasTextBaseline {
         return this.ctx.textBaseline;
     }
     set baseline(baseline: CanvasTextBaseline) {
         this.ctx.textBaseline = baseline;
+    }
+    get fontStyle(): FontStyle {
+        return this.fontControl.style;
+    }
+    set fontStyle(style: Real<FontStyle>) {
+        this.fontControl.style = style;
+        this.#buildFont();
+    }
+    get fontVariant(): FontVariant {
+        return this.fontControl.variant;
+    }
+    set fontVariant(variant: Real<FontVariant>) {
+        this.fontControl.variant = variant;
+        this.#buildFont();
+    }
+    get fontWeight(): FontWeight {
+        return this.fontControl.weight;
+    }
+    set fontWeight(weight: Real<FontWeight>) {
+        this.fontControl.weight = weight;
+        this.#buildFont();
+    }
+    get fontStretch(): FontStretch {
+        return this.fontControl.stretch;
+    }
+    set fontStretch(stretch: Real<FontStretch>) {
+        this.fontControl.stretch = stretch;
+        this.#buildFont();
+    }
+    get fontLineHeight(): FontLineHeight {
+        return this.fontControl.lineHeight;
+    }
+    set fontLineHeight(lineHeight: Real<FontLineHeight>) {
+        this.fontControl.lineHeight = lineHeight;
+        this.#buildFont();
+    }
+    #buildFont() {
+        this.font = this.fontControl;
     }
     mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
