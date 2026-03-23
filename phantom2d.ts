@@ -3709,15 +3709,25 @@ type OpenDirectoryAccessMode = "r" | "rw";
 type OpenDirectoryFinalAccessMode = "read" | "readwrite";
 type FileSystemStartPosition = FileSystemHandle | WellKnownDir;
 type AcceptedFinal = { description?: string } & AcceptBase;
-interface FilePickerOptions extends PickerOptions {
+interface FilePickerBaseOptions extends PickerOptions {
     all?: boolean;
-    mult?: boolean;
-    accept?: Accepted[]
+    accept?: Accepted[];
 }
-interface FilePickerFinalOptions extends PickerCleanedOptions {
+interface FilePickerBaseFinalOptions extends PickerCleanedOptions {
     excludeAcceptAllOption?: boolean;
-    multiple?: boolean;
     types?: AcceptedFinal[];
+}
+interface FilePickerOptions extends FilePickerBaseOptions {
+    mult?: boolean;
+}
+interface FilePickerFinalOptions extends FilePickerBaseFinalOptions {
+    multiple?: boolean;
+}
+interface FilePickerSaveOptions extends FilePickerBaseOptions {
+    suggest?: string;
+}
+interface FilePickerSaveFinalOptions extends FilePickerBaseFinalOptions {
+    suggestedName?: string;
 }
 interface DirPickerOptions extends PickerOptions {
     mode?: OpenDirectoryAccessMode;
@@ -3734,6 +3744,15 @@ abstract class Picker<P, H> {
         return { id: opts.id, startIn: opts.start };
     }
 }
+abstract class FilePickerBase<T, H, R extends FilePickerBaseOptions, P extends FilePickerBaseFinalOptions> extends Picker<T, H> {
+    cleanOpts(opts: R): P {
+        return {
+            ...this.clean(opts),
+            excludeAcceptAllOption: opts.all,
+            types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
+        } as P;
+    }
+}
 type FilePickerPickType = string | string[];
 type FilePickerHandleType = FileSystemFileHandle[];
 /**
@@ -3742,39 +3761,32 @@ type FilePickerHandleType = FileSystemFileHandle[];
  * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker)
  * @since v1.0.7
  */
-class FilePicker extends Picker<FilePickerPickType, FilePickerHandleType> {
+class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType, FilePickerOptions, FilePickerFinalOptions> {
     async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
-        try {
-            const [...handles]: FilePickerHandleType = await this.handle(opts);
-            if(handles.length == 1) {
-                const file = await handles[0].getFile();
-                return await file.text();
-            }
-            const files: File[] = [];
-            for(const handle of handles) {
-                files.push(await handle.getFile());
-            }
-            const out = await Promise.all(files.map(async o => o.text()));
-            return out;
-        } catch(e) {
-            throw e;
+        const [...handles]: FilePickerHandleType = await this.handle(opts);
+        if(handles.length == 1) {
+            const file = await handles[0].getFile();
+            return await file.text();
         }
+        const files: File[] = [];
+        for(const handle of handles) {
+            files.push(await handle.getFile());
+        }
+        const out = await Promise.all(files.map(async o => o.text()));
+        return out;
     }
     async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
-        try {
-            const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker(this.cleanOpts(opts));
-            return handles;
-        } catch(e) {
-            throw e;
-        }
+        const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
+        return handles;
     }
-    cleanOpts(opts: FilePickerOptions): FilePickerFinalOptions {
-        return {
-            ...this.clean(opts),
-            excludeAcceptAllOption: opts.all,
-            multiple: opts.mult,
-            types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
-        };
+}
+class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, FilePickerSaveOptions, FilePickerSaveFinalOptions> {
+    async pick(opts: FilePickerSaveOptions): Promise<FileSystemHandle> {
+        return await this.handle(opts);
+    }
+    async handle(opts: FilePickerSaveOptions): Promise<FileSystemHandle> {
+        const handle = await (window as any).showOpenSaveFilePicker({ ...this.cleanOpts(opts), suggestedName: opts.suggest });
+        return handle;
     }
 }
 /**
@@ -4094,9 +4106,9 @@ class ButtonUI extends SceneUI {
     #boundsTest(): boolean {
         return this.scene.mouseInRect(new Vector(this.x, this.y), this.width, this.height);
     }
-    #applyColor<T extends keyof ButtonUIMouseInteractionStyling>(k: T) {
+    #applyColor<T extends Exclude<keyof ButtonUIMouseInteractionStyling, "reset">>(k: T) {
         if(this.styles[k]) {
-            this.color = this.styles[k] as string;
+            this.color = this.styles[k];
         }
     }
     #colorIdle() {
@@ -4344,7 +4356,7 @@ export {
     SceneUI, ButtonUI, TextUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast,
-    RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag,
+    RaycastIntersecton, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag,
 
     Config, SceneConfig, ImgConfig,
 

@@ -162,6 +162,9 @@ npm install @beanthealien/phantomjs
 - Started adding `SceneFont` interface for internal font management.
 ## v1.2.1
 - Added `Scene.ray` method.
+## v1.2.2
+- Added `SaveFilePicker`.
+- Restructured file pickers to use `FilePickerBase`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
