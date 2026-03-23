@@ -160,6 +160,8 @@ npm install @beanthealien/phantomjs
 ## v1.2.0
 - Updated `Entity` to properly accept children.
 - Started adding `SceneFont` interface for internal font management.
+## v1.2.1
+- Added `Scene.ray` method.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

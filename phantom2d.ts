@@ -2761,6 +2761,13 @@ class Scene {
     bg(color: string) {
         this.rect(0, 0, this.width, this.height, color);
     }
+    ray(origin: Vector, angle: number, dist: number, color: string) {
+        this.ctx.strokeStyle = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(origin.x, origin.y);
+        this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+        this.ctx.stroke();
+    }
     clear() {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
