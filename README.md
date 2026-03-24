@@ -165,6 +165,8 @@ npm install @beanthealien/phantomjs
 ## v1.2.2
 - Added `SaveFilePicker`.
 - Restructured file pickers to use `FilePickerBase`.
+## v1.2.3
+- Started adding more aircraft support after finding an internal lack of support in the heli example.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
