@@ -17,8 +17,8 @@ player.bind("d", () => { if (player.eng)
     phys.addForceX(1); });
 player.bind("e", () => { player.eng = !player.eng; }, 1000);
 scene.add(player);
-const w = 55;
-const prop = new p2d.Entity({ rot: 0, x: player.width / 2 - w / 2, y: -5, width: w, height: 7, color: "#222222" });
+const w = 65;
+const prop = new p2d.Entity({ rot: 0, x: player.width / 2 - w / 2, y: -5, width: w, height: 9, color: "#222222" });
 player.child.add(prop);
 scene.start(() => {
     if (player.eng) {
