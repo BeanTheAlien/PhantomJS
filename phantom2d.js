@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_fontSplit, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick;
+var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -1686,6 +1686,10 @@ class Scene {
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
         this.ui = new ItemBox();
+        this.fontControl = {
+            size: 10,
+            family: "sans-serif"
+        };
     }
     get width() {
         return this.canvas.width;
@@ -1813,6 +1817,13 @@ class Scene {
     }
     bg(color) {
         this.rect(0, 0, this.width, this.height, color);
+    }
+    ray(origin, angle, dist, color) {
+        this.ctx.strokeStyle = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(origin.x, origin.y);
+        this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+        this.ctx.stroke();
     }
     clear() {
         this.ctx.clearRect(0, 0, this.width, this.height);
@@ -2048,25 +2059,80 @@ class Scene {
         return this.ctx.font;
     }
     set font(font) {
-        this.ctx.font = font;
+        var _b, _c, _d, _f, _g;
+        if (typeof font == "string") {
+            this.ctx.font = font;
+        }
+        else {
+            this.ctx.font = `${(_b = font.style) !== null && _b !== void 0 ? _b : "normal"} ${(_c = font.variant) !== null && _c !== void 0 ? _c : "normal"} ${(_d = font.weight) !== null && _d !== void 0 ? _d : "normal"} ${(_f = font.stretch) !== null && _f !== void 0 ? _f : "normal"} ${font.size} ${(_g = font.lineHeight) !== null && _g !== void 0 ? _g : "normal"} ${font.family}`;
+        }
     }
+    // useFont(size: FontSize): void;
+    // useFont(size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(lineHeight: Real<FontLineHeight>, size: FontSize, family: FontFamily): void;
+    // useFont(): void;
+    // useFont() {}
     get fontSize() {
-        return __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_fontSplit).call(this)[0];
+        return this.fontControl.size;
     }
     set fontSize(size) {
-        this.font = `${size} ${this.fontFamily}`;
+        this.fontControl.size = size;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
     }
     get fontFamily() {
-        return __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_fontSplit).call(this).slice(1).join(" ");
+        return this.fontControl.family;
     }
     set fontFamily(family) {
-        this.font = `${this.fontSize} ${family}`;
+        this.fontControl.family = family;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
     }
     get baseline() {
         return this.ctx.textBaseline;
     }
     set baseline(baseline) {
         this.ctx.textBaseline = baseline;
+    }
+    get fontStyle() {
+        return this.fontControl.style;
+    }
+    set fontStyle(style) {
+        this.fontControl.style = style;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
+    }
+    get fontVariant() {
+        return this.fontControl.variant;
+    }
+    set fontVariant(variant) {
+        this.fontControl.variant = variant;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
+    }
+    get fontWeight() {
+        return this.fontControl.weight;
+    }
+    set fontWeight(weight) {
+        this.fontControl.weight = weight;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
+    }
+    get fontStretch() {
+        return this.fontControl.stretch;
+    }
+    set fontStretch(stretch) {
+        this.fontControl.stretch = stretch;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
+    }
+    get fontLineHeight() {
+        return this.fontControl.lineHeight;
+    }
+    set fontLineHeight(lineHeight) {
+        this.fontControl.lineHeight = lineHeight;
+        __classPrivateFieldGet(this, _Scene_instances, "m", _Scene_buildFont).call(this);
     }
     mouseInRect(rectPos, rectW, rectH) {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
@@ -2079,8 +2145,8 @@ _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, 
     else {
         return ent.tags.some((t) => t.test(tagName));
     }
-}, _Scene_fontSplit = function _Scene_fontSplit() {
-    return this.font.split(" ");
+}, _Scene_buildFont = function _Scene_buildFont() {
+    this.font = this.fontControl;
 };
 /**
  * This was used in v1.0.18.2 briefly.
@@ -2649,43 +2715,44 @@ class Picker {
         return { id: opts.id, startIn: opts.start };
     }
 }
+class FilePickerBase extends Picker {
+    cleanOpts(opts) {
+        var _b;
+        return Object.assign(Object.assign({}, this.clean(opts)), { excludeAcceptAllOption: opts.all, types: (_b = opts.accept) === null || _b === void 0 ? void 0 : _b.map(a => { return { description: a.desc, accept: a.accept }; }) });
+    }
+}
 /**
  * Shows a file picker.
  *
  * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker)
  * @since v1.0.7
  */
-class FilePicker extends Picker {
+class FilePicker extends FilePickerBase {
     async pick(opts) {
-        try {
-            const [...handles] = await this.handle(opts);
-            if (handles.length == 1) {
-                const file = await handles[0].getFile();
-                return await file.text();
-            }
-            const files = [];
-            for (const handle of handles) {
-                files.push(await handle.getFile());
-            }
-            const out = await Promise.all(files.map(async (o) => o.text()));
-            return out;
+        const [...handles] = await this.handle(opts);
+        if (handles.length == 1) {
+            const file = await handles[0].getFile();
+            return await file.text();
         }
-        catch (e) {
-            throw e;
+        const files = [];
+        for (const handle of handles) {
+            files.push(await handle.getFile());
         }
+        const out = await Promise.all(files.map(async (o) => o.text()));
+        return out;
     }
     async handle(opts) {
-        try {
-            const [...handles] = await window.showOpenFilePicker(this.cleanOpts(opts));
-            return handles;
-        }
-        catch (e) {
-            throw e;
-        }
+        const [...handles] = await window.showOpenFilePicker(Object.assign(Object.assign({}, this.cleanOpts(opts)), { multiple: opts.mult }));
+        return handles;
     }
-    cleanOpts(opts) {
-        var _b;
-        return Object.assign(Object.assign({}, this.clean(opts)), { excludeAcceptAllOption: opts.all, multiple: opts.mult, types: (_b = opts.accept) === null || _b === void 0 ? void 0 : _b.map(a => { return { description: a.desc, accept: a.accept }; }) });
+}
+class SaveFilePicker extends FilePickerBase {
+    async pick(opts) {
+        return await this.handle(opts);
+    }
+    async handle(opts) {
+        const handle = await window.showOpenSaveFilePicker(Object.assign(Object.assign({}, this.cleanOpts(opts)), { suggestedName: opts.suggest }));
+        return handle;
     }
 }
 /**
@@ -2921,11 +2988,17 @@ class ButtonUI extends SceneUI {
         this.scene.on("click", () => {
             var _b;
             if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
-                if (!this.disabled)
+                if (!this.disabled) {
+                    if (this.clickCD && !this.clickCD.ready)
+                        return;
                     this.click();
+                }
                 this.resetCD.on((_b = this.styles.reset) !== null && _b !== void 0 ? _b : this.cdTime);
             }
         });
+        if (opts.clickCD) {
+            this.clickCD = new Cooldown(opts.clickCD);
+        }
     }
     update() {
         if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
@@ -3007,6 +3080,23 @@ class FixedItvl extends Itvl {
     }
     start() {
         super.start(this.cb, this.ms);
+    }
+}
+class Params {
+    constructor() {
+        this.params = new URLSearchParams(window.location.search);
+    }
+    get(k) {
+        return this.params.get(k);
+    }
+    getAll(k) {
+        return this.params.getAll(k);
+    }
+    has(k, v) {
+        if (v)
+            return this.params.has(k, Util.strOf(v));
+        else
+            return this.params.has(k);
     }
 }
 /**
@@ -3117,4 +3207,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { NoFunc, NoContextError, ExistingProcessError, NoCanvasError, NoProcessError, PhantomEvent, PhantomAliveEvent, PhantomAddedEvent, PhantomRemovedEvent, Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, HealthComp, InvComp, EnhancedPhysicsComp, Trigger, Itvl, FixedItvl };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
