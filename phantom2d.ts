@@ -2359,6 +2359,8 @@ class PlayableCharacter extends Character {
 }
 interface AircraftOptions extends EntityOptions {
     scene: Scene;
+    wing: number;
+    density: number;
 }
 class Aircraft extends Entity {
     thrust: number;
@@ -2368,6 +2370,8 @@ class Aircraft extends Entity {
     scene: Scene;
     vx: number;
     vy: number;
+    wing: number;
+    density: number;
     constructor(opts: AircraftOptions) {
         super(opts);
         this.thrust = 0;
@@ -2377,6 +2381,8 @@ class Aircraft extends Entity {
         this.scene = opts.scene;
         this.vx = 0;
         this.vy = 0;
+        this.wing = opts.wing;
+        this.density = opts.density;
         /**
          * Use Euler Integration (velocity += acceleration * dt; position += velocity * dt;) to calculate new positions every frame.
          * 
@@ -2445,6 +2451,9 @@ function updatePlane(dt) {
         this.x += this.vx;
         this.y += this.vy;
         super.update();
+        /**
+         * angle of attack (a) = Math.atan(vx / vy)
+         */
     }
 }
 class AircraftPlane extends Aircraft {}
