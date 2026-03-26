@@ -1465,6 +1465,55 @@ class PlayableCharacter extends Character {
         return objIs(obj, PlayableCharacter);
     }
 }
+class Aircraft extends Entity {
+    constructor(opts) {
+        var _b, _c;
+        super(opts);
+        this.thrust = (_b = opts.thrust) !== null && _b !== void 0 ? _b : 0;
+        this.drag = opts.drag;
+        this.lift = 0;
+        this.scene = opts.scene;
+        this.vx = 0;
+        this.vy = 0;
+        this.wing = opts.wing;
+        this.grav = opts.grav;
+        this.stall = (_c = opts.stall) !== null && _c !== void 0 ? _c : 0.3;
+        this.air = opts.air;
+        this.mass = opts.mass;
+    }
+    update() {
+        const d = this.scene.delta;
+        const fvec = this.getFVec();
+        fvec.scale(this.thrust);
+        fvec.scale(d);
+        // apply thrust based on forward vector
+        this.vx += fvec.x / this.mass;
+        this.vy += fvec.y / this.mass;
+        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // A quick logic fix for the update loop:
+        const velocityAngle = Math.atan2(this.vy, this.vx);
+        let aoa = this.rot - velocityAngle; // Difference between nose and path
+        aoa = Math.atan2(Math.sin(aoa), Math.cos(aoa));
+        // Lift is perpendicular to velocity
+        this.lift = this.liftCoefficent(aoa) * 0.5 * this.air * spd * spd * this.wing * 0.0001;
+        this.vx += Math.cos(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
+        this.vy += Math.sin(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
+        this.vy -= this.grav * d;
+        const dragOut = 1 - this.drag * d;
+        this.vx *= dragOut;
+        this.vy *= dragOut;
+        this.x += this.vx * d;
+        this.y += this.vy * d;
+        super.update();
+    }
+    liftCoefficent(aoa) {
+        let CL = 2 * Math.PI * aoa;
+        if (Math.abs(aoa) > this.stall) {
+            CL *= 0.5;
+        }
+        return Math.max(-1.5, Math.min(1.5, CL));
+    }
+}
 /**
  * A 2D vector.
  *
@@ -3207,4 +3256,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };

@@ -2360,104 +2360,72 @@ class PlayableCharacter extends Character {
 interface AircraftOptions extends EntityOptions {
     scene: Scene;
     wing: number;
-    density: number;
+    grav: number;
+    drag: number;
+    stall?: number;
+    air: number;
+    mass: number;
+    thrust?: number;
 }
 class Aircraft extends Entity {
     thrust: number;
     drag: number;
     lift: number;
-    weight: number;
     scene: Scene;
     vx: number;
     vy: number;
     wing: number;
-    density: number;
+    grav: number;
+    stall: number;
+    air: number;
+    mass: number;
     constructor(opts: AircraftOptions) {
         super(opts);
-        this.thrust = 0;
-        this.drag = 0;
+        this.thrust = opts.thrust ?? 0;
+        this.drag = opts.drag;
         this.lift = 0;
-        this.weight = 0;
         this.scene = opts.scene;
         this.vx = 0;
         this.vy = 0;
         this.wing = opts.wing;
-        this.density = opts.density;
-        /**
-         * Use Euler Integration (velocity += acceleration * dt; position += velocity * dt;) to calculate new positions every frame.
-         * 
-         * 1. Simulating 2D Planes
-A simple 2D plane simulation can be created by applying forward thrust and calculating lift based on forward speed.
-Movement: Apply acceleration in the direction the plane is facing (yaw).
-Lift Generation: Lift is proportional to the square of the speed ( **v^2
-
-). If the plane is slow, lift should decrease, causing it to fall.
-Controls:
-Pitch (Up/Down): Rotate the sprite and change the direction of thrust and lift vectors.
-Thrust: Increase forward acceleration.
-Key Formula: force = thrust - drag + lift - gravity. 
-2. Simulating 2D Helicopters
-Helicopter physics focus on maintaining altitude via a main rotor (collective) and managing tilt (cyclic) for movement. 
-Hovering: Maintain a constant vertical upward force that equals gravity (
-
-).
-Movement: Tilt the aircraft left or right to convert vertical lift into horizontal thrust.
-Controls:
-Collective (Up/Down): Increase/decrease total lift.
-Cyclic (Left/Right): Rotate the helicopter and vector the lift.
-Torque Management: Simulate anti-torque by reducing the rotation speed if the helicopter is turning against the main rotor, similar to real-world yaw controls.
-
-Angle Handling: Use Math.atan2(velocity.y, velocity.x) to align the aircraft sprite with its movement direction.
-Drag: Add linear drag proportional to velocity to prevent the plane from accelerating forever, creating a terminal velocity.
-
-// Example structure for a 2D plane
-let plane = {
-  x: 100, y: 100,
-  vx: 0, vy: 0,
-  angle: 0, // In radians
-  speed: 0,
-  thrust: 0.1,
-  drag: 0.98 // Air resistance
-};
-
-function updatePlane(dt) {
-  // Apply Thrust based on angle
-  plane.vx += Math.cos(plane.angle) * plane.thrust;
-  plane.vy += Math.sin(plane.angle) * plane.thrust;
-
-  // Apply Gravity
-  plane.vy += 0.1;
-
-  // Apply Drag
-  plane.vx *= plane.drag;
-  plane.vy *= plane.drag;
-
-  // Move
-  plane.x += plane.vx;
-  plane.y += plane.vy;
-}
-         */
+        this.grav = opts.grav;
+        this.stall = opts.stall ?? 0.3;
+        this.air = opts.air;
+        this.mass = opts.mass;
     }
     update() {
-        // apply thrust based on angle
-        this.vx += Math.cos(this.rot) * this.thrust;
-        this.vy += Math.sin(this.rot) * this.thrust;
-        // apply gravity
-        this.vy += this.weight;
-        // apply drag
-        this.vx *= this.drag;
-        this.vy *= this.drag;
-        // move
-        this.x += this.vx;
-        this.y += this.vy;
+        const d = this.scene.delta;
+        const fvec = this.getFVec();
+        fvec.scale(this.thrust);
+        fvec.scale(d);
+        // apply thrust based on forward vector
+        this.vx += fvec.x / this.mass;
+        this.vy += fvec.y / this.mass;
+        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // A quick logic fix for the update loop:
+        const velocityAngle = Math.atan2(this.vy, this.vx);
+        let aoa = this.rot - velocityAngle; // Difference between nose and path
+        aoa = Math.atan2(Math.sin(aoa), Math.cos(aoa));
+        // Lift is perpendicular to velocity
+        this.lift = this.liftCoefficent(aoa) * 0.5 * this.air * spd * spd * this.wing * 0.0001;
+        this.vx += Math.cos(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
+        this.vy += Math.sin(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
+        this.vy -= this.grav * d;
+        const dragOut = 1 - this.drag * d;
+        this.vx *= dragOut;
+        this.vy *= dragOut;
+        this.x += this.vx * d;
+        this.y += this.vy * d;
         super.update();
-        /**
-         * angle of attack (a) = Math.atan(vx / vy)
-         */
+    }
+    liftCoefficent(aoa: number): number {
+        let CL = 2 * Math.PI * aoa;
+        if(Math.abs(aoa) > this.stall) {
+            CL *= 0.5;
+        }
+        return Math.max(-1.5, Math.min(1.5, CL));
     }
 }
-class AircraftPlane extends Aircraft {}
-class AircraftHeli extends Aircraft {}
 /**
  * A 2D vector.
  * 
@@ -4453,6 +4421,7 @@ function lerp(start: number, end: number, amount: number): number {
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter, WallObject, FloorObject,
+    Aircraft,
 
     SceneUI, ButtonUI, TextUI,
     
