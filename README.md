@@ -167,6 +167,12 @@ npm install @beanthealien/phantomjs
 - Restructured file pickers to use `FilePickerBase`.
 ## v1.2.3
 - Started adding more aircraft support after finding an internal lack of support in the heli example.
+## v1.3.0
+- Added debug ray.
+- Added misc rendering for `Scene`.
+- Added `Renderable` interface.
+- Added `Scene.rectRotd`.
+- Restructured some rendering to use `rectRotd` in `Scene`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
