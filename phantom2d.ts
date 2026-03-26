@@ -2394,7 +2394,7 @@ class Aircraft extends Entity {
         this.mass = opts.mass;
     }
     update() {
-        const d = this.scene.delta;
+        const d = this.scene.delta / 1000;
         const fvec = this.getFVec();
         fvec.scale(this.thrust);
         fvec.scale(d);
@@ -2411,7 +2411,7 @@ class Aircraft extends Entity {
         this.vx += Math.cos(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
         this.vy += Math.sin(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
         this.vy -= this.grav * d;
-        const dragOut = 1 - this.drag * d;
+        const dragOut = Math.min(0, 1 - this.drag * d);
         this.vx *= dragOut;
         this.vy *= dragOut;
         this.x += this.vx * d;
