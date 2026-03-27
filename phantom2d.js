@@ -2362,18 +2362,9 @@ class DebugRay extends Raycast {
             setTimeout(() => this.scene.misc.rm(this), this.life);
         }
     }
-    cast() {
-        const out = super.cast();
-        if (out) {
-            this.result = out;
-        }
-        return out;
-    }
     update() { }
     render() {
-        if (this.result) {
-            this.scene.ray(this.origin, this.angle, this.dist, this.color);
-        }
+        this.scene.ray(this.origin, this.angle, this.dist, this.color);
     }
 }
 /**

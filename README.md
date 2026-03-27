@@ -175,6 +175,8 @@ npm install @beanthealien/phantomjs
 - Restructured some rendering to use `rectRotd` in `Scene`.
 ## v1.4.0
 - Added `Aircraft`.
+## v1.4.0.1
+- Fixed `DebugRay` to properly render no matter if there was a hit.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

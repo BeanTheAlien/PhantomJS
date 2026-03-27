@@ -3307,7 +3307,6 @@ interface DebugRayOptions extends RaycastOptions {
 class DebugRay extends Raycast implements Renderable {
     color: string;
     life: number;
-    result?: RaycastIntersecton;
     constructor(opts: DebugRayOptions) {
         super(opts);
         this.color = opts.color;
@@ -3317,18 +3316,9 @@ class DebugRay extends Raycast implements Renderable {
             setTimeout(() => this.scene.misc.rm(this), this.life);
         }
     }
-    cast(): RaycastIntersecton | null {
-        const out = super.cast();
-        if(out) {
-            this.result = out;
-        }
-        return out;
-    }
     update() {}
     render() {
-        if(this.result) {
-            this.scene.ray(this.origin, this.angle, this.dist, this.color);
-        }
+        this.scene.ray(this.origin, this.angle, this.dist, this.color);
     }
 }
 /**
