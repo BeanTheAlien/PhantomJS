@@ -10,9 +10,9 @@ const floor = new p2d.FloorObject({ width: scene.width, height: fh, y: scene.hei
 scene.add(floor);
 
 const plane = new p2d.Aircraft({
-    scene, wing: 30, grav: 0.1, drag: 300, width: 30, height: 10, x: 10, y: 30, color: "red", air: 3, mass: 200
+    scene, wing: 30, grav: 0.98, drag: 0.5, width: 30, height: 10, x: 10, y: 30, color: "red", air: 1, mass: 1
 });
-plane.thrust = 5
+plane.addThrust(30);
 
 scene.add(plane);
 

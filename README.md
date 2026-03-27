@@ -173,6 +173,8 @@ npm install @beanthealien/phantomjs
 - Added `Renderable` interface.
 - Added `Scene.rectRotd`.
 - Restructured some rendering to use `rectRotd` in `Scene`.
+## v1.4.0
+- Added `Aircraft`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

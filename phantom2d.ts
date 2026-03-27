@@ -2402,17 +2402,16 @@ class Aircraft extends Entity {
         this.vx += fvec.x / this.mass;
         this.vy += fvec.y / this.mass;
         const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        // A quick logic fix for the update loop:
         const velocityAngle = Math.atan2(this.vy, this.vx);
         let aoa = this.rot - velocityAngle; // Difference between nose and path
         aoa = Math.atan2(Math.sin(aoa), Math.cos(aoa));
         // Lift is perpendicular to velocity
         this.lift = this.liftCoefficent(aoa) * 0.5 * this.air * spd * spd * this.wing * 0.0001;
+        //this.lift = Math.min(this.lift, this.mass * this.grav * 2);
         this.vx += Math.cos(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
         this.vy += Math.sin(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
-        this.vy -= this.grav * d;
+        this.vy += this.grav * d;
         const dragOut = 1 / (1 + this.drag * d);
-        alert(dragOut);
         this.vx *= dragOut;
         this.vy *= dragOut;
         this.x += this.vx * d;
@@ -2425,6 +2424,15 @@ class Aircraft extends Entity {
             CL *= 0.5;
         }
         return Math.max(-1.5, Math.min(1.5, CL));
+    }
+    angleOfAttack(): number {
+        const velocityAngle = Math.atan2(this.vy, this.vx);
+        let aoa = this.rot - velocityAngle; // Difference between nose and path
+        aoa = Math.atan2(Math.sin(aoa), Math.cos(aoa));
+        return aoa;
+    }
+    addThrust(thrust: number) {
+        this.thrust += thrust;
     }
 }
 /**
