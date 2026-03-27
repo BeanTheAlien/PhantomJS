@@ -1482,7 +1482,7 @@ class Aircraft extends Entity {
         this.mass = opts.mass;
     }
     update() {
-        const d = this.scene.delta;
+        const d = Math.min(this.scene.delta / 1000, 0.05);
         const fvec = this.getFVec();
         fvec.scale(this.thrust);
         fvec.scale(d);
@@ -1499,7 +1499,8 @@ class Aircraft extends Entity {
         this.vx += Math.cos(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
         this.vy += Math.sin(velocityAngle + Math.PI / 2) * (this.lift / this.mass) * d;
         this.vy -= this.grav * d;
-        const dragOut = 1 - this.drag * d;
+        const dragOut = 1 / (1 + this.drag * d);
+        alert(dragOut);
         this.vx *= dragOut;
         this.vy *= dragOut;
         this.x += this.vx * d;
@@ -1559,6 +1560,9 @@ class Vector {
         const w = rectW;
         const h = rectH;
         return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
+    }
+    mag() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 }
 /**
@@ -1739,6 +1743,7 @@ class Scene {
             size: 10,
             family: "sans-serif"
         };
+        this.misc = new ItemBox();
     }
     get width() {
         return this.canvas.width;
@@ -1880,6 +1885,7 @@ class Scene {
     update() {
         this.forEach(i => i.update());
         this.forEachUI(u => u.update());
+        this.misc.forEach(m => m.update());
         this.testCols();
     }
     testCols() {
@@ -1897,41 +1903,10 @@ class Scene {
         }
     }
     render() {
-        let ox = 0;
-        let oy = 0;
-        if (this.fol) {
-            const fcx = this.fol.x + this.fol.width / 2;
-            const fcy = this.fol.y + this.fol.height / 2;
-            ox = this.width / 2 - fcx;
-            oy = this.height / 2 - fcy;
-        }
-        const entRend = (e, offX, offY) => {
-            const dx = e.x + ox + offX;
-            const dy = e.y + oy + offY;
-            this.ctx.save();
-            const w = e.width;
-            const h = e.height;
-            const w2 = w / 2;
-            const h2 = h / 2;
-            this.ctx.translate(dx + w2, dy + h2);
-            this.ctx.rotate(e.rot);
-            const nx = -w2;
-            const ny = -h2;
-            const xw = nx + w;
-            const yh = ny + h;
-            // off-screen no draw check
-            // if the x-coord is less than 0 or more than width
-            // or the y-coord is less than 0 or more than height
-            // then it is not on the canvas
-            if (Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh))
-                return this.ctx.restore();
-            this.rect(nx, ny, w, h, e.color);
-            this.ctx.restore();
-        };
         this.items.forEach(i => {
-            entRend(i, 0, 0);
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color);
             i.child.forEach(c => {
-                entRend(c, i.x, i.y);
+                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, i.x, i.y);
             });
         });
         // UI will be rendered in a fixed position
@@ -1947,6 +1922,37 @@ class Scene {
             // call the UI's render method
             u.render();
         });
+        // render misc items
+        this.misc.forEach(m => m.render());
+    }
+    rectRotd(ex, ey, w, h, rot, color, offX = 0, offY = 0) {
+        let ox = 0;
+        let oy = 0;
+        if (this.fol) {
+            const fcx = this.fol.x + this.fol.width / 2;
+            const fcy = this.fol.y + this.fol.height / 2;
+            ox = this.width / 2 - fcx;
+            oy = this.height / 2 - fcy;
+        }
+        const dx = ex + ox + offX;
+        const dy = ey + oy + offY;
+        this.ctx.save();
+        const w2 = w / 2;
+        const h2 = h / 2;
+        this.ctx.translate(dx + w2, dy + h2);
+        this.ctx.rotate(rot);
+        const nx = -w2;
+        const ny = -h2;
+        const xw = nx + w;
+        const yh = ny + h;
+        // off-screen no draw check
+        // if the x-coord is less than 0 or more than width
+        // or the y-coord is less than 0 or more than height
+        // then it is not on the canvas
+        if (Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh))
+            return this.ctx.restore();
+        this.rect(nx, ny, w, h, color);
+        this.ctx.restore();
     }
     start(postUpd = NoFunc) {
         this.runtime.start(() => {
@@ -2335,6 +2341,31 @@ class Raycast {
             }
         }
         return res;
+    }
+}
+class DebugRay extends Raycast {
+    constructor(opts) {
+        var _b;
+        super(opts);
+        this.color = opts.color;
+        this.life = (_b = opts.life) !== null && _b !== void 0 ? _b : Infinity;
+        this.scene.misc.add(this);
+        if (Number.isFinite(this.life)) {
+            setTimeout(() => this.scene.misc.rm(this), this.life);
+        }
+    }
+    cast() {
+        const out = super.cast();
+        if (out) {
+            this.result = out;
+        }
+        return out;
+    }
+    update() { }
+    render() {
+        if (this.result) {
+            this.scene.ray(this.origin, this.angle, this.dist, this.color);
+        }
     }
 }
 /**
@@ -3256,4 +3287,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, RaycastIntersecton, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
