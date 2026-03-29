@@ -177,6 +177,8 @@ npm install @beanthealien/phantomjs
 - Added `Aircraft`.
 ## v1.4.0.1
 - Fixed `DebugRay` to properly render no matter if there was a hit.
+## v1.4.0.2
+- Added support for non-primitive classes in `Config`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

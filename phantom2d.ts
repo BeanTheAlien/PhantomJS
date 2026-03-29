@@ -176,6 +176,7 @@ type Frames = Img[];
  */
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
+type AbstractConstructor<T> = abstract new (...args: any[]) => T;
 type FillStyle = string | CanvasGradient | CanvasPattern;
 type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
@@ -3608,7 +3609,7 @@ type ConfigTypeExtract<T> = T extends { vals: readonly any[]} ?
     number : T extends { type: StringConstructor } ?
     string : T extends { type: BooleanConstructor } ?
     boolean : T extends { type: FunctionConstructor } ?
-    Function : never;
+    Function : T extends { type: AbstractConstructor<any> } ? InstanceType<T["type"]> : never;
 type ConfigType<T extends Record<string, any>> = {
     [K in keyof T]: ConfigTypeExtract<T[K]>
 };
