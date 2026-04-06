@@ -4364,9 +4364,11 @@ interface Renderable {
     render: () => void;
     update: () => void;
 }
+type OpeningMode = "_self" | "self" | "_blank" | "blank" | "_parent" | "parent" | "_top" | "top" | "_unfencedTop" | "unfencedTop";
+type OpeningModeFinalized<T extends OpeningMode> = T extends "self" ? "_self" : T extends "blank" ? "_blank" : T extends "parent" ? "_parent" : T extends "top" ? "_top" : T extends "unfencedTop" ? "_unfencedTop" : T;
 class External {
     //https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a#target
-    open(url?: string, target?: string) {
+    open<O extends OpeningMode, F extends OpeningModeFinalized<O>>(url?: string, target?: F) {
         //
     }
 }

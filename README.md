@@ -182,6 +182,8 @@ npm install @beanthealien/phantomjs
 ## v1.4.1
 - Added `Scene.frustum`, `Scene.triangle`, `Scene.cone`.
 - TODO: add `External` class.
+## v1.4.1.1
+- Added `OpeningMode`, `OpeningModeFinalized`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
