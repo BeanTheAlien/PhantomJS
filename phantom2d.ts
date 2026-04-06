@@ -3167,6 +3167,48 @@ class Scene {
     mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
+    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, strokeColor?: string, lineWidth?: number) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+
+        // Style the frustum
+        this.ctx.fillStyle = fillColor;
+        this.ctx.fill();
+        this.ctx.strokeStyle = strokeColor ?? fillColor;
+        this.ctx.lineWidth = lineWidth ?? 2;
+        this.ctx.stroke();
+    }
+    triangle(p0: Vector, p1: Vector, p2: Vector, color: string) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
+    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
+        this.ctx.lineTo(p0.x, p0.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
 }
 /**
  * A collection of items.
@@ -4321,6 +4363,12 @@ class Params {
 interface Renderable {
     render: () => void;
     update: () => void;
+}
+class External {
+    //https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a#target
+    open(url?: string, target?: string) {
+        //
+    }
 }
 
 /**

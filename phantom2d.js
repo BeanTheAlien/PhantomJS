@@ -2200,6 +2200,44 @@ class Scene {
     mouseInRect(rectPos, rectW, rectH) {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
+    frustum(x, y, r0, r1, h, fillColor, strokeColor, lineWidth) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+        // Style the frustum
+        this.ctx.fillStyle = fillColor;
+        this.ctx.fill();
+        this.ctx.strokeStyle = strokeColor !== null && strokeColor !== void 0 ? strokeColor : fillColor;
+        this.ctx.lineWidth = lineWidth !== null && lineWidth !== void 0 ? lineWidth : 2;
+        this.ctx.stroke();
+    }
+    triangle(p0, p1, p2, color) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
+    cone(p0, p1, rad, color) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
+        this.ctx.lineTo(p0.x, p0.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {

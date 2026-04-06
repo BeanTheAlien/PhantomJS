@@ -179,6 +179,9 @@ npm install @beanthealien/phantomjs
 - Fixed `DebugRay` to properly render no matter if there was a hit.
 ## v1.4.0.2
 - Added support for non-primitive classes in `Config`.
+## v1.4.1
+- Added `Scene.frustum`, `Scene.triangle`, `Scene.cone`.
+- TODO: add `External` class.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

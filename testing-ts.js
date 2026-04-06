@@ -31,4 +31,4 @@ const btn = new p2d.ButtonUI({
     }
 });
 scene.addUI(btn);
-scene.start();
+scene.start(() => { scene.frustum(10, scene.height, 15, 5, 10, "#ff0000"); scene.cone(new p2d.Vector(100, 100), new p2d.Vector(70, 200), new p2d.Vector(30, 15), "#ff0202"); });
