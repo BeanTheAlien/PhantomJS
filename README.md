@@ -186,6 +186,8 @@ npm install @beanthealien/phantomjs
 - Added `OpeningMode`, `OpeningModeFinalized`.
 ## v1.4.2
 - Add `External` class. (needs testing)
+## v1.4.3
+- Started adding `Weapon`, `Gun`, other weapons. (for fighting/gun games)
 
 # Phantom HTML v0.0.1
 ### 0.0.1

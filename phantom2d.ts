@@ -4409,6 +4409,66 @@ class External {
         return `import * as p2d from "${this.baseUrl()}+esm";`;
     }
 }
+abstract class Weapon {
+    abstract fire(pos: Vector): void;
+}
+interface GunOptions {
+    mag: number;
+    ammo: number;
+    opts: BulletObjectOptions;
+    scene: Scene;
+    autoreload?: boolean;
+}
+abstract class Gun extends Weapon {
+    bul: number;
+    mag: number;
+    ammo: number;
+    opts: BulletObjectOptions;
+    scene: Scene;
+    autoreload: boolean;
+    constructor(opts: GunOptions) {
+        super();
+        this.mag = opts.mag;
+        this.ammo = opts.ammo;
+        this.bul = this.mag;
+        this.opts = opts.opts;
+        this.scene = opts.scene;
+        this.autoreload = opts.autoreload ?? false;
+    }
+    reload() {
+        const pre = this.ammo;
+        this.ammo -= this.mag - this.bul;
+        if(this.ammo < 0) {
+            this.ammo = 0;
+            this.bul = pre;
+        } else {
+            this.bul = this.mag;
+        }
+    }
+    async shoot(pos: Vector, count: number, delay?: number): Promise<void> {
+        for(let i = 0; i < count; i++) {
+            this.fire(pos);
+            if(delay) await wait(delay);
+        }
+    }
+    fire(pos: Vector) {
+        this.scene.add(new BulletObject({ ...this.opts, x: pos.x, y: pos.y, scene: this.scene }));
+        this.bul--;
+        if(this.autoreload == true) {
+            if(this.bul <= 0) this.reload();
+        }
+    }
+}
+class Pistol extends Gun {
+    fire(pos: Vector) {
+        this.shoot(pos, 1);
+    }
+}
+class Burst extends Gun {
+    fire(pos: Vector, count = 3, delay?: number) {
+        this.shoot(pos, count, delay);
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
