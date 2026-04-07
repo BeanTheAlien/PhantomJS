@@ -184,6 +184,8 @@ npm install @beanthealien/phantomjs
 - TODO: add `External` class.
 ## v1.4.1.1
 - Added `OpeningMode`, `OpeningModeFinalized`.
+## v1.4.2
+- Add `External` class. (needs testing)
 
 # Phantom HTML v0.0.1
 ### 0.0.1

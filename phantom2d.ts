@@ -4364,12 +4364,49 @@ interface Renderable {
     render: () => void;
     update: () => void;
 }
-type OpeningMode = "_self" | "self" | "_blank" | "blank" | "_parent" | "parent" | "_top" | "top" | "_unfencedTop" | "unfencedTop";
-type OpeningModeFinalized<T extends OpeningMode> = T extends "self" ? "_self" : T extends "blank" ? "_blank" : T extends "parent" ? "_parent" : T extends "top" ? "_top" : T extends "unfencedTop" ? "_unfencedTop" : T;
+type OpeningMode = "_self" | "_blank" | "_parent" | "_top" | "_unfencedTop";
+type OpeningModeShorthands = "self" | "blank" | "parent" | "top" | "unfencedTop";
+type GeneralOpeningMode = OpeningMode | OpeningModeShorthands;
+const FinalizeOpeningMode = (mode: GeneralOpeningMode): OpeningMode => (mode.startsWith("_") ? mode : `_${mode}`) as OpeningMode;
+class OpeningFailedError extends ErrRoot { constructor(url: string) { super("OpeningFailedError", `Failed to open url '${url}'.`); } }
+class NoRootExistsOnExternalDocumentError extends ErrRoot { constructor() { super("NoRootExistsOnExternalDocumentError", "A 'root' element was expected on an external document, but none was found."); } }
+type WritingMode = "esm" | "def";
 class External {
-    //https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a#target
-    open<O extends OpeningMode, F extends OpeningModeFinalized<O>>(url?: string, target?: F) {
-        //
+    app: Window;
+    constructor() {
+        this.app = window;
+    }
+    open(): void;
+    open(url: string | URL): void;
+    open<M extends GeneralOpeningMode>(url: string | URL, target: M): void;
+    open<M extends GeneralOpeningMode>(url: string | URL, target: M, features: string): void;
+    open<M extends GeneralOpeningMode>(url?: string | URL, target?: M, features?: string) {
+        const _url = url ?? "about:blank"; const _tg = FinalizeOpeningMode(target ?? "_blank");
+        const out = window.open(_url, _tg, features);
+        if(!out) throw new OpeningFailedError(objIs(_url, String) ? _url : _url.toString());
+        this.app = out;
+    }
+    write(content: string, mode?: WritingMode) {
+        this.mkRoot();
+        const root = this.getRoot();
+        if(!root) throw new NoRootExistsOnExternalDocumentError();
+        root.innerHTML = mode == "esm" ? this.esmScriptTag() : this.defImportScript();
+        root.innerHTML += content;
+    }
+    mkRoot() {
+        this.app.document.body.innerHTML = `<div id="root"></div>`;
+    }
+    getRoot(): HTMLElement | null {
+        return this.app.document.getElementById("root");
+    }
+    baseUrl(): string {
+        return "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@latest/";
+    }
+    esmScriptTag(): string {
+        return `<script src="${this.baseUrl()}phantom2d.min.js"></script>`
+    }
+    defImportScript(): string {
+        return `import * as p2d from "${this.baseUrl()}+esm";`;
     }
 }
 
@@ -4516,7 +4553,7 @@ export {
     SceneUI, ButtonUI, TextUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
-    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag,
+    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External,
 
     Config, SceneConfig, ImgConfig,
 
