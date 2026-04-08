@@ -1222,7 +1222,7 @@ class BulletObject extends Entity {
         // decay the speed by using exponential decay formula
         // y = a(1-r)^t
         // a = inital; r = decay rate; t = time
-        this.spd = this.initSpd * (Math.pow(1 - this.decay, this.scene.delta));
+        this.spd *= Math.pow(1 - this.decay, this.scene.delta);
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x;
@@ -1233,8 +1233,10 @@ class BulletObject extends Entity {
         const y = this.scrY();
         const w = this.scene.width;
         const h = this.scene.height;
-        if (x - this.tol < w || x + this.tol > w || y + this.tol > h || y - this.tol < h) {
-            // self-destruct if its not
+        if (x + this.tol < 0 ||
+            x - this.tol > w ||
+            y + this.tol < 0 ||
+            y - this.tol > h) {
             this.scene.rm(this);
             if (this.onDest)
                 this.onDest(new PhantomDestroyedEvent());
@@ -3216,6 +3218,102 @@ class Params {
             return this.params.has(k);
     }
 }
+const FinalizeOpeningMode = (mode) => (mode.startsWith("_") ? mode : `_${mode}`);
+class OpeningFailedError extends ErrRoot {
+    constructor(url) { super("OpeningFailedError", `Failed to open url '${url}'.`); }
+}
+class NoRootExistsOnExternalDocumentError extends ErrRoot {
+    constructor() { super("NoRootExistsOnExternalDocumentError", "A 'root' element was expected on an external document, but none was found."); }
+}
+class External {
+    constructor() {
+        this.app = window;
+    }
+    open(url, target, features) {
+        const _url = url !== null && url !== void 0 ? url : "about:blank";
+        const _tg = FinalizeOpeningMode(target !== null && target !== void 0 ? target : "_blank");
+        const out = window.open(_url, _tg, features);
+        if (!out)
+            throw new OpeningFailedError(objIs(_url, String) ? _url : _url.toString());
+        this.app = out;
+    }
+    write(content, mode) {
+        this.mkRoot();
+        const root = this.getRoot();
+        if (!root)
+            throw new NoRootExistsOnExternalDocumentError();
+        root.innerHTML = mode == "esm" ? this.esmScriptTag() : this.defImportScript();
+        root.innerHTML += content;
+    }
+    mkRoot() {
+        this.app.document.body.innerHTML = `<div id="root"></div>`;
+    }
+    getRoot() {
+        return this.app.document.getElementById("root");
+    }
+    baseUrl() {
+        return "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@latest/";
+    }
+    esmScriptTag() {
+        return `<script src="${this.baseUrl()}phantom2d.min.js"></script>`;
+    }
+    defImportScript() {
+        return `import * as p2d from "${this.baseUrl()}+esm";`;
+    }
+}
+class Weapon {
+}
+class Gun extends Weapon {
+    constructor(opts) {
+        var _b;
+        super();
+        this.mag = opts.mag;
+        this.ammo = opts.ammo;
+        this.bul = this.mag;
+        this.opts = opts.opts;
+        this.scene = opts.scene;
+        this.autoreload = (_b = opts.autoreload) !== null && _b !== void 0 ? _b : false;
+    }
+    reload() {
+        const needed = this.mag - this.bul;
+        const used = Math.min(needed, this.ammo);
+        this.bul += used;
+        this.ammo -= used;
+    }
+    async shoot(pos, count, delay) {
+        for (let i = 0; i < count; i++) {
+            if (this.bul <= 0)
+                return;
+            this.fire(pos);
+            this.bul--;
+            if (delay)
+                await wait(delay);
+        }
+    }
+    fire(pos) {
+        if (this.bul <= 0) {
+            if (this.autoreload)
+                this.reload();
+            return;
+        }
+        const _opts = Object.assign({}, this.opts);
+        _opts.x = pos.x;
+        _opts.y = pos.y;
+        _opts.scene = this.scene;
+        this.scene.add(new BulletObject(_opts));
+        this.bul--;
+        if (this.autoreload && this.bul <= 0) {
+            this.reload();
+        }
+    }
+}
+class Pistol extends Gun {
+}
+class Burst extends Gun {
+    fire(pos, count = 3, delay) {
+        this.shoot(pos, count, delay);
+    }
+}
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
@@ -3324,4 +3422,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };

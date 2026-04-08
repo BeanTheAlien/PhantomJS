@@ -2045,7 +2045,7 @@ class BulletObject extends Entity {
         // decay the speed by using exponential decay formula
         // y = a(1-r)^t
         // a = inital; r = decay rate; t = time
-        this.spd = this.initSpd * (Math.pow(1 - this.decay, this.scene.delta));
+        this.spd *= Math.pow(1 - this.decay, this.scene.delta);
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x;
@@ -2056,8 +2056,12 @@ class BulletObject extends Entity {
         const y = this.scrY();
         const w = this.scene.width;
         const h = this.scene.height;
-        if(x - this.tol < w || x + this.tol > w || y + this.tol > h || y - this.tol < h) {
-            // self-destruct if its not
+        if (
+            x + this.tol < 0 ||
+            x - this.tol > w ||
+            y + this.tol < 0 ||
+            y - this.tol > h
+        ) {
             this.scene.rm(this);
             if(this.onDest) this.onDest(new PhantomDestroyedEvent());
         }
@@ -4436,34 +4440,36 @@ abstract class Gun extends Weapon {
         this.autoreload = opts.autoreload ?? false;
     }
     reload() {
-        const pre = this.ammo;
-        this.ammo -= this.mag - this.bul;
-        if(this.ammo < 0) {
-            this.ammo = 0;
-            this.bul = pre;
-        } else {
-            this.bul = this.mag;
-        }
+        const needed = this.mag - this.bul;
+        const used = Math.min(needed, this.ammo);
+        this.bul += used;
+        this.ammo -= used;
     }
     async shoot(pos: Vector, count: number, delay?: number): Promise<void> {
         for(let i = 0; i < count; i++) {
+            if(this.bul <= 0) return;
             this.fire(pos);
+            this.bul--;
             if(delay) await wait(delay);
         }
     }
     fire(pos: Vector) {
-        this.scene.add(new BulletObject({ ...this.opts, x: pos.x, y: pos.y, scene: this.scene }));
+        if(this.bul <= 0) {
+            if(this.autoreload) this.reload();
+            return;
+        }
+        const _opts = { ...this.opts };
+        _opts.x = pos.x;
+        _opts.y = pos.y;
+        _opts.scene = this.scene;
+        this.scene.add(new BulletObject(_opts));
         this.bul--;
-        if(this.autoreload == true) {
-            if(this.bul <= 0) this.reload();
+        if(this.autoreload && this.bul <= 0) {
+            this.reload();
         }
     }
 }
-class Pistol extends Gun {
-    fire(pos: Vector) {
-        this.shoot(pos, 1);
-    }
-}
+class Pistol extends Gun {}
 class Burst extends Gun {
     fire(pos: Vector, count = 3, delay?: number) {
         this.shoot(pos, count, delay);
@@ -4609,6 +4615,8 @@ export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter, WallObject, FloorObject,
     Aircraft,
+
+    Weapon, Gun, Pistol, Burst,
 
     SceneUI, ButtonUI, TextUI,
     
