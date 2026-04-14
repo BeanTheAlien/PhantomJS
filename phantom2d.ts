@@ -2279,64 +2279,72 @@ class Character extends Entity {
  */
 class PlayableCharacter extends Character {
     key: KeyInputs;
-    binds: Store<KeyCode, Function>;
-    keys: Store<string, boolean>;
-    bindCD: Store<KeyCode, PCExecCDPair>;
+    // binds: Store<KeyCode, Function>;
+    // keys: Store<string, boolean>;
+    // bindCD: Store<KeyCode, PCExecCDPair>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
         this.key = new KeyInputs();
-        this.binds = opts.binds ?? new Store();
-        this.keys = new Store();
-        this.bindCD = new Store();
-        window.addEventListener("keydown", (e) => {
-            this.keys.set(e.code, true);
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys.set(e.code, false);
-        });
+        // this.binds = opts.binds ?? new Store();
+        // this.keys = new Store();
+        // this.bindCD = new Store();
+        // window.addEventListener("keydown", (e) => {
+        //     this.keys.set(e.code, true);
+        // });
+        // window.addEventListener("keyup", (e) => {
+        //     this.keys.set(e.code, false);
+        // });
     }
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
         //this.key.bind(code, exec, cd);
         if(cd == undefined) {
-            this.binds.set(code, exec);
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
         } else {
-            this.bindCD.set(code, [exec, new Cooldown(cd)]);
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
     unbind(code: KeyCode) {
-        this.binds.del(code);
-        this.bindCD.del(code);
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
     }
     isBind(code: KeyCode): boolean {
-        return this.binds.has(code);
+        return this.key.isBind(code);
+        // return this.binds.has(code);
     }
     isBindCD(code: KeyCode): boolean {
-        return this.bindCD.has(code);
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
     }
     bindOf(code: KeyCode): Function | undefined {
-        return this.binds.get(code);
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
     }
     bindCDOf(code: KeyCode): PCExecCDPair | undefined {
-        return this.bindCD.get(code);
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
     }
     update() {
-        for(const [k, v] of this.keys.items()) {
-            if(v) {
-                const _k = KeyCodeMapReverse[k] as KeyCode;
-                const exec = this.binds.get(_k);
-                const cdExec = this.bindCD.get(_k);
-                if(exec) {
-                    exec();
-                } else if(cdExec) {
-                    if(cdExec[1].ready) {
-                        cdExec[0]();
-                        cdExec[1].consume();
-                    }
-                }
-            }
-        }
+        // for(const [k, v] of this.keys.items()) {
+        //     if(v) {
+        //         const _k = KeyCodeMapReverse[k] as KeyCode;
+        //         const exec = this.binds.get(_k);
+        //         const cdExec = this.bindCD.get(_k);
+        //         if(exec) {
+        //             exec();
+        //         } else if(cdExec) {
+        //             if(cdExec[1].ready) {
+        //                 cdExec[0]();
+        //                 cdExec[1].consume();
+        //             }
+        //         }
+        //     }
+        // }
+        this.key.update();
         super.update();
     }
     /**
