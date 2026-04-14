@@ -32,7 +32,16 @@ class Soldier extends Merc {
         super(new RocketLauncher(), new Shotgun(), new Shovel(), "mc.png");
     }
 }
-class Scout extends Merc {}
+class Scout extends Merc {
+    constructor() {
+        super(new Scattergun(), new Pistol(), new Bat(), "mc.png");
+    }
+}
+class Pyro extends Merc {
+    constructor() {
+        super(new Flamethrower(), new Shotgun(), new FireAxe(), "mc.png");
+    }
+}
 abstract class WeapBase {
     img: p2d.Img;
     w;
@@ -51,35 +60,44 @@ abstract class WeapBase {
     debug(angle?: number, color?: string, dist?: number, life?: number) {
         new p2d.DebugRay({ scene, origin: weap.origin(), dist: dist ?? 1000, color: color ?? "red", angle: angle ?? this.pRot(), life });
     }
+    col(o: p2d.Entity) {
+        if(o.uses("health")) {
+            o.comp("health").hurt(1);
+        }
+    }
 }
 class RocketLauncher extends WeapBase {
     constructor() {
         super("mc.png");
     }
     fire() {
-        const b = new p2d.BulletObject({ scene, spd: 3, rot: scene.rotToMouse(player), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 15, height: 10, color: "#949494", x: player.x, y: player.y, collide: (o) => {
-            if(o.uses("health")) {
-                o.comp("health").hurt(1);
-            }
-        } });
+        const b = new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 15, height: 10, color: "#949494", x: player.x, y: player.y, collide: (o) => this.col(o) });
         scene.add(b);
     }
 }
-class ShotgunBase extends WeapBase {
+class GunBase extends WeapBase {
+    constructor(img: string) {
+        super(img);
+    }
+    fire(): void;
+    fire(pel: number, offMin: number, offMax: number): void;
+    fire(pel?: number, offMin?: number, offMax?: number) {
+        const a = this.pRot();
+        for(let i = 0; i < (pel ?? 6); i++) {
+            const _a = a + p2d.Angle.rad(p2d.random(offMin ?? -15, offMax ?? 16));
+            const out = this.ray(_a, 100);
+            this.debug(_a, "yellow", 100, 200);
+            if(out) this.col(out.obj);
+        }
+    }
+}
+class ShotgunBase extends GunBase {
     constructor(img: string) {
         super(img);
     }
     fire() {
-        const a = scene.rotToMouse(player);
         // run a set of 6 casts within a +- 15deg of a
-        for(let i = 0; i < 6; i++) {
-            const _a = a + p2d.Angle.rad(p2d.random(-15, 16));
-            const out = this.ray(_a, 100);
-            this.debug(_a, "yellow", 100, 200);
-            if(out && out.obj.uses("health")) {
-                out.obj.comp("health").hurt(1);
-            }
-        }
+        super.fire(6, -15, 16);
     }
 }
 class Shotgun extends ShotgunBase {
@@ -92,19 +110,40 @@ class Scattergun extends ShotgunBase {
         super("mc.png");
     }
 }
+class Pistol extends GunBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        super.fire(1, -5, 6);
+    }
+}
+class Flamethrower extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const a = this.pRot();
+        for(let i = -15; i <= 16; i++) {
+            const _a = a + p2d.Angle.rad(i);
+            const out = this.ray(_a, 100);
+            this.debug(_a, "red", 100, 200);
+            if(out) this.col(out.obj);
+        }
+    }
+}
 class Melee extends WeapBase {
     constructor(img: string) {
         super(img);
     }
     fire() {
         const out = this.ray();
-        if(out && out.obj.uses("health")) {
-            out.obj.comp("health").hurt(1);
-        }
+        if(out) this.col(out.obj);
     }
 }
 class Shovel extends Melee { constructor() { super("mc.png"); } }
 class Bat extends Melee { constructor() { super("mc.png"); } }
+class FireAxe extends Melee { constructor() { super("mc.png"); } }
 class Weap {
     render() {
         const o = this.origin();
