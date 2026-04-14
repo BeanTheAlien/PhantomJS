@@ -2278,11 +2278,13 @@ class Character extends Entity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
+    key: KeyInputs;
     binds: Store<KeyCode, Function>;
     keys: Store<string, boolean>;
     bindCD: Store<KeyCode, PCExecCDPair>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
+        this.key = new KeyInputs();
         this.binds = opts.binds ?? new Store();
         this.keys = new Store();
         this.bindCD = new Store();
@@ -2296,6 +2298,7 @@ class PlayableCharacter extends Character {
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
+        //this.key.bind(code, exec, cd);
         if(cd == undefined) {
             this.binds.set(code, exec);
         } else {
@@ -2360,6 +2363,66 @@ class PlayableCharacter extends Character {
     }
     static is(obj: any): obj is PlayableCharacter {
         return objIs(obj, PlayableCharacter);
+    }
+}
+type KeyBinds = Store<KeyCode, Function>;
+type KeyBindsCD = Store<KeyCode, PCExecCDPair>;
+class KeyInputs {
+    binds: KeyBinds;
+    keys: Store<string, boolean>;
+    bindCD: KeyBindsCD;
+    constructor(binds?: KeyBinds) {
+        this.binds = binds ?? new Store();
+        this.keys = new Store();
+        this.bindCD = new Store();
+        window.addEventListener("keydown", (e) => {
+            this.keys.set(e.code, true);
+        });
+        window.addEventListener("keyup", (e) => {
+            this.keys.set(e.code, false);
+        });
+    }
+    bind(code: KeyCode, exec: Function): void;
+    bind(code: KeyCode, exec: Function, cd: number): void;
+    bind(code: KeyCode, exec: Function, cd?: number) {
+        if(cd == undefined) {
+            this.binds.set(code, exec);
+        } else {
+            this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    unbind(code: KeyCode) {
+        this.binds.del(code);
+        this.bindCD.del(code);
+    }
+    isBind(code: KeyCode): boolean {
+        return this.binds.has(code);
+    }
+    isBindCD(code: KeyCode): boolean {
+        return this.bindCD.has(code);
+    }
+    bindOf(code: KeyCode): Function | undefined {
+        return this.binds.get(code);
+    }
+    bindCDOf(code: KeyCode): PCExecCDPair | undefined {
+        return this.bindCD.get(code);
+    }
+    update() {
+        for(const [k, v] of this.keys.items()) {
+            if(v) {
+                const _k = KeyCodeMapReverse[k] as KeyCode;
+                const exec = this.binds.get(_k);
+                const cdExec = this.bindCD.get(_k);
+                if(exec) {
+                    exec();
+                } else if(cdExec) {
+                    if(cdExec[1].ready) {
+                        cdExec[0]();
+                        cdExec[1].consume();
+                    }
+                }
+            }
+        }
     }
 }
 interface AircraftOptions extends EntityOptions {

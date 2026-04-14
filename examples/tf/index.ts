@@ -105,12 +105,13 @@ abstract class WeapBase {
     }
     onActivated() {}
 }
+const bulletBounds = { extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0 };
 class RocketLauncher extends WeapBase {
     constructor() {
         super("mc.png");
     }
     fire() {
-        const b = new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 15, height: 10, color: "#949494", x: player.x, y: player.y, collide: (o) => this.col(o) });
+        const b = new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), ...bulletBounds, width: 15, height: 10, color: "#949494", x: player.x, y: player.y, collide: (o) => this.col(o) });
         scene.add(b);
     }
 }
@@ -180,7 +181,7 @@ class GrenadeLauncher extends WeapBase {
         super("mc.png");
     }
     fire() {
-        scene.add(new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 15, height: 10, color: "#b01818", x: player.x, y: player.y, collide: (o) => this.col(o), decay: 0.35 }));
+        scene.add(new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), ...bulletBounds, width: 15, height: 10, color: "#b01818", x: player.x, y: player.y, collide: (o) => this.col(o), decay: 0.35 }));
     }
 }
 class StickyBombLauncher extends WeapBase {
@@ -189,7 +190,7 @@ class StickyBombLauncher extends WeapBase {
         super("mc.png");
     }
     fire() {
-        const b = new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 10, height: 10, color: "#990404", x: player.x, y: player.y, decay: 0.35 });
+        scene.add(new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), ...bulletBounds, width: 10, height: 10, color: "#990404", x: player.x, y: player.y, decay: 0.35 }));
     }
     alt() {
         StickyBombLauncher.stickys.forEach(s => scene.rm(s));
@@ -253,7 +254,11 @@ class FireAxe extends Melee { constructor() { super("mc.png"); } }
 class Bottle extends Melee { constructor() { super("mc.png"); } }
 class Fists extends Melee { constructor() { super("mc.png"); } }
 class Kukri extends Melee { constructor() { super("mc.png"); } }
-class Knife extends Melee { constructor() { super("mc.png"); } }
+class Knife extends Melee {
+    constructor() {
+        super("mc.png");
+    }
+}
 class Wrench extends WeapBase {
     constructor() {
         super("mc.png");
