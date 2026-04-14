@@ -2459,13 +2459,7 @@ class Vector {
         this.y *= fy ?? fx;
     }
     static rotBtwn(a: Vector, b: Vector): number {
-        const a1 = Math.atan2(a.y, a.x);
-        const a2 = Math.atan2(b.y, b.x);
-        let dif = a2 - a1;
-        const pi2 = 2 * Math.PI;
-        if(dif > Math.PI) dif -= pi2;
-        else if(dif < -Math.PI) dif += pi2;
-        return dif;
+        return Math.atan2(b.y - a.y, b.x - a.x);
     }
     rotate(rad: number) {
         const cos = Math.cos(rad);
@@ -3057,7 +3051,9 @@ class Scene {
      * @returns The rotation from the entity to the mouse.
      */
     rotToMouse(ent: Entity): number {
-        return Vector.rotBtwn(ent.getPos(), this.mousePos);
+        const pos = ent.getPos();
+        const dir = new Vector(this.mousePos.x, this.mousePos.y);
+        return Math.atan2(dir.y - pos.y, dir.x - pos.x);
     }
     style(styles: CSSStyleDeclaration) {
         Object.assign(this.canvas.style, styles);

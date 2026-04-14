@@ -188,6 +188,9 @@ npm install @beanthealien/phantomjs
 - Add `External` class. (needs testing)
 ## v1.4.3
 - Started adding `Weapon`, `Gun`, other weapons. (for fighting/gun games)
+## v1.4.3.1
+- Fixed an error that caused rotation testing to not work properly.
+- Continued work on `examples/tf`. Possible content port from there to the main library.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
