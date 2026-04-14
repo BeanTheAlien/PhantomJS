@@ -26,6 +26,10 @@ class Merc extends p2d.Entity {
     alt() {
         this.active.alt();
     }
+    swap(w: WeapBase) {
+        this.active = w;
+        this.active.onActivated();
+    }
 }
 class Soldier extends Merc {
     constructor() {
@@ -42,6 +46,37 @@ class Pyro extends Merc {
         super(new Flamethrower(), new Shotgun(), new FireAxe(), "mc.png");
     }
 }
+class Demo extends Merc {
+    constructor() {
+        super(new GrenadeLauncher(), new StickyBombLauncher(), new Bottle(), "mc.png");
+    }
+}
+class Heavy extends Merc {
+    constructor() {
+        super(new Minigun(), new Shovel(), new Fists(), "mc.png");
+    }
+}
+class Sniper extends Merc {
+    constructor() {
+        super(new SniperRifle(), new SMG(), new Kukri(), "mc.png");
+    }
+}
+class Spy extends Merc {
+    constructor() {
+        super(new Revolver(), new Sapper(), new Knife(), "mc.png");
+    }
+}
+class Engi extends Merc {
+    pda1: ConstructionPDA;
+    pda2: DestructionPDA;
+    metal: number;
+    constructor() {
+        super(new Shotgun(), new Pistol(), new Wrench(), "mc.png");
+        this.pda1 = new ConstructionPDA();
+        this.pda2 = new DestructionPDA();
+        this.metal = 200;
+    }
+}
 abstract class WeapBase {
     img: p2d.Img;
     w;
@@ -54,17 +89,21 @@ abstract class WeapBase {
     pRot() {
         return scene.rotToMouse(player);
     }
+    rayOpts(dist?: number, angle?: number) {
+        return { origin: weap.origin(), dist: dist ?? 1000, angle: angle ?? this.pRot(), scene };
+    }
     ray(angle?: number, dist?: number) {
-        return (new p2d.Raycast({ origin: weap.origin(), dist: dist ?? 1000, angle: angle ?? this.pRot(), scene })).cast();
+        return (new p2d.Raycast(this.rayOpts(dist, angle))).cast();
     }
     debug(angle?: number, color?: string, dist?: number, life?: number) {
-        new p2d.DebugRay({ scene, origin: weap.origin(), dist: dist ?? 1000, color: color ?? "red", angle: angle ?? this.pRot(), life });
+        new p2d.DebugRay({ ...this.rayOpts(dist, angle), color: color ?? "red", life });
     }
     col(o: p2d.Entity) {
         if(o.uses("health")) {
             o.comp("health").hurt(1);
         }
     }
+    onActivated() {}
 }
 class RocketLauncher extends WeapBase {
     constructor() {
@@ -76,12 +115,16 @@ class RocketLauncher extends WeapBase {
     }
 }
 class GunBase extends WeapBase {
-    constructor(img: string) {
+    cd: p2d.Cooldown;
+    constructor(img: string, cdTime: number) {
         super(img);
+        this.cd = new p2d.Cooldown(cdTime);
     }
     fire(): void;
     fire(pel: number, offMin: number, offMax: number): void;
     fire(pel?: number, offMin?: number, offMax?: number) {
+        if(!this.cd.ready) return;
+        this.cd.consume();
         const a = this.pRot();
         for(let i = 0; i < (pel ?? 6); i++) {
             const _a = a + p2d.Angle.rad(p2d.random(offMin ?? -15, offMax ?? 16));
@@ -93,7 +136,7 @@ class GunBase extends WeapBase {
 }
 class ShotgunBase extends GunBase {
     constructor(img: string) {
-        super(img);
+        super(img, 100);
     }
     fire() {
         // run a set of 6 casts within a +- 15deg of a
@@ -112,7 +155,7 @@ class Scattergun extends ShotgunBase {
 }
 class Pistol extends GunBase {
     constructor() {
-        super("mc.png");
+        super("mc.png", 100);
     }
     fire() {
         super.fire(1, -5, 6);
@@ -132,6 +175,69 @@ class Flamethrower extends WeapBase {
         }
     }
 }
+class GrenadeLauncher extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        scene.add(new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 15, height: 10, color: "#b01818", x: player.x, y: player.y, collide: (o) => this.col(o), decay: 0.35 }));
+    }
+}
+class StickyBombLauncher extends WeapBase {
+    static stickys: p2d.BulletObject[] = [];
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const b = new p2d.BulletObject({ scene, spd: 3, rot: this.pRot(), extLeft: 0, extBtm: scene.height, extRight: scene.width, extTop: 0, width: 10, height: 10, color: "#990404", x: player.x, y: player.y, decay: 0.35 });
+    }
+    alt() {
+        StickyBombLauncher.stickys.forEach(s => scene.rm(s));
+    }
+}
+class Minigun extends GunBase {
+    constructor() {
+        super("mc.png", 25);
+    }
+    fire() {
+        super.fire(1, -5, 6);
+    }
+}
+class SniperRifle extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const out = this.ray(this.pRot(), Infinity);
+        this.debug(this.pRot(), "yellow", Infinity, 200);
+        if(out) this.col(out.obj);
+    }
+}
+class SMG extends GunBase {
+    constructor() {
+        super("mc.png", 65);
+    }
+    fire() {
+        super.fire(1, -10, 11);
+    }
+}
+class Revolver extends GunBase {
+    constructor() {
+        super("mc.png", 100);
+    }
+    fire() {
+        super.fire(1, -3, 4);
+    }
+}
+class Sapper extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const out = this.ray(this.pRot(), 50);
+        if(out) if(out.obj instanceof Building) out.obj.destroy();
+    }
+}
 class Melee extends WeapBase {
     constructor(img: string) {
         super(img);
@@ -144,6 +250,62 @@ class Melee extends WeapBase {
 class Shovel extends Melee { constructor() { super("mc.png"); } }
 class Bat extends Melee { constructor() { super("mc.png"); } }
 class FireAxe extends Melee { constructor() { super("mc.png"); } }
+class Bottle extends Melee { constructor() { super("mc.png"); } }
+class Fists extends Melee { constructor() { super("mc.png"); } }
+class Kukri extends Melee { constructor() { super("mc.png"); } }
+class Knife extends Melee { constructor() { super("mc.png"); } }
+class Wrench extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const out = this.ray(this.pRot(), 100);
+        if(out) if(out.obj instanceof Building) {
+            const h = out.obj.comp("health");
+            if(out.obj.id) {
+                clearInterval(out.obj.id);
+                out.obj.id = undefined;
+            } else if(h.mhp && h.hp < h.mhp) {
+                h.heal(5);
+            } else {
+                out.obj.prog++;
+                if(out.obj.prog >= 4) {
+                    scene.rm(out.obj);
+                }
+            }
+        }
+    }
+}
+class Building extends p2d.Entity {
+    id?: number;
+    lvl: number = 1;
+    prog: number = 0;
+    init(hp: number) {
+        this.use("health", { hp, mhp: hp });
+    }
+    destroy() {
+        this.id = setInterval(() => this.comp("health").hurt(5), 1000);
+    }
+}
+abstract class PDA extends WeapBase {
+    abstract menu(): void;
+    fire() {}
+    onActivated() {
+        this.menu();
+    }
+}
+class ConstructionPDA extends PDA {
+    constructor() {
+        super("mc.png");
+    }
+    menu() {}
+}
+class DestructionPDA extends PDA {
+    constructor() {
+        super("mc.png");
+    }
+    menu() {}
+}
 class Weap {
     render() {
         const o = this.origin();
@@ -168,9 +330,9 @@ const phys = player.comp("enhancedphys");
 player.bind("w", () => { if(player.onGround) player.jump(player.jh); });
 player.bind("a", () => { phys.addForceX(-1); player.face = 1; });
 player.bind("d", () => { phys.addForceX(1); player.face = 0; });
-player.bind("1", () => sol.active = sol.prim);
-player.bind("2", () => sol.active = sol.sec);
-player.bind("3", () => sol.active = sol.mel);
+player.bind("1", () => sol.swap(sol.prim));
+player.bind("2", () => sol.swap(sol.sec));
+player.bind("3", () => sol.swap(sol.mel));
 const sol = new Soldier();
 const weap = new Weap();
 player.child.add(sol);
