@@ -193,6 +193,9 @@ npm install @beanthealien/phantomjs
 - Continued work on `examples/tf`. Possible content port from there to the main library.
 ## v1.4.3.2
 - Transitioned `PlayableCharacter` into using `KeyInputs`.
+## v1.4.3.3
+- Add `KeyInputs.binds`, `KeyInputs.unbinds`.
+- Discover errors/improvements-to-be-made by working on `examples/tf`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
