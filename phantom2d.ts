@@ -2841,11 +2841,11 @@ class Scene {
     filterUI(cb: Predicate<SceneUI>): SceneUI[] {
         return this.ui.filter(cb);
     }
-    on(name: EventType, handle: EventHandle) {
-        this.evMng.on(name, handle);
+    on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
+        this.evMng.on(name, handle as EventHandle);
     }
-    off(name: EventType, handle?: EventHandle) {
-        this.evMng.off(name, handle);
+    off<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle?: (event: E) => void) {
+        this.evMng.off(name, handle as EventHandle);
     }
     getImgData(pos: Vector): ImageData {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);
@@ -2954,6 +2954,7 @@ class Scene {
             const h2 = u.height / 2;
             this.ctx.translate(u.x + w2, u.y + h2);
             this.ctx.rotate(u.rot);
+            this.alpha = u.alpha;
             this.rect(-w2, -h2, u.width, u.height, u.color);
             this.ctx.restore();
             // for other rendering (other than a core rectangle)
@@ -4197,6 +4198,7 @@ interface SceneUIOptions {
     color?: string;
     rend?: Function;
     upd?: Function;
+    alpha?: number;
 }
 /**
  * The core class for UI elements.
@@ -4212,6 +4214,7 @@ class SceneUI {
     color: string;
     rend: Function;
     upd: Function;
+    alpha: number;
     /**
      * A list of the children to this UI element.
      * 
@@ -4230,6 +4233,7 @@ class SceneUI {
         this.rend = opts.rend ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
         this.child = new ChildUI();
+        this.alpha = opts.alpha ?? 1;
     }
     render() {
         this.rend();
@@ -4383,6 +4387,67 @@ class TextUI extends SceneUI {
         if(this.font) this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
         super.render();
+    }
+}
+interface MenuUIOptions extends SceneUIOptions {
+    binds?: KeyBinds;
+}
+class MenuUI extends SceneUI {
+    key: KeyInputs;
+    constructor(opts: MenuUIOptions) {
+        super(opts);
+        this.key = new KeyInputs(opts.binds);
+    }
+    bind(code: KeyCode, exec: Function): void;
+    bind(code: KeyCode, exec: Function, cd: number): void;
+    bind(code: KeyCode, exec: Function, cd?: number) {
+        //this.key.bind(code, exec, cd);
+        if(cd == undefined) {
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
+        } else {
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    unbind(code: KeyCode) {
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
+    }
+    isBind(code: KeyCode): boolean {
+        return this.key.isBind(code);
+        // return this.binds.has(code);
+    }
+    isBindCD(code: KeyCode): boolean {
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
+    }
+    bindOf(code: KeyCode): Function | undefined {
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
+    }
+    bindCDOf(code: KeyCode): PCExecCDPair | undefined {
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
+    }
+    update() {
+        super.update();
+        this.key.update();
+    }
+}
+interface ImgUIOptions extends SceneUIOptions {
+    img: Img;
+}
+class ImgUI extends SceneUI {
+    img: Img;
+    constructor(opts: ImgUIOptions) {
+        super(opts);
+        this.img = opts.img;
+    }
+    render() {
+        super.render();
+        this.scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
 
@@ -4685,7 +4750,7 @@ export {
 
     Weapon, Gun, Pistol, Burst,
 
-    SceneUI, ButtonUI, TextUI,
+    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
     Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External,
@@ -4701,6 +4766,8 @@ export {
 
     Trigger,
 
-    Itvl, FixedItvl
+    Itvl, FixedItvl,
+
+    KeyInputs
 };
-export type { Renderable };
+export type { Renderable, Constructor, AbstractConstructor, KeyCode };

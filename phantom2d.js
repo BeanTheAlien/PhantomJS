@@ -1399,10 +1399,88 @@ class Character extends Entity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
+    // binds: Store<KeyCode, Function>;
+    // keys: Store<string, boolean>;
+    // bindCD: Store<KeyCode, PCExecCDPair>;
     constructor(opts) {
-        var _b;
         super(opts);
-        this.binds = (_b = opts.binds) !== null && _b !== void 0 ? _b : new Store();
+        this.key = new KeyInputs();
+        // this.binds = opts.binds ?? new Store();
+        // this.keys = new Store();
+        // this.bindCD = new Store();
+        // window.addEventListener("keydown", (e) => {
+        //     this.keys.set(e.code, true);
+        // });
+        // window.addEventListener("keyup", (e) => {
+        //     this.keys.set(e.code, false);
+        // });
+    }
+    bind(code, exec, cd) {
+        //this.key.bind(code, exec, cd);
+        if (cd == undefined) {
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
+        }
+        else {
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    unbind(code) {
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
+    }
+    isBind(code) {
+        return this.key.isBind(code);
+        // return this.binds.has(code);
+    }
+    isBindCD(code) {
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
+    }
+    bindOf(code) {
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
+    }
+    bindCDOf(code) {
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
+    }
+    update() {
+        // for(const [k, v] of this.keys.items()) {
+        //     if(v) {
+        //         const _k = KeyCodeMapReverse[k] as KeyCode;
+        //         const exec = this.binds.get(_k);
+        //         const cdExec = this.bindCD.get(_k);
+        //         if(exec) {
+        //             exec();
+        //         } else if(cdExec) {
+        //             if(cdExec[1].ready) {
+        //                 cdExec[0]();
+        //                 cdExec[1].consume();
+        //             }
+        //         }
+        //     }
+        // }
+        this.key.update();
+        super.update();
+    }
+    static from(opts) {
+        if (opts instanceof Preset) {
+            const ent = new PlayableCharacter({ strength: 0 });
+            opts.apply(ent);
+            return ent;
+        }
+        return new PlayableCharacter(opts);
+    }
+    static is(obj) {
+        return objIs(obj, PlayableCharacter);
+    }
+}
+class KeyInputs {
+    constructor(binds) {
+        this.binds = binds !== null && binds !== void 0 ? binds : new Store();
         this.keys = new Store();
         this.bindCD = new Store();
         window.addEventListener("keydown", (e) => {
@@ -1453,18 +1531,6 @@ class PlayableCharacter extends Character {
                 }
             }
         }
-        super.update();
-    }
-    static from(opts) {
-        if (opts instanceof Preset) {
-            const ent = new PlayableCharacter({ strength: 0 });
-            opts.apply(ent);
-            return ent;
-        }
-        return new PlayableCharacter(opts);
-    }
-    static is(obj) {
-        return objIs(obj, PlayableCharacter);
     }
 }
 class Aircraft extends Entity {
@@ -1918,6 +1984,7 @@ class Scene {
             const h2 = u.height / 2;
             this.ctx.translate(u.x + w2, u.y + h2);
             this.ctx.rotate(u.rot);
+            this.alpha = u.alpha;
             this.rect(-w2, -h2, u.width, u.height, u.color);
             this.ctx.restore();
             // for other rendering (other than a core rectangle)
@@ -3029,7 +3096,7 @@ class Camera {
  */
 class SceneUI {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _l, _m;
+        var _b, _c, _d, _f, _g, _j, _l, _m, _o;
         this.scene = opts.scene;
         this.x = (_b = opts.x) !== null && _b !== void 0 ? _b : 0;
         this.y = (_c = opts.y) !== null && _c !== void 0 ? _c : 0;
@@ -3040,6 +3107,7 @@ class SceneUI {
         this.rend = (_l = opts.rend) !== null && _l !== void 0 ? _l : NoFunc;
         this.upd = (_m = opts.upd) !== null && _m !== void 0 ? _m : NoFunc;
         this.child = new ChildUI();
+        this.alpha = (_o = opts.alpha) !== null && _o !== void 0 ? _o : 1;
     }
     render() {
         this.rend();
@@ -3167,6 +3235,58 @@ class TextUI extends SceneUI {
             this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
         super.render();
+    }
+}
+class MenuUI extends SceneUI {
+    constructor(opts) {
+        super(opts);
+        this.key = new KeyInputs(opts.binds);
+    }
+    bind(code, exec, cd) {
+        //this.key.bind(code, exec, cd);
+        if (cd == undefined) {
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
+        }
+        else {
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    unbind(code) {
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
+    }
+    isBind(code) {
+        return this.key.isBind(code);
+        // return this.binds.has(code);
+    }
+    isBindCD(code) {
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
+    }
+    bindOf(code) {
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
+    }
+    bindCDOf(code) {
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
+    }
+    update() {
+        super.update();
+        this.key.update();
+    }
+}
+class ImgUI extends SceneUI {
+    constructor(opts) {
+        super(opts);
+        this.img = opts.img;
+    }
+    render() {
+        super.render();
+        this.scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
 class Itvl {
@@ -3416,4 +3536,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs };
