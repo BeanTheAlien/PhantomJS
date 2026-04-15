@@ -1,4 +1,5 @@
-import { Img, Scene, FloorObject, Entity, Raycast, DebugRay, Cooldown, BulletObject, Angle, random, Vector, PlayableCharacter, MenuUI, KeyInputs, ImgUI } from "../../phantom2d.js";
+import { Img, Scene, FloorObject, Entity, Raycast, DebugRay, Cooldown, BulletObject, Angle, random, Vector, PlayableCharacter, MenuUI, KeyInputs, ImgUI, objIs } from "../../phantom2d.js";
+window.onerror = alert;
 Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "tf", w: 1200, h: 1200, border: "2px solid red" });
 const fh = 50;
@@ -57,6 +58,7 @@ class Sniper extends Merc {
 class Spy extends Merc {
     constructor() {
         super(new Revolver(), new Sapper(), new Knife(), "mc.png");
+        this.dk = new DisguiseKit();
     }
 }
 class Engi extends Merc {
@@ -65,6 +67,11 @@ class Engi extends Merc {
         this.pda1 = new ConstructionPDA();
         this.pda2 = new DestructionPDA();
         this.metal = 200;
+    }
+}
+class Medic extends Merc {
+    constructor() {
+        super(new Medigun(), new SyringeGun(), new Bonesaw(), "mc.png");
     }
 }
 class WeapBase {
@@ -96,8 +103,12 @@ const bulletBounds = { extLeft: 0, extBtm: scene.height, extRight: scene.width, 
 class RocketLauncher extends WeapBase {
     constructor() {
         super("mc.png");
+        this.cd = new Cooldown(500);
     }
     fire() {
+        if (!this.cd.ready)
+            return;
+        this.cd.consume();
         const b = new BulletObject(Object.assign(Object.assign({ scene, spd: 3, rot: this.pRot() }, bulletBounds), { width: 15, height: 10, color: "#949494", x: player.x, y: player.y, collide: (o) => this.col(o) }));
         scene.add(b);
     }
@@ -154,10 +165,11 @@ class Flamethrower extends WeapBase {
     }
     fire() {
         const a = this.pRot();
-        for (let i = -15; i <= 16; i++) {
+        // go from -15deg - 15deg with step of 0.1
+        for (let i = -15; i <= 16; i += 0.1) {
             const _a = a + Angle.rad(i);
             const out = this.ray(_a, 100);
-            this.debug(_a, "red", 100, 200);
+            this.debug(_a, "red", 100, 100);
             if (out)
                 this.col(out.obj);
         }
@@ -231,6 +243,27 @@ class Sapper extends WeapBase {
                 out.obj.destroy();
     }
 }
+class SyringeGun extends WeapBase {
+    constructor() {
+        super("mc.png");
+        this.cd = new Cooldown(260);
+    }
+    fire() {
+        if (!this.cd.ready)
+            return;
+        this.cd.consume();
+        scene.add(new BulletObject(Object.assign(Object.assign({}, bulletBounds), { scene, spd: 3, rot: this.pRot() + Angle.rad(random(-5, 6)), width: 15, height: 10, x: player.x, y: player.y, color: "#960d0d" })));
+    }
+}
+class Medigun extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    fire() {
+        const out = this.ray(this.pRot(), 100);
+        if (out) { }
+    }
+}
 class Melee extends WeapBase {
     constructor(img) {
         super(img);
@@ -271,7 +304,7 @@ class Wrench extends WeapBase {
     fire() {
         const out = this.ray(this.pRot(), 100);
         if (out)
-            if (out.obj instanceof Building) {
+            if (objIs(out.obj, Building)) {
                 const h = out.obj.comp("health");
                 if (out.obj.id) {
                     clearInterval(out.obj.id);
@@ -289,6 +322,9 @@ class Wrench extends WeapBase {
             }
     }
 }
+class Bonesaw extends Melee {
+    constructor() { super("mc.png"); }
+}
 class Building extends Entity {
     constructor() {
         super(...arguments);
@@ -302,6 +338,23 @@ class Building extends Entity {
         this.id = setInterval(() => this.comp("health").hurt(5), 1000);
     }
 }
+const pdaMenu = new MenuUI({ scene, w: scene.width / 2, h: scene.height / 2 });
+const showPDAMenu = (b1, b2, b3, b4) => {
+    if (scene.hasUI(pdaMenu))
+        return;
+    for (let i = 1; i < 5; i++)
+        pdaMenu.bind(keyNum(i), [b1, b2, b3, b4][i - 1]);
+    pdaMenu.bind("q", closePDAMenu);
+    scene.addUI(pdaMenu);
+};
+const closePDAMenu = () => {
+    if (!scene.hasUI(pdaMenu))
+        return;
+    for (let i = 1; i < 5; i++)
+        pdaMenu.unbind(keyNum(i));
+    pdaMenu.unbind("q");
+    scene.rmUI(pdaMenu);
+};
 class PDA extends WeapBase {
     fire() { }
     onActivated() {
@@ -312,13 +365,46 @@ class ConstructionPDA extends PDA {
     constructor() {
         super("mc.png");
     }
-    menu() { }
+    menu() {
+        const _ = () => { };
+        pdaMenu.child.stuff.length = 0;
+        for (let i = 0; i < 4; i++)
+            pdaMenu.addChild(new ImgUI({ scene, img: new Img("mc.png") }));
+        showPDAMenu(_, _, _, _);
+    }
 }
 class DestructionPDA extends PDA {
     constructor() {
         super("mc.png");
     }
-    menu() { }
+    menu() {
+        const _ = () => { };
+        pdaMenu.child.stuff.length = 0;
+        for (let i = 0; i < 4; i++)
+            pdaMenu.addChild(new ImgUI({ scene, img: new Img("mc.png") }));
+        showPDAMenu(_, _, _, _);
+    }
+}
+const showDKMenu = () => {
+    if (scene.hasUI(dkMenu))
+        return;
+    dkMenu.bind("q", closeDKMenu);
+    scene.addUI(pdaMenu);
+};
+const closeDKMenu = () => {
+    if (!scene.hasUI(dkMenu))
+        return;
+    dkMenu.unbind("q");
+    scene.rmUI(pdaMenu);
+};
+class DisguiseKit extends WeapBase {
+    constructor() {
+        super("mc.png");
+    }
+    onActivated() {
+        showDKMenu();
+    }
+    fire() { }
 }
 class Weap {
     render() {
@@ -350,6 +436,12 @@ player.bind("d", () => { phys.addForceX(1); player.face = 0; });
 player.bind("1", () => merc === null || merc === void 0 ? void 0 : merc.swap(merc.prim));
 player.bind("2", () => merc === null || merc === void 0 ? void 0 : merc.swap(merc.sec));
 player.bind("3", () => merc === null || merc === void 0 ? void 0 : merc.swap(merc.mel));
+player.bind("4", () => { if (objIs(merc, Engi))
+    merc.swap(merc.pda1);
+else if (objIs(merc, Spy))
+    merc.swap(merc.dk); });
+player.bind("5", () => { if (objIs(merc, Engi))
+    merc.swap(merc.pda2); });
 var merc;
 const weap = new Weap();
 const menu = new MenuUI({ scene, w: scene.width, h: scene.height, color: "#707070" });
@@ -360,39 +452,32 @@ const select = (mcl) => {
     player.child.add(merc);
     hideMenu();
 };
+const keyNum = (i) => String(i);
 const showMenu = () => {
     if (scene.hasUI(menu))
         return;
-    menu.bind("1", () => select(Scout));
-    menu.bind("2", () => select(Soldier));
-    menu.bind("3", () => select(Pyro));
-    menu.bind("4", () => select(Demo));
-    menu.bind("5", () => select(Heavy));
-    menu.bind("6", () => select(Engi));
-    // menu.bind("7", () => select(Medic));
-    menu.bind("8", () => select(Sniper));
-    menu.bind("9", () => select(Spy));
+    for (let i = 1; i < 10; i++)
+        menu.bind(keyNum(i), () => select(mercList[i - 1]));
     scene.addUI(menu);
 };
 const hideMenu = () => {
     if (!scene.hasUI(menu))
         return;
-    menu.unbind("1");
-    menu.unbind("2");
-    menu.unbind("3");
-    menu.unbind("4");
-    menu.unbind("5");
-    menu.unbind("6");
-    // menu.unbind("7");
-    menu.unbind("8");
-    menu.unbind("9");
+    for (let i = 1; i < 10; i++)
+        menu.unbind(keyNum(i));
     scene.rmUI(menu);
 };
-const mercList = [Scout, Soldier, Pyro, Demo, Heavy, Engi, Sniper, Spy];
-for (let i = 0; i < mercList.length; i++) {
-    const _ = (new (mercList[i])()).merc;
-    menu.addChild(new ImgUI({ scene, x: i * 120, y: menu.height / 2, img: _, w: 50, h: 50 }));
-}
+const mercList = [Scout, Soldier, Pyro, Demo, Heavy, Engi, Medic, Sniper, Spy];
+const addMercImgsToMenu = (menu) => {
+    for (let i = 0; i < mercList.length; i++) {
+        const _ = (new (mercList[i])()).merc;
+        menu.addChild(new ImgUI({ scene, x: i * 120, y: menu.height / 2, img: _, w: 50, h: 50 }));
+    }
+};
+addMercImgsToMenu(menu);
+const dkMenu = new MenuUI({ scene, w: scene.width / 2, h: scene.height / 2 });
+addMercImgsToMenu(dkMenu);
+scene.addUI(dkMenu);
 // const enemy = new p2d.Character({ strength: 0.4, x: 20, color: "#1448f0", width: 15, height: 40 });
 // enemy.use("health", { mhp: 5, hp: 5 });
 // const test = new p2d.Entity({ width: 5, height: 5, color: "yellow", x: 100 });
@@ -412,6 +497,7 @@ scene.on("mouseup", (e) => {
     if (e.button == 2)
         firing2 = false;
 });
+scene.on("contextmenu", (e) => e.preventDefault());
 const gbKeys = new KeyInputs();
 showMenu();
 gbKeys.bind("dot", () => showMenu());

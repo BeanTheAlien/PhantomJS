@@ -2307,10 +2307,16 @@ class PlayableCharacter extends Character {
             // this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
+    binds(...binds: Binding[]) {
+        this.key.binds(...binds);
+    }
     unbind(code: KeyCode) {
         this.key.unbind(code);
         // this.binds.del(code);
         // this.bindCD.del(code);
+    }
+    unbinds(...codes: KeyCode[]) {
+        this.key.unbinds(...codes);
     }
     isBind(code: KeyCode): boolean {
         return this.key.isBind(code);
@@ -2375,12 +2381,13 @@ class PlayableCharacter extends Character {
 }
 type KeyBinds = Store<KeyCode, Function>;
 type KeyBindsCD = Store<KeyCode, PCExecCDPair>;
+type Binding = [KeyCode, Function] | [KeyCode, Function, number];
 class KeyInputs {
-    binds: KeyBinds;
+    kbinds: KeyBinds;
     keys: Store<string, boolean>;
     bindCD: KeyBindsCD;
     constructor(binds?: KeyBinds) {
-        this.binds = binds ?? new Store();
+        this.kbinds = binds ?? new Store();
         this.keys = new Store();
         this.bindCD = new Store();
         window.addEventListener("keydown", (e) => {
@@ -2394,23 +2401,29 @@ class KeyInputs {
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
         if(cd == undefined) {
-            this.binds.set(code, exec);
+            this.kbinds.set(code, exec);
         } else {
             this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
+    binds(...binds: Binding[]) {
+        binds.forEach(b => { if(!b[2]) this.bind(b[0], b[1]); else this.bind(b[0], b[1], b[2])});
+    }
     unbind(code: KeyCode) {
-        this.binds.del(code);
+        this.kbinds.del(code);
         this.bindCD.del(code);
     }
+    unbinds(...codes: KeyCode[]) {
+        codes.forEach(c => this.unbind(c));
+    }
     isBind(code: KeyCode): boolean {
-        return this.binds.has(code);
+        return this.kbinds.has(code);
     }
     isBindCD(code: KeyCode): boolean {
         return this.bindCD.has(code);
     }
     bindOf(code: KeyCode): Function | undefined {
-        return this.binds.get(code);
+        return this.kbinds.get(code);
     }
     bindCDOf(code: KeyCode): PCExecCDPair | undefined {
         return this.bindCD.get(code);
@@ -2419,7 +2432,7 @@ class KeyInputs {
         for(const [k, v] of this.keys.items()) {
             if(v) {
                 const _k = KeyCodeMapReverse[k] as KeyCode;
-                const exec = this.binds.get(_k);
+                const exec = this.kbinds.get(_k);
                 const cdExec = this.bindCD.get(_k);
                 if(exec) {
                     exec();
@@ -2814,8 +2827,20 @@ class Scene {
     add(...items: Entity[]) {
         this.items.add(...items);
     }
+    addIf(predicate: PredicateEntity, ...items: Entity[]) {
+        this.items.add(...items.filter(predicate));
+    }
+    addIfNotHas(...items: Entity[]) {
+        this.addIf(i => !this.has(i), ...items);
+    }
     addUI(...items: SceneUI[]) {
         this.ui.add(...items);
+    }
+    addUIIf(predicate: Predicate<SceneUI>, ...items: SceneUI[]) {
+        this.ui.add(...items.filter(predicate));
+    }
+    addUIIfNotHas(...items: SceneUI[]) {
+        this.addUIIf(u => !this.hasUI(u), ...items);
     }
     rm(...items: Entity[]) {
         this.items.rm(...items);
@@ -4410,10 +4435,16 @@ class MenuUI extends SceneUI {
             // this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
     }
+    binds(...binds: Binding[]) {
+        this.key.binds(...binds);
+    }
     unbind(code: KeyCode) {
         this.key.unbind(code);
         // this.binds.del(code);
         // this.bindCD.del(code);
+    }
+    unbinds(...codes: KeyCode[]) {
+        this.key.unbinds(...codes);
     }
     isBind(code: KeyCode): boolean {
         return this.key.isBind(code);
