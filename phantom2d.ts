@@ -9,6 +9,11 @@ class Util {
     static clamp(n: number, min: number, max: number): number {
         return Math.min(Math.max(n, min), max);
     }
+    /**
+     * Returns a string, given a value that may or may not be one.
+     * @param o Something to be stringified.
+     * @returns A string.
+     */
     static strOf(o: any): string {
         return typeof o == "string" ? o : Util.str(o);
     }
@@ -4481,6 +4486,34 @@ class ImgUI extends SceneUI {
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
+interface ProgressUIOptions extends SceneUIOptions {
+    val?: number;
+    pcolor: string;
+    scolor?: string;
+    chunks?: number;
+}
+class ProgressUI extends SceneUI {
+    val: number;
+    pcolor: string;
+    scolor?: string;
+    chunks: number;
+    constructor(opts: ProgressUIOptions) {
+        super(opts);
+        this.val = opts.val ?? 0;
+        this.pcolor = opts.pcolor;
+        this.scolor = opts.scolor;
+        this.chunks = opts.chunks ?? 1;
+    }
+    render() {
+        // width of each chunk
+        const chunkSize = this.width / this.chunks;
+        let v = this.val;
+        for(let i = 0; i < this.chunks; i++) {
+            this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : this.scolor ?? "#fff");
+            v--;
+        }
+    }
+}
 
 class Itvl {
     id: number;
@@ -4523,8 +4556,7 @@ class Params {
     has(k: string): boolean;
     has(k: string, v: any): boolean;
     has(k: string, v?: any): boolean {
-        if(v) return this.params.has(k, Util.strOf(v));
-        else return this.params.has(k);
+        return this.params.has(k, Util.strOf(v));
     }
 }
 interface Renderable {
@@ -4781,7 +4813,7 @@ export {
 
     Weapon, Gun, Pistol, Burst,
 
-    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI,
+    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
     Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External,
