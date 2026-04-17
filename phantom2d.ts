@@ -3421,27 +3421,64 @@ class Preset {
         Object.assign(ent, this.atts);
     }
 }
-/**
- * A ray in the scene space.
- * @since v0.0.0
- */
-class Raycast {
-    origin: Vector; angle: number; dist: number; scene: Scene;
+class RaycastBase {
+    origin: Vector;
+    angle: number;
+    dist: number;
+    scene: Scene;
     constructor(opts: RaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
     }
-    cast(): RaycastIntersecton | null {
-        let res: RaycastIntersecton | null = null;
-        const dir = new Vector(Math.cos(this.angle), Math.sin(this.angle));
+    dir() {
+        return new Vector(Math.cos(this.angle), Math.sin(this.angle));
+    }
+    cast(onHit: (i: Entity, hit: number, dir: Vector) => void) {
+        const dir = this.dir();
         for(const i of this.scene.items.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit) {
-                if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+                onHit(i, hit, dir);
             }
         }
+    }
+}
+interface MultiRaycastOptions extends RaycastOptions {
+    hits?: number;
+}
+class MultiRaycast extends RaycastBase {
+    hits: number;
+    constructor(opts: MultiRaycastOptions) {
+        super(opts);
+        this.hits = opts.hits ?? Infinity;
+    }
+    cast(): RaycastIntersecton[] {
+        let res: RaycastIntersecton[] = [];
+        let h = this.hits;
+        super.cast((i, hit, dir) => {
+            if(h > 0) {
+                res.push(new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit)));
+            } else return res;
+            h--;
+        });
+        return res;
+    }
+}
+/**
+ * A ray in the scene space.
+ * @since v0.0.0
+ */
+class Raycast extends RaycastBase {
+    constructor(opts: RaycastOptions) {
+        super(opts);
+    }
+    cast(): RaycastIntersecton | null {
+        let res: RaycastIntersecton | null = null;
+        super.cast((i, hit, dir) => {
+            if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+        });
         return res;
     }
 }
@@ -4816,7 +4853,7 @@ export {
     SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
-    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External,
+    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast,
 
     Config, SceneConfig, ImgConfig,
 

@@ -196,6 +196,9 @@ npm install @beanthealien/phantomjs
 ## v1.4.3.3
 - Add `KeyInputs.binds`, `KeyInputs.unbinds`.
 - Discover errors/improvements-to-be-made by working on `examples/tf`.
+## v1.4.4
+- Add `MultiRaycast`.
+- Refactor some `Raycast` classes to use `RaycastBase`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
