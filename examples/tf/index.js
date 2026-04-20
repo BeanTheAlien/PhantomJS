@@ -477,7 +477,6 @@ const addMercImgsToMenu = (menu) => {
 addMercImgsToMenu(menu);
 const dkMenu = new MenuUI({ scene, w: scene.width / 2, h: scene.height / 2 });
 addMercImgsToMenu(dkMenu);
-scene.addUI(dkMenu);
 // const enemy = new p2d.Character({ strength: 0.4, x: 20, color: "#1448f0", width: 15, height: 40 });
 // enemy.use("health", { mhp: 5, hp: 5 });
 // const test = new p2d.Entity({ width: 5, height: 5, color: "yellow", x: 100 });

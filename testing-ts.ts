@@ -32,4 +32,5 @@ const btn = new p2d.ButtonUI({
     }
 });
 scene.addUI(btn);
-scene.start(() => {scene.frustum(10, scene.height, 15, 5, 10, "#ff0000"); scene.cone(new p2d.Vector(100, 100), new p2d.Vector(70, 200), new p2d.Vector(30, 15), "#ff0202")});
+let i = 0;
+scene.start(() => {scene.frustum(10, scene.height, 15, 5, 10, "#ff0000"); scene.cone(new p2d.Vector(100, 100), new p2d.Vector(70, 200), new p2d.Vector(30, 15), "#ff0202"); i += scene.delta / 10000; if(i < 1) {tx.x = p2d.lerp(0, 500, i); tx.y = p2d.lerp(30, 30, i);}});

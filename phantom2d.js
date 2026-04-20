@@ -15,6 +15,11 @@ class Util {
     static clamp(n, min, max) {
         return Math.min(Math.max(n, min), max);
     }
+    /**
+     * Returns a string, given a value that may or may not be one.
+     * @param o Something to be stringified.
+     * @returns A string.
+     */
     static strOf(o) {
         return typeof o == "string" ? o : Util.str(o);
     }
@@ -2328,6 +2333,15 @@ class Scene {
         this.color = color;
         this.ctx.fill();
     }
+    addMisc(...items) {
+        this.misc.add(...items);
+    }
+    rmMisc(...items) {
+        this.misc.rm(...items);
+    }
+    hasMisc(...items) {
+        return this.misc.has(...items);
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -2455,27 +2469,60 @@ class Preset {
         Object.assign(ent, this.atts);
     }
 }
-/**
- * A ray in the scene space.
- * @since v0.0.0
- */
-class Raycast {
+class RaycastBase {
     constructor(opts) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
     }
-    cast() {
-        let res = null;
-        const dir = new Vector(Math.cos(this.angle), Math.sin(this.angle));
+    dir() {
+        return new Vector(Math.cos(this.angle), Math.sin(this.angle));
+    }
+    cast(onHit) {
+        const dir = this.dir();
         for (const i of this.scene.items.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if (hit) {
-                if ((res && hit < res.dist) || (res == null))
-                    res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+                onHit(i, hit, dir);
             }
         }
+    }
+}
+class MultiRaycast extends RaycastBase {
+    constructor(opts) {
+        var _b;
+        super(opts);
+        this.hits = (_b = opts.hits) !== null && _b !== void 0 ? _b : Infinity;
+    }
+    cast() {
+        let res = [];
+        let h = this.hits;
+        super.cast((i, hit, dir) => {
+            if (h > 0) {
+                res.push(new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit)));
+            }
+            else
+                return res;
+            h--;
+        });
+        return res;
+    }
+}
+/**
+ * A ray in the scene space.
+ * @since v0.0.0
+ */
+class Raycast extends RaycastBase {
+    constructor(opts) {
+        super(opts);
+    }
+    cast() {
+        let res = null;
+        super.cast((i, hit, dir) => {
+            if ((res && hit < res.dist) || (res == null))
+                res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+        });
         return res;
     }
 }
@@ -2493,6 +2540,42 @@ class DebugRay extends Raycast {
     update() { }
     render() {
         this.scene.ray(this.origin, this.angle, this.dist, this.color);
+    }
+}
+class ConeRaycast extends RaycastBase {
+    constructor(opts) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    cast() {
+        let res = null;
+        for (let i = this.r0; i < this.r1 + 1; i += this.step) {
+            if (res)
+                return res;
+            this.angle = Angle.rad(i);
+            super.cast((i, hit, dir) => {
+                if ((res && hit < res.dist) || (res == null))
+                    res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            });
+        }
+        return res;
+    }
+}
+class ConeDebugRay extends DebugRay {
+    constructor(opts) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    update() { }
+    render() {
+        for (let i = this.r0; i < this.r1 + 1; i += this.step) {
+            this.angle = Angle.rad(i);
+            super.render();
+        }
     }
 }
 /**
@@ -2844,7 +2927,7 @@ class SceneConfig extends Config {
                         return console.warn("There is already an unload listener!");
                     window.addEventListener("beforeunload", (e) => {
                         e.preventDefault();
-                        e.returnValue = "";
+                        e.returnValue = true;
                         v();
                     });
                 }
@@ -3322,6 +3405,26 @@ class ImgUI extends SceneUI {
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
+class ProgressUI extends SceneUI {
+    constructor(opts) {
+        var _b, _c;
+        super(opts);
+        this.val = (_b = opts.val) !== null && _b !== void 0 ? _b : 0;
+        this.pcolor = opts.pcolor;
+        this.scolor = opts.scolor;
+        this.chunks = (_c = opts.chunks) !== null && _c !== void 0 ? _c : 1;
+    }
+    render() {
+        var _b;
+        // width of each chunk
+        const chunkSize = this.width / this.chunks;
+        let v = this.val;
+        for (let i = 0; i < this.chunks; i++) {
+            this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : (_b = this.scolor) !== null && _b !== void 0 ? _b : "#fff");
+            v--;
+        }
+    }
+}
 class Itvl {
     constructor() {
         this.id = -1;
@@ -3359,10 +3462,7 @@ class Params {
         return this.params.getAll(k);
     }
     has(k, v) {
-        if (v)
-            return this.params.has(k, Util.strOf(v));
-        else
-            return this.params.has(k);
+        return this.params.has(k, Util.strOf(v));
     }
 }
 const FinalizeOpeningMode = (mode) => (mode.startsWith("_") ? mode : `_${mode}`);
@@ -3569,4 +3669,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs };

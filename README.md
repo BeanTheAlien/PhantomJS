@@ -199,6 +199,10 @@ npm install @beanthealien/phantomjs
 ## v1.4.4
 - Add `MultiRaycast`.
 - Refactor some `Raycast` classes to use `RaycastBase`.
+## v1.4.5
+- Add `ConeRaycast`.
+- Add `DebugConeRay`.
+- Add more options for size for scene font.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

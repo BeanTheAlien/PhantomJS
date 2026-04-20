@@ -2565,7 +2565,7 @@ class Vector {
         const w = rectW; const h = rectH;
         return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
     }
-    mag(): number {
+    get mag(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 }
@@ -2723,18 +2723,62 @@ class Items {
 }
 type FontSizeAbsolute = "xx-small" | "x-small" | "small" | "medium" | "large" | "x-large" | "xx-large" | "xxx-large";
 type FontSizeRelative = "larger" | "smaller";
+type RelativeSizeUnit<U extends string> = `${number}${U}`;
+type RelativeSizeUnitCap = RelativeSizeUnit<"cap">;
+type RelativeSizeUnitCh = RelativeSizeUnit<"ch">;
+type RelativeSizeUnitEm = RelativeSizeUnit<"em">;
+type RelativeSizeUnitEx = RelativeSizeUnit<"ex">;
+type RelativeSizeUnitIc = RelativeSizeUnit<"ic">;
+type RelativeSizeUnitLh = RelativeSizeUnit<"lh">;
+type RelativeSizeUnitRcap = RelativeSizeUnit<"rcap">;
+type RelativeSizeUnitRch = RelativeSizeUnit<"rch">;
+type RelativeSizeUnitRem = RelativeSizeUnit<"rem">;
+type RelativeSizeUnitRex = RelativeSizeUnit<"rex">;
+type RelativeSizeUnitRic = RelativeSizeUnit<"ric">;
+type RelativeSizeUnitRlh = RelativeSizeUnit<"rlh">;
+type RelativeSizeFont = RelativeSizeUnitCap | RelativeSizeUnitCh | RelativeSizeUnitEm |
+    RelativeSizeUnitEx | RelativeSizeUnitIc | RelativeSizeUnitLh |
+    RelativeSizeUnitRcap | RelativeSizeUnitRch | RelativeSizeUnitRem |
+    RelativeSizeUnitRex | RelativeSizeUnitRic | RelativeSizeUnitRlh;
+type RelativeViewportSizeUnitVh = RelativeSizeUnit<"vh">;
+type RelativeViewportSizeUnitVw = RelativeSizeUnit<"vw">;
+type RelativeViewportSizeUnitVmax = RelativeSizeUnit<"vmax">;
+type RelativeViewportSizeUnitVmin = RelativeSizeUnit<"vmin">;
+type RelativeViewportSizeUnitVb = RelativeSizeUnit<"vb">;
+type RelativeViewportSizeUnitVi = RelativeSizeUnit<"vi">;
+type RelativeSizeViewport = RelativeViewportSizeUnitVh | RelativeViewportSizeUnitVw | RelativeViewportSizeUnitVmax |
+    RelativeViewportSizeUnitVmin | RelativeViewportSizeUnitVb | RelativeViewportSizeUnitVi;
+type RelativeContainerSizeUnitCqw = RelativeSizeUnit<"cqw">;
+type RelativeContainerSizeUnitCqh = RelativeSizeUnit<"cqh">;
+type RelativeContainerSizeUnitCqi = RelativeSizeUnit<"cqi">;
+type RelativeContainerSizeUnitCqb = RelativeSizeUnit<"cqb">;
+type RelativeContainerSizeUnitCqmim = RelativeSizeUnit<"cqmin">;
+type RelativeContainerSizeUnitCqmax = RelativeSizeUnit<"cqmax">;
+type RelativeSizeContainer = RelativeContainerSizeUnitCqw | RelativeContainerSizeUnitCqh | RelativeContainerSizeUnitCqi |
+    RelativeContainerSizeUnitCqb | RelativeContainerSizeUnitCqmim | RelativeContainerSizeUnitCqmax;
+type AbsoluteSizeUnitPx = RelativeSizeUnit<"px">;
+type AbsoluteSizeUnitCm = RelativeSizeUnit<"cm">;
+type AbsoluteSizeUnitMm = RelativeSizeUnit<"mm">;
+type AbsoluteSizeUnitQ = RelativeSizeUnit<"Q">;
+type AbsoluteSizeUnitIn = RelativeSizeUnit<"in">;
+type AbsoluteSizeUnitPc = RelativeSizeUnit<"pc">;
+type AbsoluteSizeUnitPt = RelativeSizeUnit<"pt">;
+type AbsoluteSize = AbsoluteSizeUnitPx | AbsoluteSizeUnitCm | AbsoluteSizeUnitMm |
+    AbsoluteSizeUnitQ | AbsoluteSizeUnitIn | AbsoluteSizeUnitPc |
+    AbsoluteSizeUnitPt;
+type RelativeSize = RelativeSizeFont | RelativeSizeViewport | RelativeSizeContainer | AbsoluteSize;
 interface SceneFont {
     style?: "normal" | "italic" | "oblique";
     variant?: CanvasFontVariantCaps;
     weight?: "normal" | "bold" | "lighter" | "bolder" | number;
     stretch?: CanvasFontStretch;
     /**
-     * The size of the font. (in pixels)
+     * The size of the font.
      * 
      * A number will be converted to Npx.
      * @since v1.2.0
      */
-    size: FontSizeAbsolute | FontSizeRelative | number;
+    size: FontSizeAbsolute | FontSizeRelative | RelativeSize | number;
     lineHeight?: "normal" | number;
     family: string;
 }
@@ -3311,6 +3355,15 @@ class Scene {
         this.color = color;
         this.ctx.fill();
     }
+    addMisc(...items: Renderable[]) {
+        this.misc.add(...items);
+    }
+    rmMisc(...items: Renderable[]) {
+        this.misc.rm(...items);
+    }
+    hasMisc(...items: Renderable[]) {
+        return this.misc.has(...items);
+    }
 }
 /**
  * A collection of items.
@@ -3503,6 +3556,53 @@ class DebugRay extends Raycast implements Renderable {
         this.scene.ray(this.origin, this.angle, this.dist, this.color);
     }
 }
+interface ConeRaycastOptions extends RaycastOptions {
+    r0: number;
+    r1: number;
+    step: number;
+}
+class ConeRaycast extends RaycastBase {
+    r0: number;
+    r1: number;
+    step: number;
+    constructor(opts: ConeRaycastOptions) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    cast() {
+        let res: RaycastIntersecton | null = null;
+        for(let i = this.r0; i < this.r1 + 1; i += this.step) {
+            if(res) return res;
+            this.angle = Angle.rad(i);
+            super.cast((i, hit, dir) => {
+                if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            });
+        }
+        return res;
+    }
+}
+interface DebugConeRayOptions extends ConeRaycastOptions, DebugRayOptions {}
+class ConeDebugRay extends DebugRay implements Renderable {
+    r0: number;
+    r1: number;
+    step: number;
+    constructor(opts: DebugConeRayOptions) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    update() {}
+    render() {
+        for(let i = this.r0; i < this.r1 + 1; i += this.step) {
+            this.angle = Angle.rad(i);
+            super.render();
+        }
+    }
+}
+
 /**
  * The intersection returned by a `Raycast` collision.
  * @since v0.0.0
@@ -3891,14 +3991,14 @@ class SceneConfig extends Config<SceneConfigType> {
                 if(typeof v != "function") return console.warn("Invalid type passed as handle.");
                 if(k == "unload") {
                     if(Scene.config.get("unload")) return console.warn("There is already an unload listener!");
-                    window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
+                    window.addEventListener("beforeunload", (e) => {
                         e.preventDefault();
-                        e.returnValue = "";
+                        e.returnValue = true;
                         v();
                     });
                 } else if(k == "error") {
                     if(Scene.config.get("error")) return console.warn("There is already an error listener!");
-                    window.addEventListener("error", (e: ErrorEvent) => {
+                    window.addEventListener("error", (e) => {
                         v(e);
                     });
                 }
@@ -4854,6 +4954,7 @@ export {
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
     Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast,
+    ConeRaycast, ConeDebugRay,
 
     Config, SceneConfig, ImgConfig,
 
