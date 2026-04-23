@@ -2569,6 +2569,7 @@ class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
     lerp(scene: Scene, to: Vector) {
+        return new VectorLerpDevice(scene, this, this, to);
         //i += scene.delta / 10000; if(i < 1) {tx.x = p2d.lerp(0, 500, i); tx.y = p2d.lerp(30, 30, i);}
     }
 }
@@ -2578,17 +2579,13 @@ abstract class LerpDevice<T> {
     tg: T;
     from: T;
     to: T;
-    constructor(scene: Scene, tg: T, from: T, to: T) {
+    constructor(scene: Scene, tg: T, from: T, to: T, rate = 10000) {
         this.scene = scene;
         this.alpha = 0;
         this.tg = tg;
         this.from = from;
         this.to = to;
-        const post = this.scene.post?.bind(this.scene);
-        this.scene.post = () => {
-            post();
-            this.alpha++;
-        }
+        this.scene.postAdd(() => this.alpha += this.scene.delta / rate);
     }
     abstract upd(): void;
 }
@@ -3394,6 +3391,13 @@ class Scene {
     }
     hasMisc(...items: Renderable[]) {
         return this.misc.has(...items);
+    }
+    postAdd(fn: Function) {
+        const post = this.post?.bind(this);
+        this.post = () => {
+            post();
+            fn();
+        }
     }
 }
 /**

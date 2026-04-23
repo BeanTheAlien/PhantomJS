@@ -203,6 +203,8 @@ npm install @beanthealien/phantomjs
 - Add `ConeRaycast`.
 - Add `DebugConeRay`.
 - Add more options for size for scene font.
+## v1.4.6
+- Add `Scene.post`, `Scene.postAdd`, `Vector.lerp`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
