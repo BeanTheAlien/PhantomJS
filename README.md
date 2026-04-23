@@ -205,6 +205,9 @@ npm install @beanthealien/phantomjs
 - Add more options for size for scene font.
 ## v1.4.6
 - Add `Scene.post`, `Scene.postAdd`, `Vector.lerp`.
+## v1.4.7
+- Update `LerpDevice` handling.
+- Change `Scene` and `Level` to use `ItemBox`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

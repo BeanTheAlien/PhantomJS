@@ -2570,7 +2570,6 @@ class Vector {
     }
     lerp(scene: Scene, to: Vector) {
         return new VectorLerpDevice(scene, this, this, to);
-        //i += scene.delta / 10000; if(i < 1) {tx.x = p2d.lerp(0, 500, i); tx.y = p2d.lerp(30, 30, i);}
     }
 }
 abstract class LerpDevice<T> {
@@ -2579,20 +2578,36 @@ abstract class LerpDevice<T> {
     tg: T;
     from: T;
     to: T;
+    post?: Function;
     constructor(scene: Scene, tg: T, from: T, to: T, rate = 10000) {
         this.scene = scene;
         this.alpha = 0;
         this.tg = tg;
         this.from = from;
         this.to = to;
-        this.scene.postAdd(() => this.alpha += this.scene.delta / rate);
+        this.post = this.scene.post;
+        this.scene.postAdd(() => {
+            this.alpha += this.scene.delta / rate;
+            if(this.alpha >= 1) {
+                this.end();
+                this.destroy();
+            }
+        });
+    }
+    destroy() {
+        this.scene.post = this.post;
     }
     abstract upd(): void;
+    abstract end(): void;
 }
 class VectorLerpDevice extends LerpDevice<Vector> {
     upd() {
         this.tg.x = lerp(this.from.x, this.to.x, this.alpha);
         this.tg.y = lerp(this.from.y, this.to.y, this.alpha);
+    }
+    end() {
+        this.tg.x = this.to.x;
+        this.tg.y = this.to.y;
     }
 }
 /**
@@ -2833,7 +2848,7 @@ class Scene {
     static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    items: Items;
+    items: ItemBox<Entity>;
     evStore: Store<EventType, EventHandle[]>;
     lvlStore: Store<string, Level>;
     mousePos: Vector;
@@ -2859,7 +2874,7 @@ class Scene {
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
-        this.items = new Items();
+        this.items = new ItemBox();
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -2931,7 +2946,7 @@ class Scene {
         return this.ui.has(...items);
     }
     idxOf(item: Entity): number {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     idxOfUI(item: SceneUI): number {
         return this.ui.stuff.indexOf(item);
@@ -3031,12 +3046,12 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.items.length;
+        const len = this.items.stuff.length;
         for(let i = 0; i < len; i++) {
             for(let j = 0; j < len; j++) {
                 if(i == j) continue;
-                const a = this.items.at(i);
-                const b = this.items.at(j);
+                const a = this.items.stuff[i];
+                const b = this.items.stuff[j];
                 if(a && b) if(isCol(a, b)) a.collide(b);
             }
         }
@@ -3407,9 +3422,9 @@ class Scene {
  * @since v0.0.0
  */
 class Level {
-    items: Items;
+    items: ItemBox<Entity>;
     constructor() {
-        this.items = new Items();
+        this.items = new ItemBox();
     }
     add(...items: Entity[]) {
         this.items.add(...items);
@@ -3421,7 +3436,7 @@ class Level {
         return this.items.has(...items);
     }
     idxOf(item: Entity): number {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     filter(cb: Callback<unknown>): Entity[] {
         return this.items.filter(cb);
@@ -3525,7 +3540,7 @@ class RaycastBase {
     }
     cast(onHit: (i: Entity, hit: number, dir: Vector) => void) {
         const dir = this.dir();
-        for(const i of this.scene.items.items) {
+        for(const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit) {
                 onHit(i, hit, dir);
