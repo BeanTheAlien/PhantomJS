@@ -2568,6 +2568,35 @@ class Vector {
     get mag(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    lerp(scene: Scene, to: Vector) {
+        //i += scene.delta / 10000; if(i < 1) {tx.x = p2d.lerp(0, 500, i); tx.y = p2d.lerp(30, 30, i);}
+    }
+}
+abstract class LerpDevice<T> {
+    scene: Scene;
+    alpha: number;
+    tg: T;
+    from: T;
+    to: T;
+    constructor(scene: Scene, tg: T, from: T, to: T) {
+        this.scene = scene;
+        this.alpha = 0;
+        this.tg = tg;
+        this.from = from;
+        this.to = to;
+        const post = this.scene.post?.bind(this.scene);
+        this.scene.post = () => {
+            post();
+            this.alpha++;
+        }
+    }
+    abstract upd(): void;
+}
+class VectorLerpDevice extends LerpDevice<Vector> {
+    upd() {
+        this.tg.x = lerp(this.from.x, this.to.x, this.alpha);
+        this.tg.y = lerp(this.from.y, this.to.y, this.alpha);
+    }
 }
 /**
  * A pixel.
@@ -2818,6 +2847,7 @@ class Scene {
     ui: ItemBox<SceneUI>;
     fontControl: SceneFont;
     misc: ItemBox<Renderable>;
+    post?: Function;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -3067,6 +3097,7 @@ class Scene {
         this.ctx.restore();
     }
     start(postUpd: Function = NoFunc) {
+        this.post = postUpd;
         this.runtime.start(() => {
             this.update();
             this.clear();
