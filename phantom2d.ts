@@ -120,7 +120,7 @@ type PhantomEventType = Key<PhantomEventMap>;
  * Takes one argument, the event.
  * @since v0.0.0
  */
-type PhantomEventHandle = (e: PhantomEvent) => void;
+type PhantomEventHandle<E extends PhantomEvent = PhantomEvent> = (e: E) => void;
 /**
  * An audio MIME type. With or without the `audio/` prepension.
  * @since v0.0.0
@@ -2028,7 +2028,7 @@ class BulletObject extends Entity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     scene: Scene;
-    onDest?: PhantomEventHandle;
+    onDest?: PhantomEventHandle<PhantomDestroyedEvent>;
     tol: number;
     decay: number;
     initSpd: number;
