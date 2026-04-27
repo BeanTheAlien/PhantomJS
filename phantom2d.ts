@@ -2568,6 +2568,8 @@ class Vector {
     get mag(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    lerp(scene: Scene, to: Vector): VectorLerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode): VectorLerpDevice;
     lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
         return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
@@ -4088,7 +4090,7 @@ class SceneConfig extends Config<SceneConfigType> {
         super();
         this.onValueSet = (k, v) => {
             if(k == "unload" || k == "error") {
-                if(typeof v != "function") return console.warn("Invalid type passed as handle.");
+                if(typeof v != "function") throw new TypeError(`Handle '${v}' is not a function.`);
                 if(k == "unload") {
                     if(Scene.config.get("unload")) return console.warn("There is already an unload listener!");
                     window.addEventListener("beforeunload", (e) => {
@@ -4548,9 +4550,14 @@ class SceneUI {
     pos() {
         return new Vector(this.x, this.y);
     }
+    lerp(scene: Scene, to: Vector): SceneUILerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode): SceneUILerpDevice;
     lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
         return new SceneUILerpDevice(scene, this, this.pos(), to, lerpMode);
     }
+    lerpRot(scene: Scene, to: number): SceneUIRotationLerpDevice;
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName): SceneUIRotationLerpDevice;
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName, lerpMode: LerpDeviceLerpMode): SceneUIRotationLerpDevice;
     lerpRot(scene: Scene, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once") {
         return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
     }
@@ -4759,6 +4766,9 @@ class ProgressUI extends SceneUI {
             v--;
         }
     }
+    lerpVal(scene: Scene, to: number): ProgressUIValueLerpDevice;
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode): ProgressUIValueLerpDevice;
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode, rate: number): ProgressUIValueLerpDevice;
     lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode = "once", rate = 1) {
         return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
