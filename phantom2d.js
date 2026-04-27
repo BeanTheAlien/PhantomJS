@@ -1649,9 +1649,84 @@ class Vector {
         const h = rectH;
         return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
     }
-    mag() {
+    get mag() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    lerp(scene, to, lerpMode = "once") {
+        return new VectorLerpDevice(scene, this, this, to, lerpMode);
+    }
+}
+class DualLerpDevice {
+    constructor(scene, tg, from, to, mode = "once", rate = 1) {
+        this.scene = scene;
+        this.alpha = 0;
+        this.tg = tg;
+        this.from = from;
+        this.to = to;
+        this.dir = 1;
+        this.post = () => {
+            const d = this.scene.delta / rate;
+            if (this.dir == 1)
+                this.alpha += d;
+            else
+                this.alpha -= d;
+            if (this.alpha < 0 || this.alpha > 1) {
+                this.alpha = this.dir == 1 ? 1 : 0;
+                this.upd();
+                //this.end();
+                if (mode == "once")
+                    this.destroy();
+                else
+                    this.dir *= -1;
+                return;
+            }
+            this.upd();
+        };
+        this.scene.postAdd(this.post);
+    }
+    destroy() {
+        this.scene.postRm(this.post);
+    }
+}
+class LerpDevice extends DualLerpDevice {
+}
+class VectorBasedLerpDevice extends DualLerpDevice {
+    upd() {
+        this.tg.x = lerp(this.from.x, this.to.x, this.alpha);
+        this.tg.y = lerp(this.from.y, this.to.y, this.alpha);
+    }
+    end() {
+        this.tg.x = this.to.x;
+        this.tg.y = this.to.y;
+    }
+}
+class VectorLerpDevice extends VectorBasedLerpDevice {
+}
+class EntityLerpDevice extends VectorBasedLerpDevice {
+}
+class SceneUILerpDevice extends VectorBasedLerpDevice {
+}
+class AngleBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, from, to, mode = "rad", lerpMode = "once", rate = 1) {
+        super(scene, tg, from, to, lerpMode, rate);
+        this.mode = mode;
+    }
+    upd() {
+        this.tg.rot = lerp(this.mode == "rad" ? this.from : Angle.rad(this.from), this.mode == "rad" ? this.to : Angle.rad(this.to), this.alpha);
+    }
+    end() {
+        this.tg.rot = this.mode == "rad" ? this.to : Angle.rad(this.to);
+    }
+}
+class EntityRotationLerpDevice extends AngleBasedLerpDevice {
+}
+class SceneUIRotationLerpDevice extends AngleBasedLerpDevice {
+}
+class ProgressUIValueLerpDevice extends DualLerpDevice {
+    upd() {
+        this.tg.val = lerp(this.from, this.to, this.alpha);
+    }
+    end() { }
 }
 /**
  * A pixel.
@@ -1816,7 +1891,7 @@ class Scene {
         if (!ctx)
             throw new NoContextError();
         this.ctx = ctx;
-        this.items = new Items();
+        this.items = new ItemBox();
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -1832,6 +1907,7 @@ class Scene {
             family: "sans-serif"
         };
         this.misc = new ItemBox();
+        this.post = new ItemBox();
     }
     get width() {
         return this.canvas.width;
@@ -1888,7 +1964,7 @@ class Scene {
         return this.ui.has(...items);
     }
     idxOf(item) {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     idxOfUI(item) {
         return this.ui.stuff.indexOf(item);
@@ -1989,13 +2065,13 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.items.length;
+        const len = this.items.stuff.length;
         for (let i = 0; i < len; i++) {
             for (let j = 0; j < len; j++) {
                 if (i == j)
                     continue;
-                const a = this.items.at(i);
-                const b = this.items.at(j);
+                const a = this.items.stuff[i];
+                const b = this.items.stuff[j];
                 if (a && b)
                     if (isCol(a, b))
                         a.collide(b);
@@ -2056,12 +2132,16 @@ class Scene {
         this.ctx.restore();
     }
     start(postUpd = NoFunc) {
+        this.post.add(postUpd);
         this.runtime.start(() => {
             this.update();
             this.clear();
-            postUpd();
+            this.__runPostFuncs();
             this.render();
         });
+    }
+    __runPostFuncs() {
+        this.post.forEach(f => f());
     }
     stop() {
         this.runtime.stop();
@@ -2342,6 +2422,15 @@ class Scene {
     hasMisc(...items) {
         return this.misc.has(...items);
     }
+    postAdd(fn) {
+        this.post.add(fn);
+    }
+    postRm(fn) {
+        this.post.rm(fn);
+    }
+    postHas(fn) {
+        return this.post.has(fn);
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -2371,7 +2460,7 @@ Scene.unloadListenerCreated = false;
  */
 class Level {
     constructor() {
-        this.items = new Items();
+        this.items = new ItemBox();
     }
     add(...items) {
         this.items.add(...items);
@@ -2383,7 +2472,7 @@ class Level {
         return this.items.has(...items);
     }
     idxOf(item) {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     filter(cb) {
         return this.items.filter(cb);
@@ -2481,7 +2570,7 @@ class RaycastBase {
     }
     cast(onHit) {
         const dir = this.dir();
-        for (const i of this.scene.items.items) {
+        for (const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if (hit) {
                 onHit(i, hit, dir);
@@ -2599,13 +2688,17 @@ class Runtime {
     constructor() {
         this.processId = -1;
         this.delta = 0;
+        this.lastTime = 0;
     }
     start(fn) {
         if (this.processId != -1)
             throw new ExistingProcessError();
+        this.lastTime = performance.now();
         const out = () => {
+            const now = performance.now();
+            this.delta = (now - this.lastTime) / 1000; // seconds
+            this.lastTime = now;
             fn();
-            this.delta++;
             this.processId = requestAnimationFrame(out);
         };
         out();
@@ -3262,6 +3355,15 @@ class SceneUI {
     hasChilds(...childs) {
         return this.child.has(...childs);
     }
+    pos() {
+        return new Vector(this.x, this.y);
+    }
+    lerp(scene, to, lerpMode = "once") {
+        return new SceneUILerpDevice(scene, this, this.pos(), to, lerpMode);
+    }
+    lerpRot(scene, to, mode = "rad", lerpMode = "once") {
+        return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
+    }
 }
 class ChildUI extends ItemBox {
 }
@@ -3423,6 +3525,9 @@ class ProgressUI extends SceneUI {
             this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : (_b = this.scolor) !== null && _b !== void 0 ? _b : "#fff");
             v--;
         }
+    }
+    lerpVal(scene, to, mode = "once", rate = 1) {
+        return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
 }
 class Itvl {
@@ -3669,4 +3774,4 @@ function randItem(arr) {
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };

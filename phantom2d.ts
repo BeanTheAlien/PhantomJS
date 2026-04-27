@@ -2568,39 +2568,52 @@ class Vector {
     get mag(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
-    lerp(scene: Scene, to: Vector) {
-        return new VectorLerpDevice(scene, this, this, to);
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
+        return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
 }
-abstract class LerpDevice<T> {
+type LerpDeviceLerpMode = "once" | "bounce";
+abstract class DualLerpDevice<P, T> {
     scene: Scene;
     alpha: number;
-    tg: T;
+    tg: P;
     from: T;
     to: T;
-    post?: Function;
-    constructor(scene: Scene, tg: T, from: T, to: T, rate = 10000) {
+    post: Function;
+    dir: number;
+    constructor(scene: Scene, tg: P, from: T, to: T, mode: LerpDeviceLerpMode = "once", rate = 1) {
         this.scene = scene;
         this.alpha = 0;
         this.tg = tg;
         this.from = from;
         this.to = to;
-        this.post = this.scene.post;
-        this.scene.postAdd(() => {
-            this.alpha += this.scene.delta / rate;
-            if(this.alpha >= 1) {
-                this.end();
-                this.destroy();
+        this.dir = 1;
+        this.post = () => {
+            const d = this.scene.delta / rate;
+            if(this.dir == 1) this.alpha += d;
+            else this.alpha -= d;
+            if(this.alpha < 0 || this.alpha > 1) {
+                this.alpha = this.dir == 1 ? 1 : 0;
+                this.upd();
+                //this.end();
+                if(mode == "once") this.destroy();
+                else this.dir *= -1;
+                return;
             }
-        });
+            this.upd();
+        }
+        this.scene.postAdd(this.post);
     }
     destroy() {
-        this.scene.post = this.post;
+        this.scene.postRm(this.post);
     }
     abstract upd(): void;
     abstract end(): void;
 }
-class VectorLerpDevice extends LerpDevice<Vector> {
+abstract class LerpDevice<T> extends DualLerpDevice<T, T> {}
+type AngularPos2D = Entity | SceneUI;
+type Pos2D = Vector | AngularPos2D;
+class VectorBasedLerpDevice<P extends Pos2D> extends DualLerpDevice<P, Vector> {
     upd() {
         this.tg.x = lerp(this.from.x, this.to.x, this.alpha);
         this.tg.y = lerp(this.from.y, this.to.y, this.alpha);
@@ -2609,6 +2622,31 @@ class VectorLerpDevice extends LerpDevice<Vector> {
         this.tg.x = this.to.x;
         this.tg.y = this.to.y;
     }
+}
+class VectorLerpDevice extends VectorBasedLerpDevice<Vector> {}
+class EntityLerpDevice extends VectorBasedLerpDevice<Entity> {}
+class SceneUILerpDevice extends VectorBasedLerpDevice<SceneUI> {}
+type AngularMeasurementName = "deg" | "rad";
+class AngleBasedLerpDevice<P extends AngularPos2D> extends DualLerpDevice<P, number> {
+    mode: AngularMeasurementName;
+    constructor(scene: Scene, tg: P, from: number, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once", rate = 1) {
+        super(scene, tg, from, to, lerpMode, rate);
+        this.mode = mode;
+    }
+    upd() {
+        this.tg.rot = lerp(this.mode == "rad" ? this.from : Angle.rad(this.from), this.mode == "rad" ? this.to : Angle.rad(this.to), this.alpha);
+    }
+    end() {
+        this.tg.rot = this.mode == "rad" ? this.to : Angle.rad(this.to);
+    }
+}
+class EntityRotationLerpDevice extends AngleBasedLerpDevice<Entity> {}
+class SceneUIRotationLerpDevice extends AngleBasedLerpDevice<SceneUI> {}
+class ProgressUIValueLerpDevice extends DualLerpDevice<ProgressUI, number> {
+    upd() {
+        this.tg.val = lerp(this.from, this.to, this.alpha);
+    }
+    end() {}
 }
 /**
  * A pixel.
@@ -2859,7 +2897,7 @@ class Scene {
     ui: ItemBox<SceneUI>;
     fontControl: SceneFont;
     misc: ItemBox<Renderable>;
-    post?: Function;
+    post: ItemBox<Function>;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2890,6 +2928,7 @@ class Scene {
             family: "sans-serif"
         };
         this.misc = new ItemBox();
+        this.post = new ItemBox();
     }
     get width(): number {
         return this.canvas.width;
@@ -3109,13 +3148,16 @@ class Scene {
         this.ctx.restore();
     }
     start(postUpd: Function = NoFunc) {
-        this.post = postUpd;
+        this.post.add(postUpd);
         this.runtime.start(() => {
             this.update();
             this.clear();
-            postUpd();
+            this.__runPostFuncs();
             this.render();
         });
+    }
+    __runPostFuncs() {
+        this.post.forEach(f => f());
     }
     stop() {
         this.runtime.stop();
@@ -3408,11 +3450,13 @@ class Scene {
         return this.misc.has(...items);
     }
     postAdd(fn: Function) {
-        const post = this.post?.bind(this);
-        this.post = () => {
-            post();
-            fn();
-        }
+        this.post.add(fn);
+    }
+    postRm(fn: Function) {
+        this.post.rm(fn);
+    }
+    postHas(fn: Function) {
+        return this.post.has(fn);
     }
 }
 /**
@@ -3674,16 +3718,22 @@ class RaycastIntersecton {
  * @since v0.0.0
  */
 class Runtime {
-    processId: number; delta: number;
+    processId: number;
+    delta: number;
+    lastTime: number;
     constructor() {
         this.processId = -1;
         this.delta = 0;
+        this.lastTime = 0;
     }
     start(fn: Function) {
         if(this.processId != -1) throw new ExistingProcessError();
+        this.lastTime = performance.now();
         const out = () => {
+            const now = performance.now();
+            this.delta = (now - this.lastTime) / 1000; // seconds
+            this.lastTime = now;
             fn();
-            this.delta++;
             this.processId = requestAnimationFrame(out);
         }
         out();
@@ -4495,6 +4545,15 @@ class SceneUI {
     hasChilds(...childs: SceneUI[]): boolean {
         return this.child.has(...childs);
     }
+    pos() {
+        return new Vector(this.x, this.y);
+    }
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
+        return new SceneUILerpDevice(scene, this, this.pos(), to, lerpMode);
+    }
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once") {
+        return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
+    }
 }
 class ChildUI extends ItemBox<SceneUI> {}
 interface ButtonUIMouseInteractionStyling {
@@ -4699,6 +4758,9 @@ class ProgressUI extends SceneUI {
             this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : this.scolor ?? "#fff");
             v--;
         }
+    }
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode = "once", rate = 1) {
+        return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
 }
 
@@ -5019,6 +5081,9 @@ export {
 
     Itvl, FixedItvl,
 
-    KeyInputs
+    KeyInputs,
+
+    LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
+    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

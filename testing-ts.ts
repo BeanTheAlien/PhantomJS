@@ -32,5 +32,12 @@ const btn = new p2d.ButtonUI({
     }
 });
 scene.addUI(btn);
-let i = 0;
-scene.start(() => {scene.frustum(10, scene.height, 15, 5, 10, "#ff0000"); scene.cone(new p2d.Vector(100, 100), new p2d.Vector(70, 200), new p2d.Vector(30, 15), "#ff0202"); i += scene.delta / 10000; if(i < 1) {tx.x = p2d.lerp(0, 500, i); tx.y = p2d.lerp(30, 30, i);}});
+tx.lerp(scene, new p2d.Vector(300, 50), "once");
+btn.lerpRot(scene, 100, "deg", "bounce");
+const prog = new p2d.ProgressUI({ scene, pcolor: "#24b300", chunks: 10, val: 3, w: 100, h: 30, scolor: "#001c9b" });
+prog.lerpVal(scene, 100, "bounce", 5);
+scene.addUI(prog);
+// let i = 0;
+scene.start(() => {
+    scene.frustum(10, scene.height, 15, 5, 10, "#ff0000"); scene.cone(new p2d.Vector(100, 100), new p2d.Vector(70, 200), new p2d.Vector(30, 15), "#ff0202");
+});

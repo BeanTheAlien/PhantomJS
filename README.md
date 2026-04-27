@@ -208,6 +208,10 @@ npm install @beanthealien/phantomjs
 ## v1.4.7
 - Update `LerpDevice` handling.
 - Change `Scene` and `Level` to use `ItemBox`.
+## v2.0.0
+- Provides a whole host of changes for `LerpDevice` and children.
+- Change `Scene` to utilize an `ItemBox` of `Function`s for post-update.
+- Change `Runtime.delta` to be proper deltatime.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
