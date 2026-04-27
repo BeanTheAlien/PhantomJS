@@ -5054,6 +5054,18 @@ function randItem<T>(arr: T[]): T {
 function lerp(start: number, end: number, amount: number): number {
     return start + (end - start) * amount;
 }
+function easeInQuad(t: number) {
+    return Math.pow(t, 2);
+}
+function easeOutQuad(t: number) {
+    return 1 - Math.pow(1 - t, 2);
+}
+function easeInOutQuad(t: number) {
+    return t < 0.5 ? 2 * Math.pow(t, 2) : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+function easeSmoothStep(t: number) {
+    return t * t * (3 - 2 * t);
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
