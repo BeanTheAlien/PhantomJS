@@ -435,6 +435,7 @@ interface EntityOptions {
      * @since v0.0.0
      */
     y?: number;
+    z?: number;
     /**
      * The rotation (in radians).
      * @since v0.0.0
@@ -1430,6 +1431,7 @@ class Entity {
      * @since v0.0.0
      */
     y: number;
+    z: number;
     /**
      * The rotation, in radians.
      * @since v0.0.0
@@ -1469,6 +1471,7 @@ class Entity {
         this.upd = opts?.upd ?? NoFunc;
         this.x = opts?.x ?? Entity.defaults.get("x") ?? 0;
         this.y = opts?.y ?? Entity.defaults.get("y") ?? 0;
+        this.z = opts?.z ?? Entity.defaults.get("z") ?? 0;
         this.rot = opts?.rot ?? Entity.defaults.get("rot") ?? 0;
         this.width = opts?.width ?? Entity.defaults.get("width") ?? 0;
         this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
@@ -1497,10 +1500,12 @@ class Entity {
      * @since v0.0.0
      */
     setPos(x: number, y: number): void;
-    setPos(x: number | Vector, y?: number) {
+    setPos(x: number, y: number, z: number): void;
+    setPos(x: number | Vector, y?: number, z?: number) {
         if(typeof x == "number" && typeof y == "number") {
             this.x = x;
             this.y = y;
+            if(z) this.z = z;
         } else if(x instanceof Vector) {
             this.x = x.x;
             this.y = x.y;
@@ -1602,7 +1607,7 @@ class Entity {
      * @since v0.0.0
      */
     getPos(): Vector {
-        return new Vector(this.x, this.y);
+        return new Vector(this.x, this.y, this.z);
     }
     /**
      * Returns the x-coordinate.
@@ -1620,6 +1625,9 @@ class Entity {
     getPosY(): number {
         return this.y;
     }
+    getPosZ(): number {
+        return this.z;
+    }
     /**
      * Sets this x-coordinate.
      * @param x The new x.
@@ -1636,14 +1644,17 @@ class Entity {
     setPosY(y: number) {
         this.y = y;
     }
+    setPosZ(z: number) {
+        this.z = z;
+    }
     /**
      * Applies a listener for an event.
      * @param event The event type.
      * @param handle The handle.
      * @since v0.0.0
      */
-    on(event: PhantomEventType, handle: PhantomEventHandle) {
-        this.evMng.on(event, handle);
+    on<E extends PhantomEventType, H extends PhantomEventMap[E]>(event: E, handle: PhantomEventHandle<H>) {
+        this.evMng.on(event, handle as PhantomEventHandle);
     }
     /**
      * Removes a listener for an event.
@@ -1651,8 +1662,8 @@ class Entity {
      * @param handle The event handle (or nothing, to remove all handles).
      * @since v0.0.0
      */
-    off(event: PhantomEventType, handle?: PhantomEventHandle) {
-        this.evMng.off(event, handle);
+    off<E extends PhantomEventType, H extends PhantomEventMap[E]>(event: E, handle?: PhantomEventHandle<H>) {
+        this.evMng.off(event, handle as PhantomEventHandle | undefined);
     }
     /**
      * Consumes an event.
@@ -2536,10 +2547,14 @@ class Aircraft extends Entity {
  * @since v0.0.0
  */
 class Vector {
-    x: number; y: number;
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    x: number; y: number; z: number;
+    constructor();
+    constructor(x: number, y: number);
+    constructor(x: number, y: number, z: number);
+    constructor(x?: number, y?: number, z?: number) {
+        this.x = x ?? 0;
+        this.y = y ?? 0;
+        this.z = z ?? 1;
     }
     scale(fx: number, fy: number): void;
     scale(factor: number): void;
@@ -3155,6 +3170,7 @@ class Scene {
             this.update();
             this.clear();
             this.__runPostFuncs();
+            this.__sortByLayer();
             this.render();
         });
     }
@@ -3459,6 +3475,9 @@ class Scene {
     }
     postHas(fn: Function) {
         return this.post.has(fn);
+    }
+    __sortByLayer() {
+        this.items.stuff.sort((a, b) => a.z - b.z);
     }
 }
 /**
@@ -4142,6 +4161,7 @@ const EntityDefaultsMap = {
      * @since v1.0.11
      */
     y: primNum(),
+    z: primNum(),
     /**
      * Controls the rotation, in radians.
      * @since v1.0.11
@@ -4250,6 +4270,8 @@ type FilePickerHandleType = FileSystemFileHandle[];
  * @since v1.0.7
  */
 class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType, FilePickerOptions, FilePickerFinalOptions> {
+    pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
+    pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
     async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
         const [...handles]: FilePickerHandleType = await this.handle(opts);
         if(handles.length == 1) {

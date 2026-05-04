@@ -212,6 +212,10 @@ npm install @beanthealien/phantomjs
 - Provides a whole host of changes for `LerpDevice` and children.
 - Change `Scene` to utilize an `ItemBox` of `Function`s for post-update.
 - Change `Runtime.delta` to be proper deltatime.
+## v2.0.1
+- Implement z-index for `Entity`.
+- Sort elements during pre-render by z-index.
+- Change `FilePicker` to overload `{ mult: false } => string` and `{ mult: true } => string[]`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
