@@ -3121,14 +3121,17 @@ class Scene {
         });
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {
-            this.ctx.save();
-            const w2 = u.width / 2;
-            const h2 = u.height / 2;
-            this.ctx.translate(u.x + w2, u.y + h2);
-            this.ctx.rotate(u.rot);
-            this.alpha = u.alpha;
-            this.rect(-w2, -h2, u.width, u.height, u.color);
-            this.ctx.restore();
+            // test if it should also render a rectangle (true, by default)
+            if(u.rendRect) {
+                this.ctx.save();
+                const w2 = u.width / 2;
+                const h2 = u.height / 2;
+                this.ctx.translate(u.x + w2, u.y + h2);
+                this.ctx.rotate(u.rot);
+                this.alpha = u.alpha;
+                this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.ctx.restore();
+            }
             // for other rendering (other than a core rectangle)
             // call the UI's render method
             u.render();
@@ -4506,6 +4509,7 @@ class SceneUI {
     rend: Function;
     upd: Function;
     alpha: number;
+    rendRect: boolean;
     /**
      * A list of the children to this UI element.
      * 
@@ -4525,6 +4529,7 @@ class SceneUI {
         this.upd = opts.upd ?? NoFunc;
         this.child = new ChildUI();
         this.alpha = opts.alpha ?? 1;
+        this.rendRect = true;
     }
     render() {
         this.rend();
@@ -4686,6 +4691,8 @@ class TextUI extends SceneUI {
         this.tx = opts.tx ?? "";
         this.font = opts.font;
         this.mw = opts.mw;
+        // text shouldnt render a rect
+        this.rendRect = false;
     }
     render() {
         this.scene.color = this.color;
@@ -4757,8 +4764,8 @@ class ImgUI extends SceneUI {
         this.img = opts.img;
     }
     render() {
-        super.render();
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
+        super.render();
     }
 }
 interface ProgressUIOptions extends SceneUIOptions {

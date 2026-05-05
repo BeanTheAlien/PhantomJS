@@ -10,7 +10,7 @@ const b1 = new ButtonUI({ scene, styles: {
     b1.child.forEach((c) => c.alpha = 0);
     setTimeout(() => { b1.alpha = 1; b1.child.forEach((c) => c.alpha = 1); }, 1000);
 } });
-const tx = new TextUI({ scene, tx: "hello", w: 100, h: 100, color: "white" });
+const tx = new TextUI({ scene, tx: "hello", color: "black" });
 b1.addChild(tx);
 scene.addUI(b1);
 

@@ -2097,14 +2097,17 @@ class Scene {
         });
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {
-            this.ctx.save();
-            const w2 = u.width / 2;
-            const h2 = u.height / 2;
-            this.ctx.translate(u.x + w2, u.y + h2);
-            this.ctx.rotate(u.rot);
-            this.alpha = u.alpha;
-            this.rect(-w2, -h2, u.width, u.height, u.color);
-            this.ctx.restore();
+            // test if it should also render a rectangle (true, by default)
+            if (u.rendRect) {
+                this.ctx.save();
+                const w2 = u.width / 2;
+                const h2 = u.height / 2;
+                this.ctx.translate(u.x + w2, u.y + h2);
+                this.ctx.rotate(u.rot);
+                this.alpha = u.alpha;
+                this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.ctx.restore();
+            }
             // for other rendering (other than a core rectangle)
             // call the UI's render method
             u.render();
@@ -3326,6 +3329,7 @@ class SceneUI {
         this.upd = (_m = opts.upd) !== null && _m !== void 0 ? _m : NoFunc;
         this.child = new ChildUI();
         this.alpha = (_o = opts.alpha) !== null && _o !== void 0 ? _o : 1;
+        this.rendRect = true;
     }
     render() {
         this.rend();
@@ -3455,6 +3459,8 @@ class TextUI extends SceneUI {
         this.tx = (_b = opts.tx) !== null && _b !== void 0 ? _b : "";
         this.font = opts.font;
         this.mw = opts.mw;
+        // text shouldnt render a rect
+        this.rendRect = false;
     }
     render() {
         this.scene.color = this.color;
@@ -3518,8 +3524,8 @@ class ImgUI extends SceneUI {
         this.img = opts.img;
     }
     render() {
-        super.render();
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
+        super.render();
     }
 }
 class ProgressUI extends SceneUI {
