@@ -1,16 +1,13 @@
-import * as p2d from "../../phantom2d.js";
-window.addEventListener("error", (e) => {
-    alert(e.message);
-});
-const scene = new p2d.Scene({ canvas: "plane", w: 750, h: 750, border: "2px solid red" });
-const fh = 50;
-const floor = new p2d.FloorObject({ width: scene.width, height: fh, y: scene.height - fh, color: "green" });
-scene.add(floor);
-const plane = new p2d.Aircraft({
-    scene, wing: 30, grav: 0.98, drag: 0.5, width: 30, height: 10, x: 10, y: 30, color: "red", air: 1, mass: 1, upd: () => {
-        new p2d.DebugRay({ origin: plane.getPos(), angle: plane.rot, dist: 10, scene, color: "#ff0000", life: 50 });
+import { Img, Scene, Vector } from "../../phantom2d";
+const scene = new Scene({ canvas: "dest", w: 750, h: 750, border: "2px solid red" });
+const core = new Img("/missing_content.png");
+const center = new Vector(scene.width / 2, scene.height / 2);
+scene.on("click", () => {
+    if (scene.mouseInRect(center, 100, 100) && core.img.style.color != "rgba(0, 0, 0, 0)") {
+        core.img.style.color = "rgba(0, 0, 0, 0)";
+        setTimeout(() => core.img.style.color = "rgba(0, 0, 0, 1)", 500);
     }
 });
-plane.addThrust(30);
-scene.add(plane);
-scene.start();
+scene.start(() => {
+    scene.img(core, center.x, center.y, 100, 100);
+});

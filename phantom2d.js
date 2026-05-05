@@ -707,31 +707,34 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  */
 class Entity {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
         this.collide = (_b = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
         this.upd = (_c = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
         this.x = (_f = (_d = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _d !== void 0 ? _d : Entity.defaults.get("x")) !== null && _f !== void 0 ? _f : 0;
         this.y = (_j = (_g = opts === null || opts === void 0 ? void 0 : opts.y) !== null && _g !== void 0 ? _g : Entity.defaults.get("y")) !== null && _j !== void 0 ? _j : 0;
-        this.rot = (_m = (_l = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _l !== void 0 ? _l : Entity.defaults.get("rot")) !== null && _m !== void 0 ? _m : 0;
-        this.width = (_p = (_o = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _o !== void 0 ? _o : Entity.defaults.get("width")) !== null && _p !== void 0 ? _p : 0;
-        this.height = (_r = (_q = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _q !== void 0 ? _q : Entity.defaults.get("height")) !== null && _r !== void 0 ? _r : 0;
+        this.z = (_m = (_l = opts === null || opts === void 0 ? void 0 : opts.z) !== null && _l !== void 0 ? _l : Entity.defaults.get("z")) !== null && _m !== void 0 ? _m : 0;
+        this.rot = (_p = (_o = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _o !== void 0 ? _o : Entity.defaults.get("rot")) !== null && _p !== void 0 ? _p : 0;
+        this.width = (_r = (_q = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _q !== void 0 ? _q : Entity.defaults.get("width")) !== null && _r !== void 0 ? _r : 0;
+        this.height = (_t = (_s = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _s !== void 0 ? _s : Entity.defaults.get("height")) !== null && _t !== void 0 ? _t : 0;
         this.evStore = new Store();
-        this.color = (_t = (_s = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _s !== void 0 ? _s : Entity.defaults.get("color")) !== null && _t !== void 0 ? _t : "#fff";
+        this.color = (_v = (_u = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _u !== void 0 ? _u : Entity.defaults.get("color")) !== null && _v !== void 0 ? _v : "#fff";
         if (opts === null || opts === void 0 ? void 0 : opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
         this.comps = new Store();
-        this.moveMode = (_u = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _u !== void 0 ? _u : "move";
+        this.moveMode = (_w = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _w !== void 0 ? _w : "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
     }
-    setPos(x, y) {
+    setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
             this.x = x;
             this.y = y;
+            if (z)
+                this.z = z;
         }
         else if (x instanceof Vector) {
             this.x = x.x;
@@ -839,7 +842,7 @@ class Entity {
      * @since v0.0.0
      */
     getPos() {
-        return new Vector(this.x, this.y);
+        return new Vector(this.x, this.y, this.z);
     }
     /**
      * Returns the x-coordinate.
@@ -857,6 +860,9 @@ class Entity {
     getPosY() {
         return this.y;
     }
+    getPosZ() {
+        return this.z;
+    }
     /**
      * Sets this x-coordinate.
      * @param x The new x.
@@ -872,6 +878,9 @@ class Entity {
      */
     setPosY(y) {
         this.y = y;
+    }
+    setPosZ(z) {
+        this.z = z;
     }
     /**
      * Applies a listener for an event.
@@ -1618,9 +1627,10 @@ class Aircraft extends Entity {
  * @since v0.0.0
  */
 class Vector {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+    constructor(x, y, z) {
+        this.x = x !== null && x !== void 0 ? x : 0;
+        this.y = y !== null && y !== void 0 ? y : 0;
+        this.z = z !== null && z !== void 0 ? z : 1;
     }
     scale(fx, fy) {
         this.x *= fx;
@@ -2137,6 +2147,7 @@ class Scene {
             this.update();
             this.clear();
             this.__runPostFuncs();
+            this.__sortByLayer();
             this.render();
         });
     }
@@ -2430,6 +2441,9 @@ class Scene {
     }
     postHas(fn) {
         return this.post.has(fn);
+    }
+    __sortByLayer() {
+        this.items.stuff.sort((a, b) => a.z - b.z);
     }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
@@ -3014,7 +3028,7 @@ class SceneConfig extends Config {
         this.onValueSet = (k, v) => {
             if (k == "unload" || k == "error") {
                 if (typeof v != "function")
-                    return console.warn("Invalid type passed as handle.");
+                    throw new TypeError(`Handle '${v}' is not a function.`);
                 if (k == "unload") {
                     if (Scene.config.get("unload"))
                         return console.warn("There is already an unload listener!");
@@ -3069,6 +3083,7 @@ const EntityDefaultsMap = {
      * @since v1.0.11
      */
     y: primNum(),
+    z: primNum(),
     /**
      * Controls the rotation, in radians.
      * @since v1.0.11
@@ -3773,5 +3788,17 @@ function randItem(arr) {
 }
 function lerp(start, end, amount) {
     return start + (end - start) * amount;
+}
+function easeInQuad(t) {
+    return Math.pow(t, 2);
+}
+function easeOutQuad(t) {
+    return 1 - Math.pow(1 - t, 2);
+}
+function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * Math.pow(t, 2) : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+function easeSmoothStep(t) {
+    return t * t * (3 - 2 * t);
 }
 export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
