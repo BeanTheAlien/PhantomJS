@@ -3167,15 +3167,25 @@ class Scene {
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
-    start(postUpd: Function = NoFunc) {
-        this.post.add(postUpd);
-        this.runtime.start(() => {
+    __appendPost(func?: Function) {
+        if(func) this.postAdd(func);
+    }
+    __getAbsoluteUpdater() {
+        return () => {
             this.update();
             this.clear();
             this.__runPostFuncs();
             this.__sortByLayer();
             this.render();
-        });
+        }
+    }
+    start(postUpd?: Function) {
+        this.__appendPost(postUpd);
+        this.runtime.start(this.__getAbsoluteUpdater());
+    }
+    fixed(intervalTiming: number, postUpd?: Function) {
+        this.__appendPost(postUpd);
+        this.runtime.fixed(this.__getAbsoluteUpdater(), intervalTiming);
     }
     __runPostFuncs() {
         this.post.forEach(f => f());
@@ -3482,6 +3492,11 @@ class Scene {
     __sortByLayer() {
         this.items.stuff.sort((a, b) => a.z - b.z);
     }
+    *loopLvls(): Generator<Level, void, unknown> {
+        for(const lvl of this.lvlStore.items()) {
+            yield lvl[1];
+        }
+    }
 }
 /**
  * A collection of items.
@@ -3745,10 +3760,12 @@ class Runtime {
     processId: number;
     delta: number;
     lastTime: number;
+    __isDefinitelyFixed: boolean;
     constructor() {
         this.processId = -1;
         this.delta = 0;
         this.lastTime = 0;
+        this.__isDefinitelyFixed = false;
     }
     start(fn: Function) {
         if(this.processId != -1) throw new ExistingProcessError();
@@ -3762,9 +3779,16 @@ class Runtime {
         }
         out();
     }
+    fixed(fn: Function, intervalTiming: number) {
+        if(this.processId != -1) throw new ExistingProcessError();
+        this.processId = setInterval(fn, intervalTiming);
+        this.__isDefinitelyFixed = true;
+    }
     stop() {
         if(this.processId == -1) throw new NoProcessError();
-        cancelAnimationFrame(this.processId);
+        if(!this.__isDefinitelyFixed) cancelAnimationFrame(this.processId);
+        else clearInterval(this.processId);
+        this.__isDefinitelyFixed = false;
         this.delta = 0;
         this.processId = -1;
     }
