@@ -2894,6 +2894,598 @@ type FontStretch = SceneFont["stretch"];
 type FontSize = SceneFont["size"];
 type FontLineHeight = SceneFont["lineHeight"];
 type FontFamily = SceneFont["family"];
+abstract class SceneBase {
+    static config: SceneConfig;
+    /**
+     * This was used in v1.0.18.2 briefly.
+     * 
+     * It was used to determine whether an unload listener already existed.
+     * 
+     * It has been since replaced.
+     * @since v1.0.18.2
+     * @deprecated Since v1.0.19. Opted to using `Config.get` instead.
+     */
+    static unloadListenerCreated: boolean = false;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    items: ItemBox<Entity>;
+    evStore: Store<EventType, EventHandle[]>;
+    lvlStore: Store<string, Level>;
+    mousePos: Vector;
+    runtime: Runtime;
+    comps: Store<PhantomSceneCompType, SceneComp>;
+    evMng: SceneEventManager;
+    fol?: Entity;
+    ui: ItemBox<SceneUI>;
+    fontControl: SceneFont;
+    misc: ItemBox<Renderable>;
+    post: ItemBox<Function>;
+    constructor(opts: SceneOptions) {
+        if(typeof opts.canvas == "string") {
+            opts.canvas = document.getElementById(opts.canvas);
+        }
+        if(!opts.canvas) throw new NoCanvasError();
+        this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas as HTMLCanvasElement;
+        if(opts.w) this.canvas.width = opts.w;
+        if(opts.h) this.canvas.height = opts.h;
+        if(opts.cssW) this.canvas.style.width = opts.cssW;
+        if(opts.cssH) this.canvas.style.height = opts.cssH;
+        if(opts.border) this.canvas.style.border = opts.border;
+        const ctx = this.canvas.getContext("2d");
+        if(!ctx) throw new NoContextError();
+        this.ctx = ctx;
+        this.items = new ItemBox();
+        this.evStore = new Store();
+        this.lvlStore = new Store();
+        this.mousePos = new Vector(0, 0);
+        window.addEventListener("mousemove", (e) => {
+            this.mousePos = this.mouseAt(e);
+        });
+        this.runtime = new Runtime();
+        this.comps = new Store();
+        this.evMng = new SceneEventManager(this, this.evStore);
+        this.ui = new ItemBox();
+        this.fontControl = {
+            size: 10,
+            family: "sans-serif"
+        };
+        this.misc = new ItemBox();
+        this.post = new ItemBox();
+    }
+    get width(): number {
+        return this.canvas.width;
+    }
+    set width(w: number) {
+        this.canvas.width = w;
+    }
+    get cssWidth(): string {
+        return this.canvas.style.width;
+    }
+    set cssWidth(w: string) {
+        this.canvas.style.width = w;
+    }
+    get height(): number {
+        return this.canvas.height;
+    }
+    set height(h: number) {
+        this.canvas.height = h;
+    }
+    get cssHeight(): string {
+        return this.canvas.style.height;
+    }
+    set cssHeight(h: string) {
+        this.canvas.style.height = h;
+    }
+    add(...items: Entity[]) {
+        this.items.add(...items);
+    }
+    addIf(predicate: PredicateEntity, ...items: Entity[]) {
+        this.items.add(...items.filter(predicate));
+    }
+    addIfNotHas(...items: Entity[]) {
+        this.addIf(i => !this.has(i), ...items);
+    }
+    addUI(...items: SceneUI[]) {
+        this.ui.add(...items);
+    }
+    addUIIf(predicate: Predicate<SceneUI>, ...items: SceneUI[]) {
+        this.ui.add(...items.filter(predicate));
+    }
+    addUIIfNotHas(...items: SceneUI[]) {
+        this.addUIIf(u => !this.hasUI(u), ...items);
+    }
+    rm(...items: Entity[]) {
+        this.items.rm(...items);
+    }
+    rmUI(...items: SceneUI[]) {
+        this.ui.rm(...items);
+    }
+    has(...items: Entity[]): boolean {
+        return this.items.has(...items);
+    }
+    hasUI(...items: SceneUI[]): boolean {
+        return this.ui.has(...items);
+    }
+    idxOf(item: Entity): number {
+        return this.items.stuff.indexOf(item);
+    }
+    idxOfUI(item: SceneUI): number {
+        return this.ui.stuff.indexOf(item);
+    }
+    filter(cb: PredicateEntity): Entity[] {
+        return this.items.filter(cb);
+    }
+    filterUI(cb: Predicate<SceneUI>): SceneUI[] {
+        return this.ui.filter(cb);
+    }
+    on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
+        this.evMng.on(name, handle as EventHandle);
+    }
+    off<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle?: (event: E) => void) {
+        this.evMng.off(name, handle as EventHandle);
+    }
+    getImgData(pos: Vector): ImageData {
+        return this.ctx.getImageData(pos.x, pos.y, 1, 1);
+    }
+    setImgData(pos: Vector, data: ImageData) {
+        this.ctx.putImageData(data, pos.x, pos.y);
+    }
+    getPixel(pos: Vector): Pixel {
+        return Pixel.from(this.getImgData(pos));
+    }
+    setPixel(pos: Vector, rgba: Pixel) {
+        const d = this.getImgData(pos);
+        d.data[0] = rgba.r;
+        d.data[1] = rgba.g;
+        d.data[2] = rgba.b;
+        d.data[3] = rgba.a;
+        this.setImgData(pos, d);
+    }
+    forEach(cb: CallbackEntity) {
+        this.items.forEach(cb);
+    }
+    forEachUI(cb: Callback<SceneUI>) {
+        this.ui.forEach(cb);
+    }
+    getLvl(lvlName: string): Level | undefined {
+        return this.lvlStore.get(lvlName);
+    }
+    setLvl(lvlName: string, lvl: Level) {
+        this.lvlStore.set(lvlName, lvl);
+    }
+    hasLvl(lvlName: string): boolean {
+        return this.lvlStore.has(lvlName);
+    }
+    delLvl(lvlName: string) {
+        this.lvlStore.del(lvlName);
+    }
+    loadLvl(lvlName: string) {
+        const lvl = this.lvlStore.get(lvlName);
+        if(lvl) this.items = lvl.items;
+    }
+    lvl(): Level {
+        const lvl = new Level();
+        lvl.items = this.items;
+        return lvl;
+    }
+    get color(): FillStyle {
+        return this.ctx.fillStyle;
+    }
+    set color(color: FillStyle) {
+        this.ctx.fillStyle = color;
+    }
+    get alpha(): number {
+        return this.ctx.globalAlpha;
+    }
+    set alpha(alpha: number) {
+        this.ctx.globalAlpha = alpha;
+    }
+    img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
+        this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
+    }
+    rect(x: number, y: number, w: number, h: number, color: string) {
+        this.color = color;
+        this.ctx.fillRect(x, y, w, h);
+    }
+    bg(color: string) {
+        this.rect(0, 0, this.width, this.height, color);
+    }
+    ray(origin: Vector, angle: number, dist: number, color: string) {
+        this.ctx.strokeStyle = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(origin.x, origin.y);
+        this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+        this.ctx.stroke();
+    }
+    clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+    }
+    update() {
+        this.forEach(i => i.update());
+        this.forEachUI(u => u.update());
+        this.misc.forEach(m => m.update());
+        this.testCols();
+    }
+    testCols() {
+        const len = this.items.stuff.length;
+        for(let i = 0; i < len; i++) {
+            for(let j = 0; j < len; j++) {
+                if(i == j) continue;
+                const a = this.items.stuff[i];
+                const b = this.items.stuff[j];
+                if(a && b) if(isCol(a, b)) a.collide(b);
+            }
+        }
+    }
+    render() {
+        this.items.forEach(i => {
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color);
+            i.child.forEach(c => {
+                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, i.x, i.y);
+            });
+        });
+        // UI will be rendered in a fixed position
+        this.ui.forEach(u => {
+            // test if it should also render a rectangle (true, by default)
+            if(u.rendRect) {
+                this.ctx.save();
+                const w2 = u.width / 2;
+                const h2 = u.height / 2;
+                this.ctx.translate(u.x + w2, u.y + h2);
+                this.ctx.rotate(u.rot);
+                this.alpha = u.alpha;
+                this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.ctx.restore();
+            }
+            // for other rendering (other than a core rectangle)
+            // call the UI's render method
+            u.render();
+        });
+        // render misc items
+        this.misc.forEach(m => m.render());
+    }
+    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: string, offX: number = 0, offY: number = 0) {
+        let ox = 0;
+        let oy = 0;
+        if(this.fol) {
+            const fcx = this.fol.x + this.fol.width / 2;
+            const fcy = this.fol.y + this.fol.height / 2;
+            ox = this.width / 2 - fcx;
+            oy = this.height / 2 - fcy;
+        }
+        const dx = ex + ox + offX;
+        const dy = ey + oy + offY;
+        this.ctx.save();
+        const w2 = w/2;
+        const h2 = h/2;
+        this.ctx.translate(dx + w2, dy + h2);
+        this.ctx.rotate(rot);
+        const nx = -w2;
+        const ny = -h2;
+        const xw = nx + w;
+        const yh = ny + h;
+        // off-screen no draw check
+        // if the x-coord is less than 0 or more than width
+        // or the y-coord is less than 0 or more than height
+        // then it is not on the canvas
+        if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
+        this.rect(nx, ny, w, h, color);
+        this.ctx.restore();
+    }
+    __appendPost(func?: Function) {
+        if(func) this.postAdd(func);
+    }
+    abstract start(postUpd?: Function): void;
+    abstract fixed(intervalTiming: number, postUpd?: Function): void;
+    __runPostFuncs() {
+        this.post.forEach(f => f());
+    }
+    abstract stop(): void;
+    save(file: string) {
+        const s = new SaveJSON(file);
+        s.save(this, 4);
+    }
+    saveLvl(lvlName: string, file: string) {
+        const s = new SaveJSON(file);
+        s.save(this.getLvl(lvlName), 4);
+    }
+    fScrOn() {
+        this.canvas.requestFullscreen();
+    }
+    fScrOff() {
+        document.exitFullscreen();
+    }
+    pLockOn() {
+        this.canvas.requestPointerLock();
+    }
+    pLockOff() {
+        document.exitPointerLock();
+    }
+    get delta(): number {
+        return this.runtime.delta;
+    }
+    use<K extends PhantomSceneCompType, T extends PhantomSceneCompOptionsMap[K]>(c: K, opts?: T) {
+        if(this.uses(c)) throw new AlreadyUsingError();
+        const _opts = opts ?? {};
+        this.comps.set(c, new (PhantomSceneCompRecord[c])(this, _opts));
+    }
+    unuse(c: PhantomSceneCompType) {
+        this.comps.del(c);
+    }
+    uses(c: PhantomSceneCompType): boolean {
+        return this.comps.has(c);
+    }
+    comp<K extends PhantomSceneCompType, T extends PhantomSceneCompMap[K]>(c: K): T {
+        return this.comps.get(c) as T;
+    }
+    bounds(): DOMRect {
+        return this.canvas.getBoundingClientRect();
+    }
+    mouseAt(e: MouseEvent): Vector {
+        const rect = this.bounds();
+        const sx = this.width / rect.width;
+        const sy = this.height / rect.height;
+        return new Vector((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
+    }
+    clickFScrOn() {
+        this.on("click", () => this.fScrOn());
+    }
+    clickFScrOff() {
+        this.off("click", () => this.fScrOn());
+    }
+    clickPLockOn() {
+        this.on("click", () => this.pLockOn());
+    }
+    clickPLockOff() {
+        this.off("click", () => this.pLockOn());
+    }
+    __listenOn(e: EventType, h: EventHandle) {
+        this.canvas.addEventListener(e, h);
+    }
+    __listenOff(e: EventType, h: EventHandle) {
+        this.canvas.removeEventListener(e, h);
+    }
+    toDataURL(format: string = "image/png", quality: number = 1): string {
+        return this.canvas.toDataURL(format, quality);
+    }
+    /**
+     * Creates a screenshot of the canvas.
+     * 
+     * Uses the canvas's content as the image content.
+     * @param file The file name.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshot(file: string, format: string = "image/png", quality: number = 1) {
+        const save = new Save({
+            mime: format,
+            file,
+            ext: format.split("/")[1]
+        });
+        save.trigger(this.toDataURL(format, quality));
+    }
+    find(cb: FindPredicateEntity): Entity | undefined {
+        return this.items.find(cb);
+    }
+    #tagTest(ent: Entity, tagName: Tag | string): boolean {
+        if(objIs(tagName, Tag)) {
+            return ent.tags.has(tagName);
+        } else {
+            return ent.tags.some((t) => t.test(tagName));
+        }
+    }
+    findByTag(tagName: Tag | string): Entity | undefined {
+        return this.find((e): e is Entity => this.#tagTest(e, tagName));
+    }
+    hasByTag(tagName: Tag | string): boolean {
+        return this.some((e) => this.#tagTest(e, tagName));
+    }
+    some(cb: PredicateEntity) {
+        return this.items.some(cb);
+    }
+    /**
+     * Returns the rotation between two entites.
+     * 
+     * Utilizes `Vector.rotBtwn` to calculate.
+     * @param a The first entity.
+     * @param b The second entity.
+     * @returns The rotation between the two.
+     * @since v1.0.16
+     */
+    rotBtwn(a: Entity, b: Entity): number {
+        return Vector.rotBtwn(a.getPos(), b.getPos());
+    }
+    /**
+     * Returns the rotation between the specified entity and the mouse.
+     * @param ent The entity to test.
+     * @returns The rotation from the entity to the mouse.
+     */
+    rotToMouse(ent: Entity): number {
+        const pos = ent.getPos();
+        const dir = new Vector(this.mousePos.x, this.mousePos.y);
+        return Math.atan2(dir.y - pos.y, dir.x - pos.x);
+    }
+    style(styles: CSSStyleDeclaration) {
+        Object.assign(this.canvas.style, styles);
+    }
+    center(): Vector {
+        return new Vector(this.width / 2, this.height / 2);
+    }
+    clientCenter(): Vector {
+        return new Vector(this.canvas.clientWidth / 2, this.canvas.clientHeight / 2);
+    }
+    onScrn(vec: Vector, w: number, h: number) {
+        const x = vec.x + w;
+        const y = vec.y + h;
+        return x >= 0 && x <= this.width && y >= 0 && y <= this.height;
+    }
+    follow(ent: Entity) {
+        this.fol = ent;
+    }
+    unfollow() {
+        this.fol = undefined;
+    }
+    text(text: string, x: number, y: number, maxWidth?: number) {
+        this.ctx.fillText(text, x, y, maxWidth);
+    }
+    get align(): CanvasTextAlign {
+        return this.ctx.textAlign;
+    }
+    set align(align: CanvasTextAlign) {
+        this.ctx.textAlign = align;
+    }
+    get font(): string {
+        return this.ctx.font;
+    }
+    set font(font: string | SceneFont) {
+        if(typeof font == "string") {
+            this.ctx.font = font;
+        } else {
+            this.ctx.font = `${font.style ?? "normal"} ${font.variant ?? "normal"} ${font.weight ?? "normal"} ${font.stretch ?? "normal"} ${font.size} ${font.lineHeight ?? "normal"} ${font.family}`;
+        }
+    }
+    // useFont(size: FontSize): void;
+    // useFont(size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(style: Real<FontStyle>, stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(variant: Real<FontVariant>, size: FontSize, family: FontFamily): void;
+    // useFont(weight: Real<FontWeight>, size: FontSize, family: FontFamily): void;
+    // useFont(stretch: Real<FontStretch>, size: FontSize, family: FontFamily): void;
+    // useFont(lineHeight: Real<FontLineHeight>, size: FontSize, family: FontFamily): void;
+    // useFont(): void;
+    // useFont() {}
+    get fontSize(): FontSize {
+        return this.fontControl.size;
+    }
+    set fontSize(size: FontSize) {
+        this.fontControl.size = size;
+        this.#buildFont();
+    }
+    get fontFamily(): FontFamily {
+        return this.fontControl.family;
+    }
+    set fontFamily(family: FontFamily) {
+        this.fontControl.family = family;
+        this.#buildFont();
+    }
+    get baseline(): CanvasTextBaseline {
+        return this.ctx.textBaseline;
+    }
+    set baseline(baseline: CanvasTextBaseline) {
+        this.ctx.textBaseline = baseline;
+    }
+    get fontStyle(): FontStyle {
+        return this.fontControl.style;
+    }
+    set fontStyle(style: Real<FontStyle>) {
+        this.fontControl.style = style;
+        this.#buildFont();
+    }
+    get fontVariant(): FontVariant {
+        return this.fontControl.variant;
+    }
+    set fontVariant(variant: Real<FontVariant>) {
+        this.fontControl.variant = variant;
+        this.#buildFont();
+    }
+    get fontWeight(): FontWeight {
+        return this.fontControl.weight;
+    }
+    set fontWeight(weight: Real<FontWeight>) {
+        this.fontControl.weight = weight;
+        this.#buildFont();
+    }
+    get fontStretch(): FontStretch {
+        return this.fontControl.stretch;
+    }
+    set fontStretch(stretch: Real<FontStretch>) {
+        this.fontControl.stretch = stretch;
+        this.#buildFont();
+    }
+    get fontLineHeight(): FontLineHeight {
+        return this.fontControl.lineHeight;
+    }
+    set fontLineHeight(lineHeight: Real<FontLineHeight>) {
+        this.fontControl.lineHeight = lineHeight;
+        this.#buildFont();
+    }
+    #buildFont() {
+        this.font = this.fontControl;
+    }
+    mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
+        return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
+    }
+    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, strokeColor?: string, lineWidth?: number) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+
+        // Style the frustum
+        this.ctx.fillStyle = fillColor;
+        this.ctx.fill();
+        this.ctx.strokeStyle = strokeColor ?? fillColor;
+        this.ctx.lineWidth = lineWidth ?? 2;
+        this.ctx.stroke();
+    }
+    triangle(p0: Vector, p1: Vector, p2: Vector, color: string) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
+    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p0.x, p0.y);
+        this.ctx.lineTo(p1.x, p1.y);
+        this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
+        this.ctx.lineTo(p0.x, p0.y);
+        this.ctx.closePath();
+        this.color = color;
+        this.ctx.fill();
+    }
+    addMisc(...items: Renderable[]) {
+        this.misc.add(...items);
+    }
+    rmMisc(...items: Renderable[]) {
+        this.misc.rm(...items);
+    }
+    hasMisc(...items: Renderable[]) {
+        return this.misc.has(...items);
+    }
+    postAdd(fn: Function) {
+        this.post.add(fn);
+    }
+    postRm(fn: Function) {
+        this.post.rm(fn);
+    }
+    postHas(fn: Function) {
+        return this.post.has(fn);
+    }
+    __sortByLayer() {
+        this.items.stuff.sort((a, b) => a.z - b.z);
+    }
+    *loopLvls(): Generator<Level, void, unknown> {
+        for(const lvl of this.lvlStore.items()) {
+            yield lvl[1];
+        }
+    }
+}
 /**
  * The root canvas to display content.
  * @since v0.0.0
