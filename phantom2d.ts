@@ -2416,14 +2416,17 @@ class KeyInputs {
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
+        this.__createBinding(code, exec, cd);
+    }
+    binds(...binds: Binding[]) {
+        binds.forEach(b => this.__createBinding(b[0], b[1], b[2]));
+    }
+    __createBinding(code: KeyCode, exec: Function, cd?: number) {
         if(cd == undefined) {
             this.kbinds.set(code, exec);
         } else {
             this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
-    }
-    binds(...binds: Binding[]) {
-        binds.forEach(b => { if(!b[2]) this.bind(b[0], b[1]); else this.bind(b[0], b[1], b[2])});
     }
     unbind(code: KeyCode) {
         this.kbinds.del(code);
@@ -2460,6 +2463,12 @@ class KeyInputs {
                 }
             }
         }
+    }
+    isDown(key: string) {
+        return !!this.keys.get(key);
+    }
+    isUp(key: string) {
+        return !this.isDown(key);
     }
 }
 interface AircraftOptions extends EntityOptions {
