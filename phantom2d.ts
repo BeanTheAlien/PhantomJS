@@ -4195,7 +4195,7 @@ class SaveJSON extends Save {
  * @since v0.0.0
  */
 class Preset {
-    atts: { any?: any };
+    atts: { [x: string]: any };
     constructor(ent: Entity) {
         this.atts = {};
         Object.assign(this.atts, ent);
@@ -4206,6 +4206,9 @@ class Preset {
     }
     apply(ent: Entity) {
         Object.assign(ent, this.atts);
+    }
+    new() {
+        return new Entity(this.atts);
     }
 }
 class RaycastBase {
