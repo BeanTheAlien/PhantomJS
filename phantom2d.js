@@ -1511,18 +1511,18 @@ class KeyInputs {
         });
     }
     bind(code, exec, cd) {
+        this.__createBinding(code, exec, cd);
+    }
+    binds(...binds) {
+        binds.forEach(b => this.__createBinding(b[0], b[1], b[2]));
+    }
+    __createBinding(code, exec, cd) {
         if (cd == undefined) {
             this.kbinds.set(code, exec);
         }
         else {
             this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
-    }
-    binds(...binds) {
-        binds.forEach(b => { if (!b[2])
-            this.bind(b[0], b[1]);
-        else
-            this.bind(b[0], b[1], b[2]); });
     }
     unbind(code) {
         this.kbinds.del(code);
@@ -1560,6 +1560,12 @@ class KeyInputs {
                 }
             }
         }
+    }
+    isDown(key) {
+        return !!this.keys.get(key);
+    }
+    isUp(key) {
+        return !this.isDown(key);
     }
 }
 class Aircraft extends Entity {
@@ -1918,6 +1924,7 @@ class Scene {
         };
         this.misc = new ItemBox();
         this.post = new ItemBox();
+        this.dualRuntime = new Runtime();
     }
     get width() {
         return this.canvas.width;
@@ -2144,21 +2151,87 @@ class Scene {
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
-    start(postUpd = NoFunc) {
-        this.post.add(postUpd);
-        this.runtime.start(() => {
+    __appendPost(func) {
+        if (func)
+            this.postAdd(func);
+    }
+    __getAbsoluteUpdater() {
+        return () => {
             this.update();
             this.clear();
             this.__runPostFuncs();
             this.__sortByLayer();
             this.render();
-        });
+        };
+    }
+    __getDualUpdaterPrimary() {
+        return () => {
+            this.update();
+            this.__runPostFuncs();
+        };
+    }
+    __getDualUpdaterSecondary() {
+        return () => {
+            this.clear();
+            this.__sortByLayer();
+            this.render();
+        };
+    }
+    __startRuntime(fn, postUpd) {
+        this.__appendPost(postUpd);
+        this.runtime.start(fn);
+    }
+    start(postUpd) {
+        this.__startRuntime(this.__getAbsoluteUpdater(), postUpd);
+    }
+    __startDualSecondary() {
+        this.dualRuntime.start(this.__getDualUpdaterSecondary());
+    }
+    /**
+     * Starts a dual runtime process.
+     *
+     * Initates the primary `runtime` with the updating function.
+     *
+     * Runs a background process on `dualRuntime` to re-render.
+     * @param postUpd A post-update function.
+     */
+    startDual(postUpd) {
+        this.__startRuntime(this.__getDualUpdaterPrimary(), postUpd);
+        this.__startDualSecondary();
+    }
+    __fixedRuntime(fn, intervalTiming, postUpd) {
+        this.__appendPost(postUpd);
+        this.runtime.fixed(fn, intervalTiming);
+    }
+    fixed(intervalTiming, postUpd) {
+        this.__fixedRuntime(this.__getAbsoluteUpdater(), intervalTiming, postUpd);
+    }
+    /**
+     * Runs a dual runtime process.
+     *
+     * Starts an updating process on the fixed channel, as denoted by `intervalTiming`.
+     *
+     * Runs a background re-rendering process process on `dualRuntime`.
+     *
+     * Used to prevent the "laggy" effect that comes with a fixed update, per rendering not being able to update fast enough.
+     *
+     * Runs the re-render process every frame.
+     * @param intervalTiming The update timing.
+     * @param postUpd A post-update function.
+     */
+    fixedDual(intervalTiming, postUpd) {
+        this.__fixedRuntime(this.__getDualUpdaterPrimary(), intervalTiming, postUpd);
+        this.__startDualSecondary();
     }
     __runPostFuncs() {
         this.post.forEach(f => f());
     }
     stop() {
         this.runtime.stop();
+    }
+    stopDual() {
+        this.stop();
+        this.dualRuntime.stop();
     }
     save(file) {
         const s = new SaveJSON(file);
@@ -2448,6 +2521,11 @@ class Scene {
     __sortByLayer() {
         this.items.stuff.sort((a, b) => a.z - b.z);
     }
+    *loopLvls() {
+        for (const lvl of this.lvlStore.items()) {
+            yield lvl[1];
+        }
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -2573,6 +2651,9 @@ class Preset {
     }
     apply(ent) {
         Object.assign(ent, this.atts);
+    }
+    new() {
+        return new Entity(this.atts);
     }
 }
 class RaycastBase {
@@ -2706,6 +2787,7 @@ class Runtime {
         this.processId = -1;
         this.delta = 0;
         this.lastTime = 0;
+        this.__isDefinitelyFixed = false;
     }
     start(fn) {
         if (this.processId != -1)
@@ -2720,10 +2802,20 @@ class Runtime {
         };
         out();
     }
+    fixed(fn, intervalTiming) {
+        if (this.processId != -1)
+            throw new ExistingProcessError();
+        this.processId = setInterval(fn, intervalTiming);
+        this.__isDefinitelyFixed = true;
+    }
     stop() {
         if (this.processId == -1)
             throw new NoProcessError();
-        cancelAnimationFrame(this.processId);
+        if (!this.__isDefinitelyFixed)
+            cancelAnimationFrame(this.processId);
+        else
+            clearInterval(this.processId);
+        this.__isDefinitelyFixed = false;
         this.delta = 0;
         this.processId = -1;
     }

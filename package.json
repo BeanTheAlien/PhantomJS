@@ -1,13 +1,14 @@
 {
   "name": "@beanthealien/phantomjs",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Phantom.js is a web API to simplify the webgame development proccess.\r Phantom.js is a 2D webgame engine with readable and simple scripting!",
   "main": "phantom2d.js",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "tsc"
   },
   "bin": {
     "phantom": "bin/bin.js",
