@@ -7,8 +7,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "tsc"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
     "phantom": "bin/bin.js",
