@@ -216,6 +216,8 @@ npm install @beanthealien/phantomjs
 - Implement z-index for `Entity`.
 - Sort elements during pre-render by z-index.
 - Change `FilePicker` to overload `{ mult: false } => string` and `{ mult: true } => string[]`.
+## v2.1.0
+- Dual Scene support.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
