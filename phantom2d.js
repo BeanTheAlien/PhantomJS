@@ -2968,13 +2968,16 @@ class Cooldown {
         _Cooldown_instances.add(this);
         this.id = -1;
         this.ready = false;
-        if (msOrState && typeof msOrState == "number" && msOrState2 == undefined) {
+        // Use typeof check for the number
+        const hasMs = typeof msOrState === "number";
+        const hasState = typeof msOrState2 === "boolean";
+        if (hasMs && msOrState2 === undefined) {
             this.on(msOrState);
         }
-        else if (msOrState && typeof msOrState == "boolean" && msOrState2 == undefined) {
+        else if (typeof msOrState === "boolean" && msOrState2 === undefined) {
             this.ready = msOrState;
         }
-        else if (msOrState && typeof msOrState == "number" && msOrState2 && typeof msOrState2 == "boolean") {
+        else if (hasMs && hasState) {
             this.on(msOrState);
             this.ready = msOrState2;
         }
@@ -3562,6 +3565,17 @@ class TextUI extends SceneUI {
         super.render();
     }
 }
+class KeyedTextUI extends TextUI {
+    constructor(opts) {
+        super(opts);
+        this.change = opts.change;
+        if (opts.val)
+            this.tx = this.change(opts.val);
+    }
+    set val(newVal) {
+        this.tx = this.change(newVal);
+    }
+}
 class MenuUI extends SceneUI {
     constructor(opts) {
         super(opts);
@@ -3850,11 +3864,11 @@ function random(a, b) {
         min = 0;
         max = 101;
     }
-    else if (a && b == undefined) {
+    else if (a != undefined && b == undefined) {
         min = 0;
         max = a;
     }
-    else if (a && b) {
+    else if (a != undefined && b != undefined) {
         min = a;
         max = b;
     }
@@ -3899,4 +3913,4 @@ function easeInOutQuad(t) {
 function easeSmoothStep(t) {
     return t * t * (3 - 2 * t);
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
