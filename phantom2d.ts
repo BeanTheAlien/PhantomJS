@@ -611,6 +611,7 @@ interface SceneOptions {
      * @since v1.0.20
      */
     border?: CSSStyleDeclaration["border"];
+    fit?: FittingMode;
 }
 interface WallObjectOptions extends EntityOptions {}
 /**
@@ -2894,6 +2895,7 @@ type FontStretch = SceneFont["stretch"];
 type FontSize = SceneFont["size"];
 type FontLineHeight = SceneFont["lineHeight"];
 type FontFamily = SceneFont["family"];
+type FittingMode = "none" | "shrink" | "grow" | "fill";
 /**
  * The root canvas to display content.
  * @since v0.0.0
@@ -3561,6 +3563,23 @@ class Scene {
     *loopLvls(): Generator<Level, void, unknown> {
         for(const lvl of this.lvlStore.items()) {
             yield lvl[1];
+        }
+    }
+    set fit(fit: FittingMode) {
+        if(fit == "none") return;
+        if(fit == "fill") {
+            // use WxH as desired dimensions
+            // window.innerWidth and window.innerHeight for measurments
+            // this.canvas.width = window.innerWidth;
+            // this.canvas.height = window.innerHeight;
+        }
+        if(fit == "grow") {
+            // grow WxH to fill, if possible
+            // never shrink dimensions
+        }
+        if(fit == "shrink") {
+            // shrink WxH to fill, if possible
+            // never grow dimensions
         }
     }
 }
