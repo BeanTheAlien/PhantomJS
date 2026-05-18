@@ -4797,6 +4797,21 @@ class TextUI extends SceneUI {
         super.render();
     }
 }
+interface KeyedTextUIOptions<T> extends TextUIOptions {
+    val?: T;
+    change: (newValue: T) => string;
+}
+class KeyedTextUI<T> extends TextUI {
+    change: (v: T) => string;
+    constructor(opts: KeyedTextUIOptions<T>) {
+        super(opts);
+        this.change = opts.change;
+        if(opts.val) this.tx = this.change(opts.val);
+    }
+    set val(newVal: T) {
+        this.tx = this.change(newVal);
+    }
+}
 interface MenuUIOptions extends SceneUIOptions {
     binds?: KeyBinds;
 }
@@ -5209,7 +5224,7 @@ export {
 
     Weapon, Gun, Pistol, Burst,
 
-    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI,
+    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
     Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast,
