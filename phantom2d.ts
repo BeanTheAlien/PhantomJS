@@ -2598,6 +2598,11 @@ class Vector {
     lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
         return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
+    near(vec: Vector, tolerance: number) {
+        const dx = vec.x - this.x;
+        const dy = vec.y - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < tolerance;
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
