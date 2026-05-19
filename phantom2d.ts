@@ -3570,6 +3570,26 @@ class Scene {
             yield lvl[1];
         }
     }
+    grow(rw: number, rh: number) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if(cr > tr) {
+            this.canvas.height = Math.floor(ch);
+            this.canvas.width = Math.floor(ch * tr);
+        }
+    }
+    shrink(rw: number, rh: number) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if(cr < tr) {
+            this.canvas.width = Math.floor(cw);
+            this.canvas.height = Math.floor(cw / tr);
+        }
+    }
     set fit(fit: FittingMode) {
         if(fit == "none") return;
         if(fit == "fill") {
