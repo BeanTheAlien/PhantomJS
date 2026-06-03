@@ -1671,6 +1671,11 @@ class Vector {
     lerp(scene, to, lerpMode = "once") {
         return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
+    near(vec, tolerance) {
+        const dx = vec.x - this.x;
+        const dy = vec.y - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < tolerance;
+    }
 }
 class DualLerpDevice {
     constructor(scene, tg, from, to, mode = "once", rate = 1) {
@@ -2524,6 +2529,44 @@ class Scene {
     *loopLvls() {
         for (const lvl of this.lvlStore.items()) {
             yield lvl[1];
+        }
+    }
+    grow(rw, rh) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if (cr > tr) {
+            this.canvas.height = Math.floor(ch);
+            this.canvas.width = Math.floor(ch * tr);
+        }
+    }
+    shrink(rw, rh) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if (cr < tr) {
+            this.canvas.width = Math.floor(cw);
+            this.canvas.height = Math.floor(cw / tr);
+        }
+    }
+    set fit(fit) {
+        if (fit == "none")
+            return;
+        if (fit == "fill") {
+            // use WxH as desired dimensions
+            // window.innerWidth and window.innerHeight for measurments
+            // this.canvas.width = window.innerWidth;
+            // this.canvas.height = window.innerHeight;
+        }
+        if (fit == "grow") {
+            // grow WxH to fill, if possible
+            // never shrink dimensions
+        }
+        if (fit == "shrink") {
+            // shrink WxH to fill, if possible
+            // never grow dimensions
         }
     }
 }
