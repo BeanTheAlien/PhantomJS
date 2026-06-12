@@ -5001,6 +5001,9 @@ class Params {
     has(k: string, v?: any): boolean {
         return this.params.has(k, Util.strOf(v));
     }
+    set(k: string, v: any) {
+        this.params.set(k, Util.strOf(v));
+    }
 }
 interface Renderable {
     render: () => void;
