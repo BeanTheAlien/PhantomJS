@@ -3607,6 +3607,15 @@ class Scene {
             // never grow dimensions
         }
     }
+    near(pos: Vector, tolerance: number) {
+        return this.items.filter(v => v.getPos().near(pos, tolerance * 2));
+    }
+    hasByMouse(pos: Vector, tolerance: number) {
+        return this.items.some((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    getByMouse(pos: Vector, tolerance: number) {
+        return this.items.find((v): v is Entity => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
 }
 /**
  * A collection of items.

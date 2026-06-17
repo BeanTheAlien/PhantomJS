@@ -2569,6 +2569,15 @@ class Scene {
             // never grow dimensions
         }
     }
+    near(pos, tolerance) {
+        return this.items.filter(v => v.getPos().near(pos, tolerance * 2));
+    }
+    hasByMouse(pos, tolerance) {
+        return this.items.some((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    getByMouse(pos, tolerance) {
+        return this.items.find((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
     if (objIs(tagName, Tag)) {
@@ -3738,6 +3747,9 @@ class Params {
     }
     has(k, v) {
         return this.params.has(k, Util.strOf(v));
+    }
+    set(k, v) {
+        this.params.set(k, Util.strOf(v));
     }
 }
 const FinalizeOpeningMode = (mode) => (mode.startsWith("_") ? mode : `_${mode}`);
