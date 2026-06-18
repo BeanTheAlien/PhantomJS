@@ -6,11 +6,19 @@
     <title>Phantom.js Editor Testing</title>
 </head>
 <body>
+    <style>
+        .div {
+            padding: 15px;
+            color: white;
+            font-size: 15px;
+            background-color: #1b1b1b;
+        }
+    </style>
     <div style="display: flex; flex-direction: row; gap: 40px;">
-        <div style="left: 50px; padding: 15px; color: white; font-size: 15px;
-            width: 35vw; background-color: #1b1b1b; height: 95vh;" id="editor-bar-left"></div>
-        <canvas id="editor" style="min-width: 500px; min-height: 500px;"></canvas>
+        <div class="div" style="left: 50px; width: 35vw; height: 75vh;" id="editor-bar-left"></div>
+        <canvas id="editor"></canvas>
     </div>
+    <div class="div" style="width: 95vw; height: 10vh; margin-top: 5vh;" id="editor-bar-bottom"></div>
     <script src="editor.js" type="module"></script>
 </body>
 </html>

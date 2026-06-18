@@ -1,6 +1,7 @@
 import { Entity, Scene } from "./phantom2d.js";
-const scene = new Scene({ canvas: "editor", border: "2px solid red", w: 500, h: 500 });
+const scene = new Scene({ canvas: "editor", border: "2px solid red", w: 1000, h: 1000 });
 const barLeft = document.getElementById("editor-bar-left");
+const barBtm = document.getElementById("editor-bar-bottom");
 const create = document.createElement.bind(document);
 const add = (t, ...n) => n.forEach(x => t.appendChild(x));
 function input(k, v) {
@@ -53,5 +54,11 @@ scene.on("click", (e) => {
         deselect();
     }
 });
-scene.add(new Entity({ x: 10, y: 10, width: 30, height: 30, color: "red" }));
+const buttons = [[Entity, "entity", []]].map(x => [x[0], x[1], `<button id="${x[1]}">${x[1].charAt(0).toUpperCase() + x[1].slice(1)}</button>`, x[2]]);
+barBtm.innerHTML = buttons.map(x => x[2]).join("");
+buttons.forEach(x => document.getElementById(x[1]).addEventListener("click", () => {
+    const e = new (x[0])(...x[3]);
+    scene.add(e);
+    select(e);
+}));
 scene.start();
