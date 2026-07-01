@@ -220,6 +220,8 @@ npm install @beanthealien/phantomjs
 - Dual Scene support.
 ## v2.1.1
 - Add `KeyedTextUI`.
+## v2.1.2
+- Add experimental `ParamKey`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
