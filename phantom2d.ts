@@ -5125,6 +5125,34 @@ class Burst extends Gun {
         this.shoot(pos, count, delay);
     }
 }
+type itemof<T extends any[] | { [x: string | number | symbol]: any }> = T extends any[] ? T[number] : T[keyof T];
+class ParamKey<T extends string[], D extends itemof<T>> {
+    param: Params;
+    pkey!: string;
+    opts: T;
+    constructor(key: string, opt: T, def: D) {
+        this.param = new Params();
+        this.key = key;
+        this.val = def;
+        this.opts = opt;
+        if(!(this.val in this.opts)) this.val = def;
+    }
+    get key() {
+        return this.pkey;
+    }
+    set key(key: string) {
+        this.pkey = key;
+    }
+    get val() {
+        return this.get() as itemof<T>;
+    }
+    set val(val: itemof<T>) {
+        this.param.set(this.key, val);
+    }
+    get() {
+        return this.param.get(this.key);
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -5302,6 +5330,8 @@ export {
     KeyInputs,
 
     LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
-    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice
+    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice,
+
+    ParamKey
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
