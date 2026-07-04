@@ -5126,7 +5126,7 @@ class Burst extends Gun {
     }
 }
 type itemof<T extends any[] | { [x: string | number | symbol]: any }> = T extends any[] ? T[number] : T[keyof T];
-class ParamKey<T extends string[], D extends itemof<T>> {
+class ParamKey<T extends readonly string[], D extends itemof<T>> {
     param: Params;
     pkey!: string;
     opts: T;
