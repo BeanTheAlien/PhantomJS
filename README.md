@@ -222,6 +222,8 @@ npm install @beanthealien/phantomjs
 - Add `KeyedTextUI`.
 ## v2.1.2
 - Add experimental `ParamKey`.
+## v2.1.2.1
+- Fix a minor oversight in `ParamKey`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
