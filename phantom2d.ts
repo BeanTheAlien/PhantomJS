@@ -1405,6 +1405,7 @@ for(const [k, v] of Object.entries(KeyCodeMap)) {
  * @since v0.0.0
  */
 type KeyCode = keyof typeof KeyCodeMap;
+type EntityLerp = "pos" | "rot";
 
 /**
  * The root class of all entities, providing base functionality.
@@ -1875,6 +1876,12 @@ class Entity {
      */
     static is(obj: any): obj is Entity {
         return objIs(obj, Entity);
+    }
+    lerp(use: "pos", scene: Scene, to: Vector, mode?: LerpDeviceLerpMode, rate?: number): EntityLerpDevice;
+    lerp(use: "rot", scene: Scene, to: number, angleMode?: AngularMeasurementName, mode?: LerpDeviceLerpMode, rate?: number): EntityRotationLerpDevice;
+    lerp(use: EntityLerp, scene: Scene, to: Vector | number, angleMode?: AngularMeasurementName | LerpDeviceLerpMode, modeOrRate?: LerpDeviceLerpMode | number, rate?: number) {
+        if(use == "pos" && objIs(to, Vector)) return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode as LerpDeviceLerpMode | undefined, modeOrRate as number | undefined);
+        else return new EntityRotationLerpDevice(scene, this, this.rot, to as number, angleMode as AngularMeasurementName, modeOrRate as LerpDeviceLerpMode, rate);
     }
 }
 /**
