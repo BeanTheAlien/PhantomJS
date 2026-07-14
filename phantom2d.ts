@@ -3103,6 +3103,9 @@ class Scene {
     img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
         this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
+    drawImg(path: string, x: number, y: number, w: number, h: number) {
+        this.img(new Img(path), x, y, w, h);
+    }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
