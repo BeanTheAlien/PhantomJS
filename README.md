@@ -224,6 +224,9 @@ npm install @beanthealien/phantomjs
 - Add experimental `ParamKey`.
 ## v2.1.2.1
 - Fix a minor oversight in `ParamKey`.
+## v2.2.0
+- Update to add modern rotation-collision.
+- Move old collision to legacy collision.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
