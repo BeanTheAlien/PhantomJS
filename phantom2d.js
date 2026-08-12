@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick;
+var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick, _PagedUI_instances, _PagedUI_changeL, _PagedUI_changeR;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -610,7 +610,7 @@ class ArcMoveSlingComp extends Comp {
     }
     launch(spd, angle) {
         this.vx = spd * Math.cos(angle);
-        this.vy = -spd * Math.sin(angle);
+        this.vy = spd * Math.sin(angle);
     }
     upd() {
         this.vy += this.strength;
@@ -707,7 +707,7 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  */
 class Entity {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
+        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
         this.collide = (_b = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
         this.upd = (_c = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
         this.x = (_f = (_d = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _d !== void 0 ? _d : Entity.defaults.get("x")) !== null && _f !== void 0 ? _f : 0;
@@ -728,6 +728,7 @@ class Entity {
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
+        this.legCol = (_x = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _x !== void 0 ? _x : false;
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1096,6 +1097,12 @@ class Entity {
      */
     static is(obj) {
         return objIs(obj, Entity);
+    }
+    lerp(use, scene, to, angleMode, modeOrRate, rate) {
+        if (use == "pos" && objIs(to, Vector))
+            return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode, modeOrRate);
+        else
+            return new EntityRotationLerpDevice(scene, this, this.rot, to, angleMode, modeOrRate, rate);
     }
 }
 /**
@@ -1676,6 +1683,9 @@ class Vector {
         const dy = vec.y - this.y;
         return Math.sqrt(dx * dx + dy * dy) < tolerance;
     }
+    dot(vec) {
+        return this.x * vec.x + this.y * vec.y;
+    }
 }
 class DualLerpDevice {
     constructor(scene, tg, from, to, mode = "once", rate = 1) {
@@ -1748,6 +1758,46 @@ class ProgressUIValueLerpDevice extends DualLerpDevice {
         this.tg.val = lerp(this.from, this.to, this.alpha);
     }
     end() { }
+}
+class SizeBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, [tg.width, tg.height], to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from[0], this.to[0], this.alpha);
+        this.tg.height = lerp(this.from[1], this.to[1], this.alpha);
+    }
+    end() { }
+}
+class WidthBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, tg.width, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from, this.to, this.alpha);
+    }
+    end() { }
+}
+class HeightBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, tg.height, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.height = lerp(this.from, this.to, this.alpha);
+    }
+    end() { }
+}
+class EntitySizeLerpDevice extends SizeBasedLerpDevice {
+}
+class SceneUISizeLerpDevice extends SizeBasedLerpDevice {
+}
+class EntityWidthLerpDevice extends WidthBasedLerpDevice {
+}
+class SceneUIWidthLerpDevice extends WidthBasedLerpDevice {
+}
+class EntityHeightLerpDevice extends HeightBasedLerpDevice {
+}
+class SceneUIHeightLerpDevice extends HeightBasedLerpDevice {
 }
 /**
  * A pixel.
@@ -2063,6 +2113,9 @@ class Scene {
     img(img, x, y, w, h) {
         this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
+    drawImg(path, x, y, w, h) {
+        this.img(new Img(path), x, y, w, h);
+    }
     rect(x, y, w, h, color) {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
@@ -2094,8 +2147,12 @@ class Scene {
                     continue;
                 const a = this.items.stuff[i];
                 const b = this.items.stuff[j];
+                // if both a and b are using legacy
+                // collision detection, then run legacy
+                // instead of modern
+                // (only works if both using)
                 if (a && b)
-                    if (isCol(a, b))
+                    if ((a.legCol && b.legCol) ? isColLegacy(a, b) : isCol(a, b))
                         a.collide(b);
             }
         }
@@ -3530,6 +3587,15 @@ class SceneUI {
     lerpRot(scene, to, mode = "rad", lerpMode = "once") {
         return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
     }
+    lerpSize(scene, to, mode, rate) {
+        return new SceneUISizeLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpWidth(scene, to, mode, rate) {
+        return new SceneUIWidthLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpHeight(scene, to, mode, rate) {
+        return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
+    }
 }
 class ChildUI extends ItemBox {
 }
@@ -3709,6 +3775,28 @@ class ProgressUI extends SceneUI {
         return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
 }
+class PagedUI extends SceneUI {
+    constructor(opts) {
+        var _b, _c, _d;
+        super(opts);
+        _PagedUI_instances.add(this);
+        this.pgs = (_b = opts.pgs) !== null && _b !== void 0 ? _b : [];
+        this.lbt = new ButtonUI((_c = opts.lbt) !== null && _c !== void 0 ? _c : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeL) });
+        this.rbt = new ButtonUI((_d = opts.rbt) !== null && _d !== void 0 ? _d : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeR) });
+        this.active = 0;
+    }
+    addPg(pg) {
+        this.pgs.push(pg);
+    }
+    addAt(index, pg) {
+        this.pgs[index].push(...pg);
+    }
+}
+_PagedUI_instances = new WeakSet(), _PagedUI_changeL = function _PagedUI_changeL() {
+    this.active = Math.max(0, --this.active);
+}, _PagedUI_changeR = function _PagedUI_changeR() {
+    this.active = Math.min(this.pgs.length - 1, ++this.active);
+};
 class Itvl {
     constructor() {
         this.id = -1;
@@ -3848,14 +3936,40 @@ class Burst extends Gun {
         this.shoot(pos, count, delay);
     }
 }
+class ParamKey {
+    constructor(key, opt, def) {
+        this.param = new Params();
+        this.key = key;
+        this.val = def;
+        this.opts = opt;
+        if (!(this.val in this.opts))
+            this.val = def;
+    }
+    get key() {
+        return this.pkey;
+    }
+    set key(key) {
+        this.pkey = key;
+    }
+    get val() {
+        return this.get();
+    }
+    set val(val) {
+        this.param.set(this.key, val);
+    }
+    get() {
+        return this.param.get(this.key);
+    }
+}
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
  * @param b Object 2.
  * @returns If they collide.
  * @since v0.0.0
+ * @deprecated since v2.2.0
  */
-function isCol(a, b) {
+function isColLegacy(a, b) {
     const w1 = a.width;
     const h1 = a.height;
     const x1 = a.x;
@@ -3865,6 +3979,59 @@ function isCol(a, b) {
     const x2 = b.x;
     const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+}
+function getCorners(e) {
+    const cx = e.x + e.width / 2;
+    const cy = e.y + e.height / 2;
+    const hw = e.width / 2;
+    const hh = e.height / 2;
+    const c = Math.cos(e.rot);
+    const s = Math.sin(e.rot);
+    return [
+        new Vector(cx + (-hw * c - -hh * s), cy + (-hw * s + -hh * c)),
+        new Vector(cx + (hw * c - -hh * s), cy + (hw * s + -hh * c)),
+        new Vector(cx + (hw * c - hh * s), cy + (hw * s + hh * c)),
+        new Vector(cx + (-hw * c - hh * s), cy + (-hw * s + hh * c))
+    ];
+}
+function project(points, axis) {
+    let min = points[0].dot(axis);
+    let max = min;
+    for (let i = 1; i < points.length; i++) {
+        const value = points[i].dot(axis);
+        if (value < min)
+            min = value;
+        if (value > max)
+            max = value;
+    }
+    return { min, max };
+}
+/**
+ * Returns whether 2 objects are in collision.
+ *
+ * Factors in rotation, unlike `isColLegacy`.
+ * @param a Object 1.
+ * @param b Object 2.
+ * @returns If they collide.
+ * @since v2.2.0
+ */
+function isCol(a, b) {
+    const A = getCorners(a);
+    const B = getCorners(b);
+    const axes = [
+        new Vector(A[1].y - A[0].y, A[0].x - A[1].x),
+        new Vector(A[2].y - A[1].y, A[1].x - A[2].x),
+        new Vector(B[1].y - B[0].y, B[0].x - B[1].x),
+        new Vector(B[2].y - B[1].y, B[1].x - B[2].x)
+    ];
+    for (const axis of axes) {
+        const pA = project(A, axis);
+        const pB = project(B, axis);
+        if (pA.max < pB.min || pB.max < pA.min) {
+            return false;
+        }
+    }
+    return true;
 }
 /**
  * Returns an intersection distance between a ray and a rect.
@@ -3968,4 +4135,4 @@ function easeInOutQuad(t) {
 function easeSmoothStep(t) {
     return t * t * (3 - 2 * t);
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey };

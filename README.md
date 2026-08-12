@@ -229,6 +229,8 @@ npm install @beanthealien/phantomjs
 - Move old collision to legacy collision.
 ## v2.2.1
 - `SceneUI` size lerp.
+## v2.2.2
+- Critical hotfix to fix `ArcSlingComp.launch` to use y-down coords.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

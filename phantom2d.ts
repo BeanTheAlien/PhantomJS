@@ -1295,7 +1295,7 @@ class ArcMoveSlingComp extends Comp {
     }
     launch(spd: number, angle: number) {
         this.vx = spd * Math.cos(angle);
-        this.vy = -spd * Math.sin(angle);
+        this.vy = spd * Math.sin(angle);
     }
     upd() {
         this.vy += this.strength;
@@ -5047,6 +5047,36 @@ class ProgressUI extends SceneUI {
     lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode, rate: number): ProgressUIValueLerpDevice;
     lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode = "once", rate = 1) {
         return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
+    }
+}
+interface PagedUIOptions extends SceneUIOptions {
+    pgs?: SceneUI[][];
+    lbt?: ButtonUIOptions;
+    rbt?: ButtonUIOptions;
+}
+class PagedUI extends SceneUI {
+    pgs: SceneUI[][];
+    lbt: ButtonUI;
+    rbt: ButtonUI;
+    active: number;
+    constructor(opts: PagedUIOptions) {
+        super(opts);
+        this.pgs = opts.pgs ?? [];
+        this.lbt = new ButtonUI(opts.lbt ?? { scene: opts.scene, click: this.#changeL });
+        this.rbt = new ButtonUI(opts.rbt ?? { scene: opts.scene, click: this.#changeR });
+        this.active = 0;
+    }
+    addPg(pg: SceneUI[]) {
+        this.pgs.push(pg);
+    }
+    #changeL() {
+        this.active = Math.max(0, --this.active);
+    }
+    #changeR() {
+        this.active = Math.min(this.pgs.length - 1, ++this.active);
+    }
+    addAt(index: number, pg: SceneUI[]) {
+        this.pgs[index].push(...pg);
     }
 }
 
