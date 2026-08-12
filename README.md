@@ -231,6 +231,8 @@ npm install @beanthealien/phantomjs
 - `SceneUI` size lerp.
 ## v2.2.2
 - Critical hotfix to fix `ArcSlingComp.launch` to use y-down coords.
+## v2.2.2.1
+- `Entity.expire` method.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

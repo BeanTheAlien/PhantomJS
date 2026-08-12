@@ -1897,6 +1897,14 @@ class Entity {
         if(use == "pos" && objIs(to, Vector)) return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode as LerpDeviceLerpMode | undefined, modeOrRate as number | undefined);
         else return new EntityRotationLerpDevice(scene, this, this.rot, to as number, angleMode as AngularMeasurementName, modeOrRate as LerpDeviceLerpMode, rate);
     }
+    /**
+     * Delays for `time` time before popping itself from scenespace.
+     * @param time The time to delay.
+     * @param scene The `Scene` reference.
+     */
+    expire(time: number, scene: Scene) {
+        setTimeout(() => scene.rm(this), time);
+    }
 }
 /**
  * A simple object that is primarily used for scenery.
