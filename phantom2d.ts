@@ -1485,7 +1485,8 @@ class Entity {
     legCol: boolean;
     constructor();
     constructor(opts: EntityOptions);
-    constructor(opts?: EntityOptions) {
+    constructor(opts: ExpiringEntityOptions);
+    constructor(opts?: EntityOptions | ExpiringEntityOptions) {
         this.collide = opts?.collide ?? ((o: Entity) => {});
         this.upd = opts?.upd ?? NoFunc;
         this.x = opts?.x ?? Entity.defaults.get("x") ?? 0;
@@ -1506,7 +1507,7 @@ class Entity {
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
         this.legCol = opts?.legCol ?? false;
-        if("expr" in opts) {
+        if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
     }
