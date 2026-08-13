@@ -477,6 +477,10 @@ interface EntityOptions {
      */
     legCol?: boolean;
 }
+interface ExpiringEntityOptions extends EntityOptions {
+    expr: number;
+    scene: Scene;
+}
 /**
  * The options for a `StaticObject`.
  * @since v0.0.0
@@ -1502,6 +1506,9 @@ class Entity {
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
         this.legCol = opts?.legCol ?? false;
+        if("expr" in opts) {
+            this.expire(opts.expr, opts.scene);
+        }
     }
     /**
      * Sets the position, based on a `Vector`.
