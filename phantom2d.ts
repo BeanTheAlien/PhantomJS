@@ -3251,9 +3251,10 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        const dx = ex + ox + offX;
-        const dy = ey + oy + offY;
+        const dx = (ex + ox + offX) * this.scaleX;
+        const dy = (ey + oy + offY) * this.scaleY;
         this.ctx.save();
+        this.ctx.scale(this.scaleX, this.scaleY);
         const w2 = w/2;
         const h2 = h/2;
         this.ctx.translate(dx + w2, dy + h2);
