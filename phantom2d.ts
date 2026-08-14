@@ -3702,6 +3702,10 @@ class Scene {
     getByMouse(pos: Vector, tolerance: number) {
         return this.items.find((v): v is Entity => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
     }
+    scale(sx: number, sy: number) {
+        this.scaleX = sx;
+        this.scaleY = sy;
+    }
 }
 /**
  * A collection of items.
