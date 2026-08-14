@@ -3251,10 +3251,9 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        const dx = (ex + ox + offX) * this.scaleX;
-        const dy = (ey + oy + offY) * this.scaleY;
+        const dx = ex + ox + offX;
+        const dy = ey + oy + offY;
         this.ctx.save();
-        this.ctx.scale(this.scaleX, this.scaleY);
         const w2 = w/2;
         const h2 = h/2;
         this.ctx.translate(dx + w2, dy + h2);
@@ -3268,6 +3267,7 @@ class Scene {
         // or the y-coord is less than 0 or more than height
         // then it is not on the canvas
         if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
+        this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
