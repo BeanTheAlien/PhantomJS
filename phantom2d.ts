@@ -3006,6 +3006,8 @@ class Scene {
     misc: ItemBox<Renderable>;
     post: ItemBox<Function>;
     dualRuntime: Runtime;
+    scaleX: number;
+    scaleY: number;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -3038,6 +3040,8 @@ class Scene {
         this.misc = new ItemBox();
         this.post = new ItemBox();
         this.dualRuntime = new Runtime();
+        this.scaleX = 1;
+        this.scaleY = 1;
     }
     get width(): number {
         return this.canvas.width;
@@ -5496,6 +5500,9 @@ function easeInOutQuad(t: number) {
 }
 function easeSmoothStep(t: number) {
     return t * t * (3 - 2 * t);
+}
+function aspectRatio() {
+    return window.innerWidth / window.innerHeight;
 }
 
 export {
