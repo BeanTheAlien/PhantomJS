@@ -3254,19 +3254,43 @@ class Scene {
         const dx = ex + ox + offX;
         const dy = ey + oy + offY;
         this.ctx.save();
-        const w2 = w/2;
-        const h2 = h/2;
+        const w2 = w / 2;
+        const h2 = h / 2;
+
         this.ctx.translate(dx + w2, dy + h2);
         this.ctx.rotate(rot);
+
         const nx = -w2;
         const ny = -h2;
-        const xw = nx + w;
-        const yh = ny + h;
-        // off-screen no draw check
-        // if the x-coord is less than 0 or more than width
-        // or the y-coord is less than 0 or more than height
-        // then it is not on the canvas
-        if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
+
+        // Off-screen check
+        if(Scene.config.get("osnd") == true) {
+            const sw = w * Math.abs(this.scaleX);
+            const sh = h * Math.abs(this.scaleY);
+
+            const cos = Math.abs(Math.cos(rot));
+            const sin = Math.abs(Math.sin(rot));
+
+            const bw = sw * cos + sh * sin;
+            const bh = sw * sin + sh * cos;
+
+            const cx = dx + w2;
+            const cy = dy + h2;
+
+            // off-screen no draw check
+            // if the x-coord is less than 0 or more than width
+            // or the y-coord is less than 0 or more than height
+            // then it is not on the canvas
+            if (
+                cx + bw / 2 < 0 ||
+                cx - bw / 2 > this.width ||
+                cy + bh / 2 < 0 ||
+                cy - bh / 2 > this.height
+            ) {
+                return this.ctx.restore();
+            }
+        }
+
         this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();

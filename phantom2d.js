@@ -729,6 +729,9 @@ class Entity {
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
         this.legCol = (_x = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _x !== void 0 ? _x : false;
+        if (opts && "expr" in opts) {
+            this.expire(opts.expr, opts.scene);
+        }
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1103,6 +1106,14 @@ class Entity {
             return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode, modeOrRate);
         else
             return new EntityRotationLerpDevice(scene, this, this.rot, to, angleMode, modeOrRate, rate);
+    }
+    /**
+     * Delays for `time` time before popping itself from scenespace.
+     * @param time The time to delay.
+     * @param scene The `Scene` reference.
+     */
+    expire(time, scene) {
+        setTimeout(() => scene.rm(this), time);
     }
 }
 /**
@@ -1980,6 +1991,8 @@ class Scene {
         this.misc = new ItemBox();
         this.post = new ItemBox();
         this.dualRuntime = new Runtime();
+        this.scaleX = 1;
+        this.scaleY = 1;
     }
     get width() {
         return this.canvas.width;
@@ -2202,14 +2215,28 @@ class Scene {
         this.ctx.rotate(rot);
         const nx = -w2;
         const ny = -h2;
-        const xw = nx + w;
-        const yh = ny + h;
-        // off-screen no draw check
-        // if the x-coord is less than 0 or more than width
-        // or the y-coord is less than 0 or more than height
-        // then it is not on the canvas
-        if (Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh))
-            return this.ctx.restore();
+        // Off-screen check
+        if (Scene.config.get("osnd") == true) {
+            const sw = w * Math.abs(this.scaleX);
+            const sh = h * Math.abs(this.scaleY);
+            const cos = Math.abs(Math.cos(rot));
+            const sin = Math.abs(Math.sin(rot));
+            const bw = sw * cos + sh * sin;
+            const bh = sw * sin + sh * cos;
+            const cx = dx + w2;
+            const cy = dy + h2;
+            // off-screen no draw check
+            // if the x-coord is less than 0 or more than width
+            // or the y-coord is less than 0 or more than height
+            // then it is not on the canvas
+            if (cx + bw / 2 < 0 ||
+                cx - bw / 2 > this.width ||
+                cy + bh / 2 < 0 ||
+                cy - bh / 2 > this.height) {
+                return this.ctx.restore();
+            }
+        }
+        this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
@@ -2634,6 +2661,10 @@ class Scene {
     }
     getByMouse(pos, tolerance) {
         return this.items.find((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    scale(sx, sy) {
+        this.scaleX = sx;
+        this.scaleY = sy;
     }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
@@ -4134,5 +4165,8 @@ function easeInOutQuad(t) {
 }
 function easeSmoothStep(t) {
     return t * t * (3 - 2 * t);
+}
+function aspectRatio() {
+    return window.innerWidth / window.innerHeight;
 }
 export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey };

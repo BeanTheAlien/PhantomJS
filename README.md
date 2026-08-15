@@ -236,6 +236,8 @@ npm install @beanthealien/phantomjs
 ## v2.2.3
 - Add `ExpiringEntityOptions`.
 - Add `Entity.constructor(ExpiringEntityOptions)`.
+## v2.2.4
+- Scale in `Scene`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
