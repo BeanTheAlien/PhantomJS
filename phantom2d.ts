@@ -5128,6 +5128,29 @@ class PagedUI extends SceneUI {
         this.pgs[index].push(...pg);
     }
 }
+type CostMap = Record<string, number>;
+interface UpgradeMenuUIOptions extends SceneUIOptions {
+    cm: CostMap;
+    bopt: ButtonUIOptions;
+    kopt: KeyedTextUIOptions<number>;
+    topt: TextUIOptions;
+    mult: number;
+}
+class UpgradeMenuUI<C extends CostMap> extends SceneUI {
+    cm: C;
+    bopt: ButtonUIOptions;
+    kopt: KeyedTextUIOptions<number>;
+    topt: TextUIOptions;
+    mult: number;
+    constructor(opt: UpgradeMenuUIOptions) {
+        super(opt);
+        this.cm = opt.cm;
+        this.bopt = opt.bopt;
+        this.kopt = opt.kopt;
+        this.topt = opt.topt;
+        this.mult = opt.mult;
+    }
+}
 
 class Itvl {
     id: number;
