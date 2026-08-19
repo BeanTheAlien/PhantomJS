@@ -904,6 +904,10 @@ interface ArcMoveOrbitOptions extends ArcMoveOptions {
 interface ArcMoveSlingOptions extends ArcMoveOptions {
     strength?: number;
 }
+interface EntityVisionOptions extends CompOptions {
+    scene?: Scene;
+    len?: number;
+}
 /**
  * The options for a `SceneComp`.
  * @since v0.0.0
@@ -1307,6 +1311,29 @@ class ArcMoveSlingComp extends Comp {
         this.ent.y += this.vy;
     }
 }
+class EntityVisionComp extends Comp {
+    scene: Scene;
+    len: number;
+    entList: Entity[];
+    constructor(ent: Entity, opts: EntityVisionOptions) {
+        super(ent);
+        this.scene = opts.scene ?? shallow<Scene>();
+        this.len = opts.len ?? 0;
+        this.entList = [];
+    }
+    upd() {
+        this.scene.items.forEach(i => {
+            const c = (new Raycast({ scene: this.scene, origin: this.ent.getPos(), angle: this.ent.rot, dist: this.len })).cast();
+            if(c) this.entList.push(c.obj);
+        });
+    }
+    get seesEnt() {
+        return !!this.entList.length;
+    }
+    get sees() {
+        return this.entList;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1320,7 +1347,8 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     enhancedphys: EnhancedPhysicsComp,
     grav: GravityComp,
     arcmoveorbit: ArcMoveOrbitComp,
-    arcmovesling: ArcMoveSlingComp
+    arcmovesling: ArcMoveSlingComp,
+    vis: EntityVisionComp
 };
 /**
  * Maps components to their respective option interface.
@@ -1336,6 +1364,7 @@ interface PhantomCompOptionsMap {
     grav: GravityCompOptions;
     arcmoveorbit: ArcMoveOrbitOptions;
     arcmovesling: ArcMoveSlingOptions;
+    vis: EntityVisionOptions;
 }
 /**
  * The class used for creating components for the scene.
@@ -5129,8 +5158,8 @@ class PagedUI extends SceneUI {
     }
 }
 type CostMap = Record<string, number>;
-interface UpgradeMenuUIOptions extends SceneUIOptions {
-    cm: CostMap;
+interface UpgradeMenuUIOptions<C extends CostMap> extends SceneUIOptions {
+    cm: C;
     bopt: ButtonUIOptions;
     kopt: KeyedTextUIOptions<number>;
     topt: TextUIOptions;
@@ -5142,7 +5171,7 @@ class UpgradeMenuUI<C extends CostMap> extends SceneUI {
     kopt: KeyedTextUIOptions<number>;
     topt: TextUIOptions;
     mult: number;
-    constructor(opt: UpgradeMenuUIOptions) {
+    constructor(opt: UpgradeMenuUIOptions<C>) {
         super(opt);
         this.cm = opt.cm;
         this.bopt = opt.bopt;
@@ -5338,6 +5367,7 @@ class ParamKey<T extends readonly string[], D extends itemof<T>> {
         return this.param.get(this.key);
     }
 }
+//class AIController {}
 
 /**
  * Returns whether 2 objects are in collision.
