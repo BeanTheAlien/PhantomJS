@@ -907,6 +907,7 @@ interface ArcMoveSlingOptions extends ArcMoveOptions {
 interface EntityVisionOptions extends CompOptions {
     scene?: Scene;
     len?: number;
+    clrrt?: number;
 }
 /**
  * The options for a `SceneComp`.
@@ -1320,12 +1321,16 @@ class EntityVisionComp extends Comp {
         this.scene = opts.scene ?? shallow<Scene>();
         this.len = opts.len ?? 0;
         this.entList = [];
+        if(opts.clrrt) setInterval(this.clear, opts.clrrt);
     }
     upd() {
         this.scene.items.forEach(i => {
             const c = (new Raycast({ scene: this.scene, origin: this.ent.getPos(), angle: this.ent.rot, dist: this.len })).cast();
-            if(c) this.entList.push(c.obj);
+            if(c && !this.entList.includes(c.obj)) this.entList.push(c.obj);
         });
+    }
+    clear() {
+        this.entList = [];
     }
     get seesEnt() {
         return !!this.entList.length;
@@ -5367,7 +5372,15 @@ class ParamKey<T extends readonly string[], D extends itemof<T>> {
         return this.param.get(this.key);
     }
 }
-//class AIController {}
+interface AIControllerOptions {
+    tg: Entity;
+}
+class AIController {
+    tg: Entity;
+    constructor(opts: AIControllerOptions) {
+        this.tg = opts.tg;
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
