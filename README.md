@@ -238,6 +238,9 @@ npm install @beanthealien/phantomjs
 - Add `Entity.constructor(ExpiringEntityOptions)`.
 ## v2.2.4
 - Scale in `Scene`.
+## v2.2.5
+- Add `History` class.
+- TODO: implement `History` into API, refactor `Entity` around
 
 # Phantom HTML v0.0.1
 ### 0.0.1

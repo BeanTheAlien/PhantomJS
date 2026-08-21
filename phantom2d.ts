@@ -5381,6 +5381,25 @@ class AIController {
         this.tg = opts.tg;
     }
 }
+type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
+class History<T> {
+    hist: HistoryCache<T>[];
+    ptr: number;
+    constructor() {
+        this.hist = [];
+        this.ptr = 0;
+    }
+    cache(cache: HistoryCache<T>) {
+        this.hist.push(cache);
+        this.ptr++;
+    }
+    point(pointer: number) {
+        this.ptr = pointer;
+    }
+    read() {
+        return this.hist[ptr];
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
