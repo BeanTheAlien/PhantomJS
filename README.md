@@ -241,6 +241,8 @@ npm install @beanthealien/phantomjs
 ## v2.2.5
 - Add `History` class.
 - TODO: implement `History` into API, refactor `Entity` around
+## v2.2.6
+- `Vector.equals`, `Vector.compareTo`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

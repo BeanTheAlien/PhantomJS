@@ -187,6 +187,12 @@ type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
 type Real<T> = Exclude<T, null | undefined>;
 type Nullish<T> = T | null | undefined;
+interface Equals<T = unknown> {
+    equals: (obj: T) => boolean;
+}
+interface CompareTo<T = unknown> {
+    compareTo: (obj: T) => number;
+}
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -2676,6 +2682,22 @@ class Vector {
     }
     dot(vec: Vector) {
         return this.x * vec.x + this.y * vec.y;
+    }
+    /**
+     * Returns whether `this == vec`.
+     * @param vec The other `Vector` to test.
+     * @returns Whether they are equivalent.
+     */
+    equals(vec: Vector) {
+        return this.x == vec.x && this.y == vec.y;
+    }
+    /**
+     * Returns the distance between `this` and `vec`.
+     * @param vec The other `Vector` to test.
+     * @returns The distance between them.
+     */
+    compareTo(vec: Vector) {
+        return Math.hypot(vec.x - this.x, vec.y - this.y);
     }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
