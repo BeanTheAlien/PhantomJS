@@ -1953,6 +1953,13 @@ class Entity {
     expire(time: number, scene: Scene) {
         setTimeout(() => scene.rm(this), time);
     }
+    goTo(tg: Entity, spd = 1) {
+        const dx = tg.x - this.x;
+        const dy = tg.y - this.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        this.x += (dx / d) * spd;
+        this.y += (dy / d) * spd;
+    }
 }
 /**
  * A simple object that is primarily used for scenery.
