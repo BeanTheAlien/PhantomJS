@@ -762,6 +762,7 @@ interface RaycastOptions {
      * @since v0.0.0
      */
     scene: Scene;
+    ign?: Constructor<unknown>[];
 }
 /**
  * The map for `Comp`.
@@ -3911,11 +3912,13 @@ class RaycastBase {
     angle: number;
     dist: number;
     scene: Scene;
+    ign: Constructor<unknown>;
     constructor(opts: RaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
+        this.ign = opts.ign ?? [];
     }
     dir() {
         return new Vector(Math.cos(this.angle), Math.sin(this.angle));
@@ -3924,7 +3927,7 @@ class RaycastBase {
         const dir = this.dir();
         for(const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
-            if(hit) {
+            if(hit && !this.ign.some(i => objIs(hit.obj, i))) {
                 onHit(i, hit, dir);
             }
         }

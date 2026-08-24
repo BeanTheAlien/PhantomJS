@@ -245,6 +245,8 @@ npm install @beanthealien/phantomjs
 - `Vector.equals`, `Vector.compareTo`.
 ## v2.2.7
 - `Entity.goTo` method.
+## v2.2.8
+- Add `RaycastOptions.ign` field for type ignore.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
