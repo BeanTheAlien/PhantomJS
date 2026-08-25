@@ -247,6 +247,8 @@ npm install @beanthealien/phantomjs
 - `Entity.goTo` method.
 ## v2.2.8
 - Add `RaycastOptions.ign` field for type ignore.
+## v2.2.8.1
+- Minor bug fixes.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

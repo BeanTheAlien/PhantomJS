@@ -618,6 +618,33 @@ class ArcMoveSlingComp extends Comp {
         this.ent.y += this.vy;
     }
 }
+class EntityVisionComp extends Comp {
+    constructor(ent, opts) {
+        var _b, _c;
+        super(ent);
+        this.scene = (_b = opts.scene) !== null && _b !== void 0 ? _b : shallow();
+        this.len = (_c = opts.len) !== null && _c !== void 0 ? _c : 0;
+        this.entList = [];
+        if (opts.clrrt)
+            setInterval(this.clear, opts.clrrt);
+    }
+    upd() {
+        this.scene.items.forEach(i => {
+            const c = (new Raycast({ scene: this.scene, origin: this.ent.getPos(), angle: this.ent.rot, dist: this.len })).cast();
+            if (c && !this.entList.includes(c.obj))
+                this.entList.push(c.obj);
+        });
+    }
+    clear() {
+        this.entList = [];
+    }
+    get seesEnt() {
+        return !!this.entList.length;
+    }
+    get sees() {
+        return this.entList;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -631,7 +658,8 @@ const PhantomCompRecord = {
     enhancedphys: EnhancedPhysicsComp,
     grav: GravityComp,
     arcmoveorbit: ArcMoveOrbitComp,
-    arcmovesling: ArcMoveSlingComp
+    arcmovesling: ArcMoveSlingComp,
+    vis: EntityVisionComp
 };
 /**
  * The class used for creating components for the scene.
@@ -1114,6 +1142,13 @@ class Entity {
      */
     expire(time, scene) {
         setTimeout(() => scene.rm(this), time);
+    }
+    goTo(tg, spd = 1) {
+        const dx = tg.x - this.x;
+        const dy = tg.y - this.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        this.x += (dx / d) * spd;
+        this.y += (dy / d) * spd;
     }
 }
 /**
@@ -1696,6 +1731,22 @@ class Vector {
     }
     dot(vec) {
         return this.x * vec.x + this.y * vec.y;
+    }
+    /**
+     * Returns whether `this == vec`.
+     * @param vec The other `Vector` to test.
+     * @returns Whether they are equivalent.
+     */
+    equals(vec) {
+        return this.x == vec.x && this.y == vec.y;
+    }
+    /**
+     * Returns the distance between `this` and `vec`.
+     * @param vec The other `Vector` to test.
+     * @returns The distance between them.
+     */
+    compareTo(vec) {
+        return Math.hypot(vec.x - this.x, vec.y - this.y);
     }
 }
 class DualLerpDevice {
@@ -2798,10 +2849,12 @@ class Preset {
 }
 class RaycastBase {
     constructor(opts) {
+        var _b;
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
+        this.ign = (_b = opts.ign) !== null && _b !== void 0 ? _b : [];
     }
     dir() {
         return new Vector(Math.cos(this.angle), Math.sin(this.angle));
@@ -2810,7 +2863,7 @@ class RaycastBase {
         const dir = this.dir();
         for (const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
-            if (hit) {
+            if (hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
             }
         }
@@ -3828,6 +3881,16 @@ _PagedUI_instances = new WeakSet(), _PagedUI_changeL = function _PagedUI_changeL
 }, _PagedUI_changeR = function _PagedUI_changeR() {
     this.active = Math.min(this.pgs.length - 1, ++this.active);
 };
+class UpgradeMenuUI extends SceneUI {
+    constructor(opt) {
+        super(opt);
+        this.cm = opt.cm;
+        this.bopt = opt.bopt;
+        this.kopt = opt.kopt;
+        this.topt = opt.topt;
+        this.mult = opt.mult;
+    }
+}
 class Itvl {
     constructor() {
         this.id = -1;
@@ -3992,6 +4055,30 @@ class ParamKey {
         return this.param.get(this.key);
     }
 }
+class AIController {
+    constructor(opts) {
+        this.tg = opts.tg;
+    }
+}
+// type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
+// class History<T> {
+//     hist: HistoryCache<T>[];
+//     ptr: number;
+//     constructor() {
+//         this.hist = [];
+//         this.ptr = 0;
+//     }
+//     cache(cache: HistoryCache<T>) {
+//         this.hist.push(cache);
+//         this.ptr++;
+//     }
+//     point(pointer: number) {
+//         this.ptr = pointer;
+//     }
+//     read() {
+//         return this.hist[this.ptr];
+//     }
+// }
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.

@@ -3912,7 +3912,7 @@ class RaycastBase {
     angle: number;
     dist: number;
     scene: Scene;
-    ign: Constructor<unknown>;
+    ign: Constructor<unknown>[];
     constructor(opts: RaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
@@ -3927,7 +3927,7 @@ class RaycastBase {
         const dir = this.dir();
         for(const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
-            if(hit && !this.ign.some(i => objIs(hit.obj, i))) {
+            if(hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
             }
         }
@@ -5413,25 +5413,25 @@ class AIController {
         this.tg = opts.tg;
     }
 }
-type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
-class History<T> {
-    hist: HistoryCache<T>[];
-    ptr: number;
-    constructor() {
-        this.hist = [];
-        this.ptr = 0;
-    }
-    cache(cache: HistoryCache<T>) {
-        this.hist.push(cache);
-        this.ptr++;
-    }
-    point(pointer: number) {
-        this.ptr = pointer;
-    }
-    read() {
-        return this.hist[ptr];
-    }
-}
+// type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
+// class History<T> {
+//     hist: HistoryCache<T>[];
+//     ptr: number;
+//     constructor() {
+//         this.hist = [];
+//         this.ptr = 0;
+//     }
+//     cache(cache: HistoryCache<T>) {
+//         this.hist.push(cache);
+//         this.ptr++;
+//     }
+//     point(pointer: number) {
+//         this.ptr = pointer;
+//     }
+//     read() {
+//         return this.hist[this.ptr];
+//     }
+// }
 
 /**
  * Returns whether 2 objects are in collision.
