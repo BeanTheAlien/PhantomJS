@@ -482,6 +482,11 @@ interface EntityOptions {
      * @since v2.2.0
      */
     legCol?: boolean;
+    /**
+     * A custom rendering function to be used.
+     * @since v2.2.9
+     */
+    render?: Function;
 }
 interface ExpiringEntityOptions extends EntityOptions {
     expr: number;
@@ -1524,6 +1529,7 @@ class Entity {
      * @default false
      */
     legCol: boolean;
+    render: Function;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts: ExpiringEntityOptions);
@@ -1551,6 +1557,7 @@ class Entity {
         if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
+        this.render = opts.render ?? NoFunc;
     }
     /**
      * Sets the position, based on a `Vector`.

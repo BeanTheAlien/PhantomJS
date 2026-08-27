@@ -249,6 +249,9 @@ npm install @beanthealien/phantomjs
 - Add `RaycastOptions.ign` field for type ignore.
 ## v2.2.8.1
 - Minor bug fixes.
+## v2.2.9
+- Add `render` function to `EntityOptions`.
+- Add `render` function property to `Entity`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
