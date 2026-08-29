@@ -2387,6 +2387,18 @@ class Character extends Entity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
+    static QBind = {
+        Move: {
+            __core: (t: PlayableCharacter, set: [KeyCode, KeyCode, KeyCode] | [KeyCode, KeyCode, KeyCode, KeyCode], spd: number) => {
+                t.bind(set[0], () => t.moveX(-spd));
+                t.bind(set[1], () => t.moveX(spd));
+                t.bind(set[2], () => t.moveY(-spd));
+                if(set[3]) t.bind(set[3], () => t.moveY(-spd));
+            },
+            WASD: (t: PlayableCharacter, spd: number) => this.QBind.Move.__core(t, ["w", "a", "s", "d"], spd),
+            WAS: (t: PlayableCharacter, spd: number) => this.QBind.Move.__core(t, ["w", "a", "s"], spd)
+        }
+    } as const;
     key: KeyInputs;
     // binds: Store<KeyCode, Function>;
     // keys: Store<string, boolean>;
