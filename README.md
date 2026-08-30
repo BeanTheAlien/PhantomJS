@@ -252,6 +252,8 @@ npm install @beanthealien/phantomjs
 ## v2.2.9
 - Add `render` function to `EntityOptions`.
 - Add `render` function property to `Entity`.
+## v2.2.9.1
+- `Angle.roff` method.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

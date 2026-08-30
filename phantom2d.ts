@@ -4325,6 +4325,15 @@ class Angle {
     static toVector(rad: number): Vector {
         return new Vector(Math.cos(rad), Math.sin(rad));
     }
+    /**
+     * Returns a random offset angle of `roffVal`, converted to radians.
+     * @param inRadSource The source angle (in radians).
+     * @param roffVal The amount to offset by.
+     * @returns An angle +-`roffVal` from `inRadSource` (in radians).
+     */
+    static roff(inRadSource: number, roffVal: number) {
+        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+    }
 }
 type ConfigOnValueSetHandler<T> = (k: keyof T, v: T[keyof T]) => void;
 class Config<T extends Record<string, any>> {
