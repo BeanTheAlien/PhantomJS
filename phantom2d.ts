@@ -2945,6 +2945,12 @@ class Img {
     static from(src: string): Img {
         return new Img(src);
     }
+    get w() {
+        return this.img.width;
+    }
+    get h() {
+        return this.img.height;
+    }
 }
 /**
  * A component to store various elements.
@@ -4588,6 +4594,9 @@ interface FilePickerBaseFinalOptions extends PickerCleanedOptions {
 interface FilePickerOptions extends FilePickerBaseOptions {
     mult?: boolean;
 }
+interface FilePickerWritingOptions extends FilePickerBaseOptions {
+    tx: string;
+}
 interface FilePickerFinalOptions extends FilePickerBaseFinalOptions {
     multiple?: boolean;
 }
@@ -4648,6 +4657,12 @@ class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType
     async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
         const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
         return handles;
+    }
+    async write(opts: FilePickerWritingOptions) {
+        const [h] = await this.handle(opts);
+        const w = await h.createWritable();
+        await w.write(opts.tx);
+        await w.close();
     }
 }
 class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, FilePickerSaveOptions, FilePickerSaveFinalOptions> {
@@ -4998,6 +5013,9 @@ class ButtonUI extends SceneUI {
         this.cdTime = 250;
         this.disabled = false;
         this.scene.on("click", () => {
+            // CRITICAL BUGFIX:
+            // ONLY ACCEPT CLICK WHEN PRESENT
+            if(!this.scene.hasUI(this)) return;
             if(this.#boundsTest()) {
                 if(!this.disabled) {
                     if(this.clickCD && !this.clickCD.ready) return;
