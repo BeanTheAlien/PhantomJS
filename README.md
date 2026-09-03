@@ -254,6 +254,8 @@ npm install @beanthealien/phantomjs
 - Add `render` function property to `Entity`.
 ## v2.2.9.1
 - `Angle.roff` method.
+## v2.2.10
+- Add `hs`, `self` property for allow-hit-self and not-allow-hit-self on `Raycast`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _Img_instances, _a, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick, _PagedUI_instances, _PagedUI_changeL, _PagedUI_changeR;
+var _HealthComp_instances, _HealthComp_consume, _a, _Img_instances, _b, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick, _PagedUI_instances, _PagedUI_changeL, _PagedUI_changeR;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -347,10 +347,10 @@ class Comp {
  */
 class HealthComp extends Comp {
     constructor(ent, opts) {
-        var _b;
+        var _c;
         super(ent);
         _HealthComp_instances.add(this);
-        this.hp = (_b = opts.hp) !== null && _b !== void 0 ? _b : 0;
+        this.hp = (_c = opts.hp) !== null && _c !== void 0 ? _c : 0;
         this.mhp = opts.mhp;
         this.onHurt = opts.onHurt;
         this.onDie = opts.onDie;
@@ -462,9 +462,9 @@ class InvComp extends Comp {
  */
 class SpriteComp extends Comp {
     constructor(ent, opts) {
-        var _b;
+        var _c;
         super(ent);
-        this.frames = ((_b = opts.frames) !== null && _b !== void 0 ? _b : []).map(Img.from);
+        this.frames = ((_c = opts.frames) !== null && _c !== void 0 ? _c : []).map(Img.from);
         this.scene = opts.scene;
         this.idx = 0;
     }
@@ -529,16 +529,16 @@ class PointAtMouseComp extends PointAtCompBase {
 }
 class EnhancedPhysicsComp extends Comp {
     constructor(ent, opts) {
-        var _b, _c, _d, _f, _g;
+        var _c, _d, _f, _g, _j;
         super(ent);
         this.scene = opts.scene;
         // represent inital velocity and acceleration
         // recommended to remain at 0
-        this.vx = (_b = opts.vx) !== null && _b !== void 0 ? _b : 0;
-        this.vy = (_c = opts.vy) !== null && _c !== void 0 ? _c : 0;
-        this.ax = (_d = opts.ax) !== null && _d !== void 0 ? _d : 0;
-        this.ay = (_f = opts.ay) !== null && _f !== void 0 ? _f : 0;
-        this.fric = (_g = opts.fric) !== null && _g !== void 0 ? _g : 0.95;
+        this.vx = (_c = opts.vx) !== null && _c !== void 0 ? _c : 0;
+        this.vy = (_d = opts.vy) !== null && _d !== void 0 ? _d : 0;
+        this.ax = (_f = opts.ax) !== null && _f !== void 0 ? _f : 0;
+        this.ay = (_g = opts.ay) !== null && _g !== void 0 ? _g : 0;
+        this.fric = (_j = opts.fric) !== null && _j !== void 0 ? _j : 0.95;
     }
     addForce(fx, fy) {
         this.ax += fx;
@@ -569,27 +569,27 @@ class EnhancedPhysicsComp extends Comp {
 }
 class GravityComp extends Comp {
     constructor(ent, opts) {
-        var _b, _c;
+        var _c, _d;
         super(ent);
-        this.strength = (_b = opts.strength) !== null && _b !== void 0 ? _b : 0;
-        this.gspd = (_c = opts.gspd) !== null && _c !== void 0 ? _c : 0;
+        this.strength = (_c = opts.strength) !== null && _c !== void 0 ? _c : 0;
+        this.gspd = (_d = opts.gspd) !== null && _d !== void 0 ? _d : 0;
     }
     upd() {
-        var _b;
+        var _c;
         this.gspd += this.strength;
-        const vec = Angle.toVector((_b = Scene.config.get("gravdir")) !== null && _b !== void 0 ? _b : Angle.rad(270));
+        const vec = Angle.toVector((_c = Scene.config.get("gravdir")) !== null && _c !== void 0 ? _c : Angle.rad(270));
         this.ent.x += vec.x * this.gspd;
         this.ent.y += vec.y * this.gspd;
     }
 }
 class ArcMoveOrbitComp extends Comp {
     constructor(ent, opts) {
-        var _b, _c, _d, _f;
+        var _c, _d, _f, _g;
         super(ent);
-        this.origin = (_b = opts.origin) !== null && _b !== void 0 ? _b : new Vector(0, 0);
-        this.spd = (_c = opts.spd) !== null && _c !== void 0 ? _c : 0;
-        this.angle = (_d = opts.angle) !== null && _d !== void 0 ? _d : 0;
-        this.rad = (_f = opts.rad) !== null && _f !== void 0 ? _f : 0;
+        this.origin = (_c = opts.origin) !== null && _c !== void 0 ? _c : new Vector(0, 0);
+        this.spd = (_d = opts.spd) !== null && _d !== void 0 ? _d : 0;
+        this.angle = (_f = opts.angle) !== null && _f !== void 0 ? _f : 0;
+        this.rad = (_g = opts.rad) !== null && _g !== void 0 ? _g : 0;
     }
     upd() {
         // calculate angular velocity
@@ -602,9 +602,9 @@ class ArcMoveOrbitComp extends Comp {
 }
 class ArcMoveSlingComp extends Comp {
     constructor(ent, opts) {
-        var _b;
+        var _c;
         super(ent);
-        this.strength = (_b = opts.strength) !== null && _b !== void 0 ? _b : 0;
+        this.strength = (_c = opts.strength) !== null && _c !== void 0 ? _c : 0;
         this.vx = 0;
         this.vy = 0;
     }
@@ -620,10 +620,10 @@ class ArcMoveSlingComp extends Comp {
 }
 class EntityVisionComp extends Comp {
     constructor(ent, opts) {
-        var _b, _c;
+        var _c, _d;
         super(ent);
-        this.scene = (_b = opts.scene) !== null && _b !== void 0 ? _b : shallow();
-        this.len = (_c = opts.len) !== null && _c !== void 0 ? _c : 0;
+        this.scene = (_c = opts.scene) !== null && _c !== void 0 ? _c : shallow();
+        this.len = (_d = opts.len) !== null && _d !== void 0 ? _d : 0;
         this.entList = [];
         if (opts.clrrt)
             setInterval(this.clear, opts.clrrt);
@@ -676,9 +676,9 @@ class SceneComp {
  */
 class SceneTilesComp extends SceneComp {
     constructor(scene, opts) {
-        var _b;
+        var _c;
         super(scene);
-        this.size = (_b = opts.size) !== null && _b !== void 0 ? _b : 0;
+        this.size = (_c = opts.size) !== null && _c !== void 0 ? _c : 0;
         this.nth = opts.nth;
     }
 }
@@ -735,31 +735,32 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  */
 class Entity {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
-        this.collide = (_b = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _b !== void 0 ? _b : ((o) => { });
-        this.upd = (_c = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _c !== void 0 ? _c : NoFunc;
-        this.x = (_f = (_d = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _d !== void 0 ? _d : Entity.defaults.get("x")) !== null && _f !== void 0 ? _f : 0;
-        this.y = (_j = (_g = opts === null || opts === void 0 ? void 0 : opts.y) !== null && _g !== void 0 ? _g : Entity.defaults.get("y")) !== null && _j !== void 0 ? _j : 0;
-        this.z = (_m = (_l = opts === null || opts === void 0 ? void 0 : opts.z) !== null && _l !== void 0 ? _l : Entity.defaults.get("z")) !== null && _m !== void 0 ? _m : 0;
-        this.rot = (_p = (_o = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _o !== void 0 ? _o : Entity.defaults.get("rot")) !== null && _p !== void 0 ? _p : 0;
-        this.width = (_r = (_q = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _q !== void 0 ? _q : Entity.defaults.get("width")) !== null && _r !== void 0 ? _r : 0;
-        this.height = (_t = (_s = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _s !== void 0 ? _s : Entity.defaults.get("height")) !== null && _t !== void 0 ? _t : 0;
+        var _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
+        this.collide = (_c = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _c !== void 0 ? _c : ((o) => { });
+        this.upd = (_d = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _d !== void 0 ? _d : NoFunc;
+        this.x = (_g = (_f = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _f !== void 0 ? _f : Entity.defaults.get("x")) !== null && _g !== void 0 ? _g : 0;
+        this.y = (_l = (_j = opts === null || opts === void 0 ? void 0 : opts.y) !== null && _j !== void 0 ? _j : Entity.defaults.get("y")) !== null && _l !== void 0 ? _l : 0;
+        this.z = (_o = (_m = opts === null || opts === void 0 ? void 0 : opts.z) !== null && _m !== void 0 ? _m : Entity.defaults.get("z")) !== null && _o !== void 0 ? _o : 0;
+        this.rot = (_q = (_p = opts === null || opts === void 0 ? void 0 : opts.rot) !== null && _p !== void 0 ? _p : Entity.defaults.get("rot")) !== null && _q !== void 0 ? _q : 0;
+        this.width = (_s = (_r = opts === null || opts === void 0 ? void 0 : opts.width) !== null && _r !== void 0 ? _r : Entity.defaults.get("width")) !== null && _s !== void 0 ? _s : 0;
+        this.height = (_u = (_t = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _t !== void 0 ? _t : Entity.defaults.get("height")) !== null && _u !== void 0 ? _u : 0;
         this.evStore = new Store();
-        this.color = (_v = (_u = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _u !== void 0 ? _u : Entity.defaults.get("color")) !== null && _v !== void 0 ? _v : "#fff";
+        this.color = (_w = (_v = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _v !== void 0 ? _v : Entity.defaults.get("color")) !== null && _w !== void 0 ? _w : "#fff";
         if (opts === null || opts === void 0 ? void 0 : opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
             }
         this.comps = new Store();
-        this.moveMode = (_w = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _w !== void 0 ? _w : "move";
+        this.moveMode = (_x = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _x !== void 0 ? _x : "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
-        this.legCol = (_x = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _x !== void 0 ? _x : false;
+        this.legCol = (_y = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _y !== void 0 ? _y : false;
         if (opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
+        this.render = (_z = opts === null || opts === void 0 ? void 0 : opts.render) !== null && _z !== void 0 ? _z : NoFunc;
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1271,7 +1272,7 @@ class MovingObject extends Entity {
  */
 class BulletObject extends Entity {
     constructor(opts) {
-        var _b, _c;
+        var _c, _d;
         super(opts);
         this.rot = opts.rot;
         this.extLeft = opts.extLeft;
@@ -1281,8 +1282,8 @@ class BulletObject extends Entity {
         this.spd = opts.spd;
         this.scene = opts.scene;
         this.onDest = opts.onDest;
-        this.tol = (_b = opts.tol) !== null && _b !== void 0 ? _b : 15;
-        this.decay = (_c = opts.decay) !== null && _c !== void 0 ? _c : 0;
+        this.tol = (_c = opts.tol) !== null && _c !== void 0 ? _c : 15;
+        this.decay = (_d = opts.decay) !== null && _d !== void 0 ? _d : 0;
         this.initSpd = this.spd;
     }
     update() {
@@ -1541,16 +1542,30 @@ class PlayableCharacter extends Character {
     }
     static from(opts) {
         if (opts instanceof Preset) {
-            const ent = new PlayableCharacter({ strength: 0 });
+            const ent = new _a({ strength: 0 });
             opts.apply(ent);
             return ent;
         }
-        return new PlayableCharacter(opts);
+        return new _a(opts);
     }
     static is(obj) {
-        return objIs(obj, PlayableCharacter);
+        return objIs(obj, _a);
     }
 }
+_a = PlayableCharacter;
+PlayableCharacter.QBind = {
+    Move: {
+        __core: (t, set, spd) => {
+            t.bind(set[0], () => t.moveX(-spd));
+            t.bind(set[1], () => t.moveX(spd));
+            t.bind(set[2], () => t.moveY(-spd));
+            if (set[3])
+                t.bind(set[3], () => t.moveY(-spd));
+        },
+        WASD: (t, spd) => _a.QBind.Move.__core(t, ["w", "a", "s", "d"], spd),
+        WAS: (t, spd) => _a.QBind.Move.__core(t, ["w", "a", "s"], spd)
+    }
+};
 class KeyInputs {
     constructor(binds) {
         this.kbinds = binds !== null && binds !== void 0 ? binds : new Store();
@@ -1623,9 +1638,9 @@ class KeyInputs {
 }
 class Aircraft extends Entity {
     constructor(opts) {
-        var _b, _c;
+        var _c, _d;
         super(opts);
-        this.thrust = (_b = opts.thrust) !== null && _b !== void 0 ? _b : 0;
+        this.thrust = (_c = opts.thrust) !== null && _c !== void 0 ? _c : 0;
         this.drag = opts.drag;
         this.lift = 0;
         this.scene = opts.scene;
@@ -1633,7 +1648,7 @@ class Aircraft extends Entity {
         this.vy = 0;
         this.wing = opts.wing;
         this.grav = opts.grav;
-        this.stall = (_c = opts.stall) !== null && _c !== void 0 ? _c : 0.3;
+        this.stall = (_d = opts.stall) !== null && _d !== void 0 ? _d : 0.3;
         this.air = opts.air;
         this.mass = opts.mass;
     }
@@ -1946,11 +1961,17 @@ class Img {
         this.img.src = __classPrivateFieldGet(this, _Img_instances, "m", _Img_realSrc).call(this, src);
     }
     static from(src) {
-        return new _a(src);
+        return new _b(src);
+    }
+    get w() {
+        return this.img.width;
+    }
+    get h() {
+        return this.img.height;
     }
 }
-_a = Img, _Img_instances = new WeakSet(), _Img_realSrc = function _Img_realSrc(src) {
-    const root = _a.config.get("root");
+_b = Img, _Img_instances = new WeakSet(), _Img_realSrc = function _Img_realSrc(src) {
+    const root = _b.config.get("root");
     if (!root || root.length == 0)
         return src;
     return `${root}${root.endsWith("/") ? "" : "/"}${src}`;
@@ -2524,12 +2545,12 @@ class Scene {
         return this.ctx.font;
     }
     set font(font) {
-        var _b, _c, _d, _f, _g;
+        var _c, _d, _f, _g, _j;
         if (typeof font == "string") {
             this.ctx.font = font;
         }
         else {
-            this.ctx.font = `${(_b = font.style) !== null && _b !== void 0 ? _b : "normal"} ${(_c = font.variant) !== null && _c !== void 0 ? _c : "normal"} ${(_d = font.weight) !== null && _d !== void 0 ? _d : "normal"} ${(_f = font.stretch) !== null && _f !== void 0 ? _f : "normal"} ${font.size} ${(_g = font.lineHeight) !== null && _g !== void 0 ? _g : "normal"} ${font.family}`;
+            this.ctx.font = `${(_c = font.style) !== null && _c !== void 0 ? _c : "normal"} ${(_d = font.variant) !== null && _d !== void 0 ? _d : "normal"} ${(_f = font.weight) !== null && _f !== void 0 ? _f : "normal"} ${(_g = font.stretch) !== null && _g !== void 0 ? _g : "normal"} ${font.size} ${(_j = font.lineHeight) !== null && _j !== void 0 ? _j : "normal"} ${font.family}`;
         }
     }
     // useFont(size: FontSize): void;
@@ -2849,12 +2870,14 @@ class Preset {
 }
 class RaycastBase {
     constructor(opts) {
-        var _b;
+        var _c;
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
-        this.ign = (_b = opts.ign) !== null && _b !== void 0 ? _b : [];
+        this.ign = (_c = opts.ign) !== null && _c !== void 0 ? _c : [];
+        if ("self" in opts)
+            this.self = opts.self;
     }
     dir() {
         return new Vector(Math.cos(this.angle), Math.sin(this.angle));
@@ -2871,9 +2894,9 @@ class RaycastBase {
 }
 class MultiRaycast extends RaycastBase {
     constructor(opts) {
-        var _b;
+        var _c;
         super(opts);
-        this.hits = (_b = opts.hits) !== null && _b !== void 0 ? _b : Infinity;
+        this.hits = (_c = opts.hits) !== null && _c !== void 0 ? _c : Infinity;
     }
     cast() {
         let res = [];
@@ -2894,13 +2917,10 @@ class MultiRaycast extends RaycastBase {
  * @since v0.0.0
  */
 class Raycast extends RaycastBase {
-    constructor(opts) {
-        super(opts);
-    }
     cast() {
         let res = null;
         super.cast((i, hit, dir) => {
-            if ((res && hit < res.dist) || (res == null))
+            if ((res && hit < res.dist) || (res == null) && (!this.self || i != this.self))
                 res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
         });
         return res;
@@ -2908,10 +2928,10 @@ class Raycast extends RaycastBase {
 }
 class DebugRay extends Raycast {
     constructor(opts) {
-        var _b;
+        var _c;
         super(opts);
         this.color = opts.color;
-        this.life = (_b = opts.life) !== null && _b !== void 0 ? _b : Infinity;
+        this.life = (_c = opts.life) !== null && _c !== void 0 ? _c : Infinity;
         this.scene.misc.add(this);
         if (Number.isFinite(this.life)) {
             setTimeout(() => this.scene.misc.rm(this), this.life);
@@ -3204,6 +3224,15 @@ class Angle {
     static toVector(rad) {
         return new Vector(Math.cos(rad), Math.sin(rad));
     }
+    /**
+     * Returns a random offset angle of `roffVal`, converted to radians.
+     * @param inRadSource The source angle (in radians).
+     * @param roffVal The amount to offset by.
+     * @returns An angle +-`roffVal` from `inRadSource` (in radians).
+     */
+    static roff(inRadSource, roffVal) {
+        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+    }
 }
 class Config {
     constructor() {
@@ -3406,8 +3435,8 @@ class Picker {
 }
 class FilePickerBase extends Picker {
     cleanOpts(opts) {
-        var _b;
-        return Object.assign(Object.assign({}, this.clean(opts)), { excludeAcceptAllOption: opts.all, types: (_b = opts.accept) === null || _b === void 0 ? void 0 : _b.map(a => { return { description: a.desc, accept: a.accept }; }) });
+        var _c;
+        return Object.assign(Object.assign({}, this.clean(opts)), { excludeAcceptAllOption: opts.all, types: (_c = opts.accept) === null || _c === void 0 ? void 0 : _c.map(a => { return { description: a.desc, accept: a.accept }; }) });
     }
 }
 /**
@@ -3433,6 +3462,12 @@ class FilePicker extends FilePickerBase {
     async handle(opts) {
         const [...handles] = await window.showOpenFilePicker(Object.assign(Object.assign({}, this.cleanOpts(opts)), { multiple: opts.mult }));
         return handles;
+    }
+    async write(opts) {
+        const [h] = await this.handle(opts);
+        const w = await h.createWritable();
+        await w.write(opts.tx);
+        await w.close();
     }
 }
 class SaveFilePicker extends FilePickerBase {
@@ -3473,16 +3508,16 @@ class EventManager {
         this.store = store;
     }
     on(e, h, thenExec = NoFunc) {
-        var _b;
-        const a = (_b = this.store.get(e)) !== null && _b !== void 0 ? _b : [];
+        var _c;
+        const a = (_c = this.store.get(e)) !== null && _c !== void 0 ? _c : [];
         ArrayUtil.add(a, h);
         this.store.set(e, a);
         thenExec();
     }
     off(e, h, hExist = NoFunc, notHExist = NoFunc) {
-        var _b;
+        var _c;
         if (h) {
-            const a = (_b = this.store.get(e)) !== null && _b !== void 0 ? _b : [];
+            const a = (_c = this.store.get(e)) !== null && _c !== void 0 ? _c : [];
             ArrayUtil.rm(a, h);
             this.store.set(e, a);
             hExist();
@@ -3561,13 +3596,13 @@ class SavedState {
 }
 class Trigger {
     constructor(opts) {
-        var _b;
+        var _c;
         this.x = opts.x;
         this.y = opts.y;
         this.w = opts.w;
         this.h = opts.h;
         this.trig = opts.trig;
-        this.active = (_b = opts.active) !== null && _b !== void 0 ? _b : true;
+        this.active = (_c = opts.active) !== null && _c !== void 0 ? _c : true;
     }
     activate() {
         this.active = true;
@@ -3578,9 +3613,9 @@ class Trigger {
 }
 class Material {
     constructor(opts) {
-        var _b, _c;
-        this.fric = (_b = opts.fric) !== null && _b !== void 0 ? _b : 1;
-        this.color = (_c = opts.color) !== null && _c !== void 0 ? _c : "#fff";
+        var _c, _d;
+        this.fric = (_c = opts.fric) !== null && _c !== void 0 ? _c : 1;
+        this.color = (_d = opts.color) !== null && _d !== void 0 ? _d : "#fff";
     }
 }
 class Camera {
@@ -3605,18 +3640,18 @@ class Camera {
  */
 class SceneUI {
     constructor(opts) {
-        var _b, _c, _d, _f, _g, _j, _l, _m, _o;
+        var _c, _d, _f, _g, _j, _l, _m, _o, _p;
         this.scene = opts.scene;
-        this.x = (_b = opts.x) !== null && _b !== void 0 ? _b : 0;
-        this.y = (_c = opts.y) !== null && _c !== void 0 ? _c : 0;
-        this.width = (_d = opts.w) !== null && _d !== void 0 ? _d : 0;
-        this.height = (_f = opts.h) !== null && _f !== void 0 ? _f : 0;
-        this.rot = (_g = opts.rot) !== null && _g !== void 0 ? _g : 0;
-        this.color = (_j = opts.color) !== null && _j !== void 0 ? _j : "#fff";
-        this.rend = (_l = opts.rend) !== null && _l !== void 0 ? _l : NoFunc;
-        this.upd = (_m = opts.upd) !== null && _m !== void 0 ? _m : NoFunc;
+        this.x = (_c = opts.x) !== null && _c !== void 0 ? _c : 0;
+        this.y = (_d = opts.y) !== null && _d !== void 0 ? _d : 0;
+        this.width = (_f = opts.w) !== null && _f !== void 0 ? _f : 0;
+        this.height = (_g = opts.h) !== null && _g !== void 0 ? _g : 0;
+        this.rot = (_j = opts.rot) !== null && _j !== void 0 ? _j : 0;
+        this.color = (_l = opts.color) !== null && _l !== void 0 ? _l : "#fff";
+        this.rend = (_m = opts.rend) !== null && _m !== void 0 ? _m : NoFunc;
+        this.upd = (_o = opts.upd) !== null && _o !== void 0 ? _o : NoFunc;
         this.child = new ChildUI();
-        this.alpha = (_o = opts.alpha) !== null && _o !== void 0 ? _o : 1;
+        this.alpha = (_p = opts.alpha) !== null && _p !== void 0 ? _p : 1;
         this.rendRect = true;
     }
     render() {
@@ -3685,24 +3720,28 @@ class ChildUI extends ItemBox {
 }
 class ButtonUI extends SceneUI {
     constructor(opts) {
-        var _b, _c;
+        var _c, _d;
         super(opts);
         _ButtonUI_instances.add(this);
-        this.click = (_b = opts.click) !== null && _b !== void 0 ? _b : NoFunc;
-        this.styles = (_c = opts.styles) !== null && _c !== void 0 ? _c : {};
+        this.click = (_c = opts.click) !== null && _c !== void 0 ? _c : NoFunc;
+        this.styles = (_d = opts.styles) !== null && _d !== void 0 ? _d : {};
         __classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_colorIdle).call(this);
         this.resetCD = new Cooldown();
         this.cdTime = 250;
         this.disabled = false;
         this.scene.on("click", () => {
-            var _b;
+            var _c;
+            // CRITICAL BUGFIX:
+            // ONLY ACCEPT CLICK WHEN PRESENT
+            if (!this.scene.hasUI(this))
+                return;
             if (__classPrivateFieldGet(this, _ButtonUI_instances, "m", _ButtonUI_boundsTest).call(this)) {
                 if (!this.disabled) {
                     if (this.clickCD && !this.clickCD.ready)
                         return;
                     this.click();
                 }
-                this.resetCD.on((_b = this.styles.reset) !== null && _b !== void 0 ? _b : this.cdTime);
+                this.resetCD.on((_c = this.styles.reset) !== null && _c !== void 0 ? _c : this.cdTime);
             }
         });
         if (opts.clickCD) {
@@ -3751,9 +3790,9 @@ _ButtonUI_instances = new WeakSet(), _ButtonUI_boundsTest = function _ButtonUI_b
  */
 class TextUI extends SceneUI {
     constructor(opts) {
-        var _b;
+        var _c;
         super(opts);
-        this.tx = (_b = opts.tx) !== null && _b !== void 0 ? _b : "";
+        this.tx = (_c = opts.tx) !== null && _c !== void 0 ? _c : "";
         this.font = opts.font;
         this.mw = opts.mw;
         // text shouldnt render a rect
@@ -3838,20 +3877,20 @@ class ImgUI extends SceneUI {
 }
 class ProgressUI extends SceneUI {
     constructor(opts) {
-        var _b, _c;
+        var _c, _d;
         super(opts);
-        this.val = (_b = opts.val) !== null && _b !== void 0 ? _b : 0;
+        this.val = (_c = opts.val) !== null && _c !== void 0 ? _c : 0;
         this.pcolor = opts.pcolor;
         this.scolor = opts.scolor;
-        this.chunks = (_c = opts.chunks) !== null && _c !== void 0 ? _c : 1;
+        this.chunks = (_d = opts.chunks) !== null && _d !== void 0 ? _d : 1;
     }
     render() {
-        var _b;
+        var _c;
         // width of each chunk
         const chunkSize = this.width / this.chunks;
         let v = this.val;
         for (let i = 0; i < this.chunks; i++) {
-            this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : (_b = this.scolor) !== null && _b !== void 0 ? _b : "#fff");
+            this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : (_c = this.scolor) !== null && _c !== void 0 ? _c : "#fff");
             v--;
         }
     }
@@ -3861,12 +3900,12 @@ class ProgressUI extends SceneUI {
 }
 class PagedUI extends SceneUI {
     constructor(opts) {
-        var _b, _c, _d;
+        var _c, _d, _f;
         super(opts);
         _PagedUI_instances.add(this);
-        this.pgs = (_b = opts.pgs) !== null && _b !== void 0 ? _b : [];
-        this.lbt = new ButtonUI((_c = opts.lbt) !== null && _c !== void 0 ? _c : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeL) });
-        this.rbt = new ButtonUI((_d = opts.rbt) !== null && _d !== void 0 ? _d : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeR) });
+        this.pgs = (_c = opts.pgs) !== null && _c !== void 0 ? _c : [];
+        this.lbt = new ButtonUI((_d = opts.lbt) !== null && _d !== void 0 ? _d : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeL) });
+        this.rbt = new ButtonUI((_f = opts.rbt) !== null && _f !== void 0 ? _f : { scene: opts.scene, click: __classPrivateFieldGet(this, _PagedUI_instances, "m", _PagedUI_changeR) });
         this.active = 0;
     }
     addPg(pg) {
@@ -3981,14 +4020,14 @@ class Weapon {
 }
 class Gun extends Weapon {
     constructor(opts) {
-        var _b;
+        var _c;
         super();
         this.mag = opts.mag;
         this.ammo = opts.ammo;
         this.bul = this.mag;
         this.opts = opts.opts;
         this.scene = opts.scene;
-        this.autoreload = (_b = opts.autoreload) !== null && _b !== void 0 ? _b : false;
+        this.autoreload = (_c = opts.autoreload) !== null && _c !== void 0 ? _c : false;
     }
     reload() {
         const needed = this.mag - this.bul;

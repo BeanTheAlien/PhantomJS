@@ -769,6 +769,9 @@ interface RaycastOptions {
     scene: Scene;
     ign?: Constructor<unknown>[];
 }
+interface NoHitSelfRaycastOptions extends RaycastOptions {
+    self: Entity;
+}
 /**
  * The map for `Comp`.
  * @since v0.0.0
@@ -1557,7 +1560,7 @@ class Entity {
         if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
-        this.render = opts.render ?? NoFunc;
+        this.render = opts?.render ?? NoFunc;
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -3932,18 +3935,26 @@ class Preset {
         return new Entity(this.atts);
     }
 }
+interface AllowHitSelf<T extends boolean> {
+    hs: T;
+}
 class RaycastBase {
     origin: Vector;
     angle: number;
     dist: number;
     scene: Scene;
     ign: Constructor<unknown>[];
-    constructor(opts: RaycastOptions) {
+    self?: Entity;
+    constructor(opts: RaycastOptions);
+    constructor(opts: RaycastOptions & AllowHitSelf<false>);
+    constructor(opts: NoHitSelfRaycastOptions & AllowHitSelf<true>);
+    constructor(opts: RaycastOptions | NoHitSelfRaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
         this.ign = opts.ign ?? [];
+        if("self" in opts) this.self = opts.self;
     }
     dir() {
         return new Vector(Math.cos(this.angle), Math.sin(this.angle));
@@ -3984,13 +3995,10 @@ class MultiRaycast extends RaycastBase {
  * @since v0.0.0
  */
 class Raycast extends RaycastBase {
-    constructor(opts: RaycastOptions) {
-        super(opts);
-    }
     cast(): RaycastIntersecton | null {
         let res: RaycastIntersecton | null = null;
         super.cast((i, hit, dir) => {
-            if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            if((res && hit < res.dist) || (res == null) && (!this.self || i != this.self)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
         });
         return res;
     }
