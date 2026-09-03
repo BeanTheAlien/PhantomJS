@@ -256,6 +256,8 @@ npm install @beanthealien/phantomjs
 - `Angle.roff` method.
 ## v2.2.10
 - Add `hs`, `self` property for allow-hit-self and not-allow-hit-self on `Raycast`.
+## v2.2.11
+- Critical `Raycast.cast` bugfix.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
