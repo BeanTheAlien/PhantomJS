@@ -5478,6 +5478,61 @@ class AIController {
         this.tg = opts.tg;
     }
 }
+interface SpawnerOptionsMap {
+    entity: EntityOptions;
+    stcobj: StaticObjectOptions;
+    physobj: PhysicsObjectOptions;
+    mvobj: MovingObjectOptions;
+    bulobj: BulletObjectOptions;
+    wallobj: WallObjectOptions;
+    floorobj: WallObjectOptions;
+    char: CharacterOptions;
+    pc: PlayableCharacterOptions;
+    aircf: AircraftOptions;
+}
+interface SpawnerCtorMap {
+    entity: Constructor<Entity>;
+    stcobj: Constructor<StaticObject>;
+    physobj: Constructor<PhysicsObject>;
+    mvobj: Constructor<MovingObject>;
+    bulobj: Constructor<BulletObject>;
+    wallobj: Constructor<WallObject>;
+    floorobj: Constructor<FloorObject>;
+    char: Constructor<Character>;
+    pc: Constructor<PlayableCharacter>;
+    aircf: Constructor<Aircraft>;
+}
+const CtorMap: SpawnerCtorMap = {
+    entity: Entity,
+    stcobj: StaticObject,
+    physobj: PhysicsObject,
+    mvobj: MovingObject,
+    bulobj: BulletObject,
+    wallobj: WallObject,
+    floorobj: FloorObject,
+    char: Character,
+    pc: PlayableCharacter,
+    aircf: Aircraft
+} as const;
+class Spawner<T extends keyof SpawnerOptionsMap, C extends SpawnerCtorMap[T], K extends () => SpawnerOptionsMap[T]> {
+    ctor: C;
+    opt: K;
+    itvl: Itvl;
+    constructor(ctor: T, opt: K) {
+        this.ctor = CtorMap[ctor] as C;
+        this.opt = opt;
+        this.itvl = new Itvl();
+    }
+    new() {
+        return new (this.ctor)(this.opt);
+    }
+    start(time: number) {
+        this.itvl.start(this.new.bind(this), time);
+    }
+    stop() {
+        this.itvl.stop();
+    }
+}
 // type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
 // class History<T> {
 //     hist: HistoryCache<T>[];
@@ -5747,6 +5802,8 @@ export {
     LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
     EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice,
 
-    ParamKey
+    ParamKey,
+
+    Spawner
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

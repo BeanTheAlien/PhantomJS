@@ -258,6 +258,9 @@ npm install @beanthealien/phantomjs
 - Add `hs`, `self` property for allow-hit-self and not-allow-hit-self on `Raycast`.
 ## v2.2.11
 - Critical `Raycast.cast` bugfix.
+## v2.2.12
+- Add new `Spawner` class.
+- Fix [#13](https://github.com/BeanTheAlien/PhantomJS/issues/13).
 
 # Phantom HTML v0.0.1
 ### 0.0.1
