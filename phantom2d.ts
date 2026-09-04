@@ -3830,7 +3830,7 @@ class Scene {
     }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
-        for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0], stops[i][1]); else g.addColorStop(i, stops[i]);
+        for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0] as number, stops[i][1]); else g.addColorStop(i, stops[i]);
         return g;
     }
 }
