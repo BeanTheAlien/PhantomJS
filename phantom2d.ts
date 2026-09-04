@@ -3822,6 +3822,17 @@ class Scene {
         this.scaleX = sx;
         this.scaleY = sy;
     }
+    oval(x: number, y: number, rx: number, ry: number, color: string) {
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
+        this.color = color;
+        this.ctx.fill();
+    }
+    rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
+        const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
+        for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0], stops[i][1]); else g.addColorStop(i, stops[i]);
+        return g;
+    }
 }
 /**
  * A collection of items.
