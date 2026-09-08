@@ -261,6 +261,11 @@ npm install @beanthealien/phantomjs
 ## v2.2.12
 - Add new `Spawner` class.
 - Fix [#13](https://github.com/BeanTheAlien/PhantomJS/issues/13).
+## v2.2.13
+- Add `Perlin` class for generating Perlin noise.
+- Add `Scene.goff` `Vector` for global offset.
+- Apply previous font post-render in `TextUI`.
+- Add `Angle.cv` anglestring conversion.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
