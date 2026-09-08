@@ -266,6 +266,8 @@ npm install @beanthealien/phantomjs
 - Add `Scene.goff` `Vector` for global offset.
 - Apply previous font post-render in `TextUI`.
 - Add `Angle.cv` anglestring conversion.
+## v2.2.13.1
+- Add `mulberry32` seeded random function.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
