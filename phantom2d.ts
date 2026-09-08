@@ -5589,14 +5589,14 @@ class Perlin {
             this.perm[i] = p[i & 255];
         }
     }
-    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-    grad(hash, x, y) {
+    fade(t: number) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    grad(hash: number, x: number, y: number) {
         const h = hash & 7;
         const u = h < 4 ? x : y;
         const v = h < 4 ? y : x;
         return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
     }
-    noise(x, y) {
+    noise(x: number, y: number) {
         const X = Math.floor(x) & 255;
         const Y = Math.floor(y) & 255;
 
@@ -5606,7 +5606,7 @@ class Perlin {
         const u = this.fade(x);
         const v = this.fade(y);
 
-        const p = this.permutation;
+        const p = this.perm;
         const A = p[X] + Y;
         const B = p[X + 1] + Y;
 
