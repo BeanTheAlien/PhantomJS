@@ -268,6 +268,8 @@ npm install @beanthealien/phantomjs
 - Add `Angle.cv` anglestring conversion.
 ## v2.2.13.1
 - Add `mulberry32` seeded random function.
+## v2.2.13.2
+- Add `FilePicker` static methods.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

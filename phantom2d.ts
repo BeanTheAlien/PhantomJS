@@ -4678,6 +4678,7 @@ type FilePickerHandleType = FileSystemFileHandle[];
 class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType, FilePickerOptions, FilePickerFinalOptions> {
     pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
     pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
+    pick(opts: FilePickerOptions): Promise<string | string[]>;
     async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
         const [...handles]: FilePickerHandleType = await this.handle(opts);
         if(handles.length == 1) {
@@ -4691,15 +4692,27 @@ class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType
         const out = await Promise.all(files.map(async o => o.text()));
         return out;
     }
+    static pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
+    static pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
+    static pick(opts: FilePickerOptions): Promise<string | string[]>;
+    static async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
+        return await (new FilePicker()).pick(opts);
+    }
     async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
         const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
         return handles;
+    }
+    static async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
+        return await (new FilePicker()).handle(opts);
     }
     async write(opts: FilePickerWritingOptions) {
         const [h] = await this.handle(opts);
         const w = await h.createWritable();
         await w.write(opts.tx);
         await w.close();
+    }
+    static async write(opts: FilePickerWritingOptions) {
+        await (new FilePicker()).write(opts);
     }
 }
 class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, FilePickerSaveOptions, FilePickerSaveFinalOptions> {
@@ -4719,12 +4732,8 @@ class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, 
  */
 class DirPicker extends Picker<FileSystemDirectoryHandle, FileSystemDirectoryHandle> {
     async pick(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
-        try {
-            const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(this.cleanOpts(opts));
-            return handle;
-        } catch(e) {
-            throw e;
-        }
+        const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(this.cleanOpts(opts));
+        return handle;
     }
     async handle(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
         return this.pick(opts);
