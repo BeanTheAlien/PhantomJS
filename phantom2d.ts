@@ -5805,7 +5805,7 @@ function chance(max: number): boolean;
  */
 function chance(max: number, upperBound: number): boolean;
 function chance(max: number, upperBound?: number): boolean {
-    return max <= random((upperBound ?? 100) + 1);
+    return random((upperBound ?? 100) + 1) <= max;
 }
 function objIs<T>(obj: any, ctor: Constructor<T>): obj is T {
     return obj != undefined && obj instanceof ctor;

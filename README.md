@@ -270,6 +270,8 @@ npm install @beanthealien/phantomjs
 - Add `mulberry32` seeded random function.
 ## v2.2.13.2
 - Add `FilePicker` static methods.
+## v2.2.14
+- Critical bugfix in `chance`. Swap `max <= random()` => `random() <= max`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
