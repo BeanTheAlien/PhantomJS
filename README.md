@@ -272,6 +272,10 @@ npm install @beanthealien/phantomjs
 - Add `FilePicker` static methods.
 ## v2.2.14
 - Critical bugfix in `chance`. Swap `max <= random()` => `random() <= max`.
+## v2.2.15
+- `mulberrySeed`, `randomx`.
+- `PhantomHealthCompHurtEvent` `dmg` property.
+- `PhantomHealthCompHealEvent` `hp` property.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
