@@ -2257,6 +2257,7 @@ class WallObject extends Entity {
                     }
                 }
             }
+            opts?.collide?.(e);
         }
     }
     /**

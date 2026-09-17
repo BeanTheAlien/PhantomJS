@@ -276,6 +276,8 @@ npm install @beanthealien/phantomjs
 - `mulberrySeed`, `randomx`.
 - `PhantomHealthCompHurtEvent` `dmg` property.
 - `PhantomHealthCompHealEvent` `hp` property.
+## v2.2.15.1
+- `WallObject` fires `opts.collide` if present.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
