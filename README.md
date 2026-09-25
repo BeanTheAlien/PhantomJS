@@ -278,6 +278,8 @@ npm install @beanthealien/phantomjs
 - `PhantomHealthCompHealEvent` `hp` property.
 ## v2.2.15.1
 - `WallObject` fires `opts.collide` if present.
+## v2.2.16
+- `Vector` math
 
 # Phantom HTML v0.0.1
 ### 0.0.1

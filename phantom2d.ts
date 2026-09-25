@@ -2730,6 +2730,37 @@ class Vector {
     compareTo(vec: Vector) {
         return Math.hypot(vec.x - this.x, vec.y - this.y);
     }
+    set(vec: Vector) {
+        this.x = vec.x;
+        this.y = vec.y;
+    }
+    static add(v0: Vector, v1: Vector) {
+        return new Vector(v0.x + v1.x, v0.y + v1.y);
+    }
+    add(vec: Vector) {
+        this.set(Vector.add(this, vec));
+    }
+    static sub(v0: Vector, v1: Vector) {
+        return new Vector(v0.x - v1.x, v0.y - v1.y);
+    }
+    sub(vec: Vector) {
+        this.set(Vector.sub(this, vec));
+    }
+    static mult(v0: Vector, v1: Vector) {
+        return new Vector(v0.x * v1.x, v0.y * v1.y);
+    }
+    mult(vec: Vector) {
+        this.set(Vector.mult(this, vec));
+    }
+    static div(v0: Vector, v1: Vector) {
+        return new Vector(v0.x / v1.x, v0.y / v1.y);
+    }
+    div(vec: Vector) {
+        this.set(Vector.div(this, vec));
+    }
+    div2(vec: Vector) {
+        this.set(Vector.div(vec, this));
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
