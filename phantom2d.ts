@@ -3868,10 +3868,16 @@ class Scene {
         this.color = color;
         this.ctx.fill();
     }
+    circ(x: number, y: number, r: number, color: string) {
+        this.oval(x, y, r, r, color);
+    }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
         for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0] as number, stops[i][1]); else g.addColorStop(i, stops[i]);
         return g;
+    }
+    col(e: Entity) {
+        return this.items.some(x => isCol(e, x));
     }
 }
 /**
@@ -4398,7 +4404,7 @@ class Angle {
      * @returns An angle +-`roffVal` from `inRadSource` (in radians).
      */
     static roff(inRadSource: number, roffVal: number) {
-        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+        return Angle.rad(random(Angle.deg(inRadSource) - roffVal, Angle.deg(inRadSource) + roffVal));
     }
     /**
      * Convert an angle from deg => rad or rad => deg.
