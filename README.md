@@ -279,7 +279,9 @@ npm install @beanthealien/phantomjs
 ## v2.2.15.1
 - `WallObject` fires `opts.collide` if present.
 ## v2.2.16
-- `Vector` math
+- `Vector` math.
+## v2.2.17
+- Start ragdoll implementation.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
