@@ -2778,6 +2778,8 @@ class Joint extends Vector {
     oy: number;
     strength: number;
     damp: number;
+    vx: number;
+    vy: number;
     constructor(x: number, y: number);
     constructor(x: number, y: number, strength: number);
     constructor(x: number, y: number, strength?: number);
@@ -2788,8 +2790,14 @@ class Joint extends Vector {
         this.oy = y;
         this.strength = strength ?? 0;
         this.damp = damp ?? 0.99;
+        this.vx = 0;
+        this.vy = 0;
     }
     update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx = 0;
+        this.vy = 0;
         // slight damping
         const vx = (this.x - this.ox) * this.damp;
         const vy = (this.y - this.oy) * this.damp;
