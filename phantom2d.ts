@@ -1464,12 +1464,24 @@ for(const [k, v] of Object.entries(KeyCodeMap)) {
  */
 type KeyCode = keyof typeof KeyCodeMap;
 type EntityLerp = "pos" | "rot";
-
+type XYAxis = "x" | "y";
+interface Bound<T extends XYAxis = XYAxis> {
+    min: number;
+    max: number;
+    axis: T;
+}
+interface BoundX extends Bound<"x"> {}
+interface BoundY extends Bound<"y"> {}
+interface Boundaries {
+    bounds: ItemBox<Bound>;
+    bound(boundary: Bound): void;
+    unbound(boundary: Bound): void;
+}
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
  */
-class Entity {
+class Entity implements Boundaries {
     static defaults: EntityDefaults;
     /**
      * Fired when this object collides with another.
@@ -1533,6 +1545,7 @@ class Entity {
      */
     legCol: boolean;
     render: Function;
+    bounds: ItemBox<Bound<XYAxis>>;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts: ExpiringEntityOptions);
@@ -1561,6 +1574,7 @@ class Entity {
             this.expire(opts.expr, opts.scene);
         }
         this.render = opts?.render ?? NoFunc;
+        this.bounds = new ItemBox();
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1779,6 +1793,13 @@ class Entity {
         for(const c of this.comps.values()) {
             c.upd();
         }
+        this.bounds.forEach(b => {
+            if(b.axis == "x") {
+                this.clampPosX(b.min, b.max);
+            } else {
+                this.clampPosY(b.min, b.max);
+            }
+        });
     }
     /**
      * Returns the string representation of this object.
@@ -1970,6 +1991,12 @@ class Entity {
         const d = Math.sqrt(dx * dx + dy * dy);
         this.x += (dx / d) * spd;
         this.y += (dy / d) * spd;
+    }
+    bound(boundary: Bound): void {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary: Bound): void {
+        this.bounds.rm(boundary);
     }
 }
 /**
@@ -2855,7 +2882,7 @@ interface SkeletonOptions {
     jr: number;
     scene: Scene;
 }
-class Skeleton implements Renderable {
+class Skeleton implements Renderable, Boundaries {
     bn: Bone[];
     joints: Joint[];
     /**
@@ -2872,6 +2899,7 @@ class Skeleton implements Renderable {
     bw: number;
     jr: number;
     scene: Scene;
+    bounds: ItemBox<Bound>;
     constructor(opts: SkeletonOptions) {
         this.bn = opts.bn;
         this.joints = [];
@@ -2884,6 +2912,7 @@ class Skeleton implements Renderable {
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
+        this.bounds = new ItemBox();
     }
     setSoft(enabled = true) {
         this.soft = enabled;
@@ -2917,6 +2946,71 @@ class Skeleton implements Renderable {
         for(let i = 0; i < this.pass; i++) {
             constraints.forEach(b => b.resolve());
         }
+        this.bounds.forEach(b => {
+            const next = (k: "x" | "y") => {
+                const lx = Math.max(...(k == "x" ? this.jx : this.jy));
+                if(lx <= b.max) return;
+                const o = b.max - lx;
+                this.joints.forEach(j => {
+                    if(this.soft) {
+                        if(j[k] > b.max) {
+                            j[k] = b.max;
+                            j[k == "x" ? "ox" : "oy"] = b.max;
+                        }
+                    } else {
+                        j[k] += o;
+                        j[k == "x" ? "ox" : "oy"] += o;
+                    }
+                });
+            }
+            if(b.axis == "x") {
+                next("x");
+            } else {
+                next("y");
+            }
+        });
+    }
+    get jy() {
+        return this.joints.map(j => j.y);
+    }
+    get jx() {
+        return this.joints.map(j => j.x);
+    }
+    bound(boundary: Bound) {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary: Bound) {
+        this.bounds.rm(boundary);
+    }
+}
+interface SkeletalEntityOptions extends EntityOptions {
+    sk: Skeleton;
+}
+class SkeletalEntity extends Entity {
+    sk: Skeleton;
+    constructor(opts: SkeletalEntityOptions) {
+        super(opts);
+        this.sk = opts.sk;
+        const x = opts.x ?? 0;
+        const y = opts.y ?? 0;
+        this.sk.joints.forEach(j => {
+            j.x += x;
+            j.ox += x;
+            j.y += y;
+            j.oy += y;
+        });
+        this.upd = () => this.#syncBounds();
+        this.#syncBounds();
+    }
+    #syncBounds() {
+        const xs = this.sk.joints.map(j => j.x);
+        const ys = this.sk.joints.map(j => j.y);
+        const minX = Math.min(...xs);
+        const minY = Math.min(...ys);
+        this.x = minX;
+        this.y = minY;
+        this.width = Math.max(...xs) - minX;
+        this.height = Math.max(...ys) - minY;
     }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
@@ -6110,6 +6204,9 @@ function mulberry32(a: number) {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     }
 }
+function clamp(val: number, min: number, max: number) {
+    return Math.min(Math.max(val, min), max);
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -6148,6 +6245,6 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton
+    Joint, Bone, Skeleton, SkeletalEntity, clamp
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
