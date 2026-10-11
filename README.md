@@ -1,7 +1,7 @@
 # PhantomJS
 Phantom.js is a web API to simplify the webgame development proccess.\
 Phantom.js is a 2D game development API with readable and simple scripting.\
-Phantom.js is a side project, most of my focus is directed to [GhostScript](https://github.com/BeanTheAlien/GhostScript), so sorry for lack of attention on this. <3
+Phantom.js is a side project, most of my focus is directed to [Haunted Heist](https://github.com/BeanTheAlien/HauntedHeist), so sorry for lack of attention on this. <3
 
 # Download
 Avalible with `npm`!
@@ -285,6 +285,8 @@ npm install @beanthealien/phantomjs
 ## v2.2.17.1
 - `clone` function.
 - `Sound.fire` method.
+## v2.2.17.2 [BREAKING]
+- Change `[x: string]: any` index property of `Entity` to `Entity.ct` property.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

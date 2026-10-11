@@ -1529,7 +1529,6 @@ class Entity implements Boundaries {
      * @since v0.0.0
      */
     evStore: Store<PhantomEventType, PhantomEventHandle[]>;
-    [x: string]: any;
     comps: Store<PhantomCompType, Comp>;
     moveMode: MoveMode;
     evMng: PhantomEventManager;
@@ -1546,6 +1545,7 @@ class Entity implements Boundaries {
     legCol: boolean;
     render: Function;
     bounds: ItemBox<Bound<XYAxis>>;
+    ct: Custom;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts: ExpiringEntityOptions);
@@ -1560,8 +1560,9 @@ class Entity implements Boundaries {
         this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
         this.evStore = new Store();
         this.color = opts?.color ?? Entity.defaults.get("color") ?? "#fff";
+        this.ct = {};
         if(opts?.custom) for(const [k, v] of Object.entries(opts.custom)) {
-            this[k] = v;
+            this.ct[k] = v;
         }
         this.comps = new Store();
         this.moveMode = opts?.moveMode ?? "move";
@@ -3870,6 +3871,7 @@ class Scene {
         });
         save.trigger(this.toDataURL(format, quality));
     }
+    screenshotWith(file: string, format = "image/png", quality = 1, hideList: ("ent" | "ui" | "rend")[] = []) {}
     find(cb: FindPredicateEntity): Entity | undefined {
         return this.items.find(cb);
     }
