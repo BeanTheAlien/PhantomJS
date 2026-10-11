@@ -473,6 +473,11 @@ interface EntityOptions {
      */
     color?: string;
     /**
+     * The outline (stroke) color.
+     * @since v2.2.18
+     */
+    colorsk?: string;
+    /**
      * The movement mode.
      * @since v1.0.4
      */
@@ -1477,6 +1482,9 @@ interface Boundaries {
     bound(boundary: Bound): void;
     unbound(boundary: Bound): void;
 }
+enum Color {
+    invis = "rgba(0, 0, 0, 0)"
+};
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
@@ -1525,6 +1533,11 @@ class Entity implements Boundaries {
      */
     color: string;
     /**
+     * The outline (stroke) color.
+     * @since v2.2.18
+     */
+    colorsk: string;
+    /**
      * The storage for listeners for events.
      * @since v0.0.0
      */
@@ -1560,6 +1573,7 @@ class Entity implements Boundaries {
         this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
         this.evStore = new Store();
         this.color = opts?.color ?? Entity.defaults.get("color") ?? "#fff";
+        this.colorsk = opts?.color ?? Entity.defaults.get("color") ?? Color.invis;
         this.ct = {};
         if(opts?.custom) for(const [k, v] of Object.entries(opts.custom)) {
             this.ct[k] = v;
@@ -3366,7 +3380,19 @@ type GenericIdentifier = "ent" | "ui" | "rend";
 type DrawMethod = "f" | "s";
 /**
  * The root canvas to display content.
+ * 
+ * Since v2.2.18, methods that end in `""` *fill*,
+ * and methods that end in `"s"` *stroke*.
  * @since v0.0.0
+ * @example Fill vs Stroke methods.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect
+ * scene.rect(0, 0, 10, 10, "red");
+ * // stroking a rect
+ * scene.rects(0, 0, 10, 10, "red");
+ * ```
  */
 class Scene {
     static config: SceneConfig;
@@ -3596,21 +3622,31 @@ class Scene {
         if(m == "f") f1();
         else f2();
     }
+    __detmc(m: DrawMethod, c1: string, c2: string, f1: Function, f2: Function) {
+        this.__detm(m, () => {
+            this.color = c1;
+            f1();
+        }, () => {
+            this.colorsk = c2;
+            f2();
+        });
+    }
+    __detmcr(m: DrawMethod, c: string, f1: Function, f2: Function) {
+        this.__detmc(m, c, c, f1, f2);
+    }
+    __detmfs(m: DrawMethod, c: string) {
+        this.__detmcr(m, c, this.ctx.fill, this.ctx.stroke);
+    }
     __rect(x: number, y: number, w: number, h: number, c: string, m: DrawMethod) {
-        if(m == "f") {
-            this.color = c;
-            this.ctx.fillRect(x, y, w, h);
-        }
-        else {
-            this.colorsk = c;
-            this.ctx.strokeRect(x, y, w, h);
-        }
+        this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
     }
     rect(x: number, y: number, w: number, h: number, color: string) {
-        this.color = color;
-        this.ctx.fillRect(x, y, w, h);
+        this.__rect(x, y, w, h, color, "f");
     }
-    rects(x: number, y: number, w: number, h: number, color: string) {}
+    rectc(x: number, y: number, w: number, h: number) {}
+    rects(x: number, y: number, w: number, h: number, color: string) {
+        this.__rect(x, y, w, h, color, "s");
+    }
     bg(color: string) {
         this.rect(0, 0, this.width, this.height, color);
     }
@@ -3661,9 +3697,9 @@ class Scene {
     }
     render() {
         this.items.forEach(i => {
-            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color);
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk);
             i.child.forEach(c => {
-                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, i.x, i.y);
+                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
             });
         });
         // UI will be rendered in a fixed position
@@ -3677,6 +3713,7 @@ class Scene {
                 this.ctx.rotate(u.rot);
                 this.alpha = u.alpha;
                 this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.rects(-w2, -h2, u.width, u.height, u.colorsk);
                 this.ctx.restore();
             }
             // for other rendering (other than a core rectangle)
@@ -3686,7 +3723,7 @@ class Scene {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: string, offX: number = 0, offY: number = 0) {
+    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: string, colorsk: string, offX: number = 0, offY: number = 0) {
         let ox = 0;
         let oy = 0;
         if(this.fol) {
@@ -3737,6 +3774,7 @@ class Scene {
 
         this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
+        this.rects(nx, ny, w, h, colorsk);
         this.ctx.restore();
     }
     __appendPost(func?: Function) {
@@ -4080,7 +4118,7 @@ class Scene {
     mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
-    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, strokeColor?: string, lineWidth?: number) {
+    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, lineWidth?: number) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -4097,30 +4135,58 @@ class Scene {
         this.ctx.closePath();
 
         // Style the frustum
-        this.ctx.fillStyle = fillColor;
+        this.color = fillColor;
         this.ctx.fill();
-        this.ctx.strokeStyle = strokeColor ?? fillColor;
+    }
+    frustums(x: number, y: number, r0: number, r1: number, h: number, strokeColor: string, lineWidth?: number) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+
+        // Style the frustum
+        this.colorsk = strokeColor;
         this.ctx.lineWidth = lineWidth ?? 2;
         this.ctx.stroke();
     }
-    triangle(p0: Vector, p1: Vector, p2: Vector, color: string) {
+    __tri(p0: Vector, p1: Vector, p2: Vector, color: string, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.lineTo(p2.x, p2.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
     }
-    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+    tri(p0: Vector, p1: Vector, p2: Vector, color: string) {
+        this.__tri(p0, p1, p2, color, "f");
+    }
+    tris(p0: Vector, p1: Vector, p2: Vector, color: string) {
+        this.__tri(p0, p1, p2, color, "s");
+    }
+    __cone(p0: Vector, p1: Vector, rad: Vector, color: string, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
         this.ctx.lineTo(p0.x, p0.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
+    }
+    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+        this.__cone(p0, p1, rad, color, "f");
+    }
+    cones(p0: Vector, p1: Vector, rad: Vector, color: string) {
+        this.__cone(p0, p1, rad, color, "s");
     }
     addMisc(...items: Renderable[]) {
         this.misc.add(...items);
@@ -4198,14 +4264,22 @@ class Scene {
         this.scaleX = sx;
         this.scaleY = sy;
     }
-    oval(x: number, y: number, rx: number, ry: number, color: string) {
+    __oval(x: number, y: number, rx: number, ry: number, color: string, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
+    }
+    oval(x: number, y: number, rx: number, ry: number, color: string) {
+        this.__oval(x, y, rx, ry, color, "f");
+    }
+    ovals(x: number, y: number, rx: number, ry: number, color: string) {
+        this.__oval(x, y, rx, ry, color, "s");
     }
     circ(x: number, y: number, r: number, color: string) {
         this.oval(x, y, r, r, color);
+    }
+    circs(x: number, y: number, r: number, color: string) {
+        this.ovals(x, y, r, r, color);
     }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
@@ -5282,6 +5356,7 @@ interface SceneUIOptions {
     h?: number;
     rot?: number;
     color?: string;
+    colorsk?: string;
     rend?: Function;
     upd?: Function;
     alpha?: number;
@@ -5298,6 +5373,7 @@ class SceneUI {
     height: number;
     rot: number;
     color: string;
+    colorsk: string;
     rend: Function;
     upd: Function;
     alpha: number;
@@ -5317,6 +5393,7 @@ class SceneUI {
         this.height = opts.h ?? 0;
         this.rot = opts.rot ?? 0;
         this.color = opts.color ?? "#fff";
+        this.colorsk = opts.color ?? Color.invis;
         this.rend = opts.rend ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
         this.child = new ChildUI();
@@ -6313,6 +6390,6 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone
+    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
