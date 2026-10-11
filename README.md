@@ -282,6 +282,9 @@ npm install @beanthealien/phantomjs
 - `Vector` math.
 ## v2.2.17
 - Start ragdoll implementation.
+## v2.2.17.1
+- `clone` function.
+- `Sound.fire` method.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -3185,6 +3185,14 @@ class Sound {
     play() {
         this.aud.play();
     }
+    /**
+     * Fires a one-shot player for this sound.
+     * 
+     * Creates a clone of this `Sound` object and plays it.
+     */
+    fire() {
+        clone(this).play();
+    }
     pause() {
         this.aud.pause();
     }
@@ -6207,6 +6215,9 @@ function mulberry32(a: number) {
 function clamp(val: number, min: number, max: number) {
     return Math.min(Math.max(val, min), max);
 }
+function clone<T>(object: T) {
+    return Object.assign({}, object) as T;
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -6245,6 +6256,6 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp
+    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
