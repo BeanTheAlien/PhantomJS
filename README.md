@@ -287,6 +287,8 @@ npm install @beanthealien/phantomjs
 - `Sound.fire` method.
 ## v2.2.17.2 [BREAKING]
 - Change `[x: string]: any` index property of `Entity` to `Entity.ct` property.
+## v2.2.17.3
+- Add `Scene.screenshotWith`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

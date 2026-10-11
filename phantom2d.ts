@@ -3360,6 +3360,11 @@ type FontLineHeight = SceneFont["lineHeight"];
 type FontFamily = SceneFont["family"];
 type FittingMode = "none" | "shrink" | "grow" | "fill";
 /**
+ * A generic identifier for `Entity`-type, `SceneUI`-type or `Renderable`-type.
+ */
+type GenericIdentifier = "ent" | "ui" | "rend";
+type DrawMethod = "f" | "s";
+/**
  * The root canvas to display content.
  * @since v0.0.0
  */
@@ -3498,8 +3503,20 @@ class Scene {
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
     }
+    deepFilter(cb: PredicateEntity) {
+        this.items.stuff = this.filter(cb);
+    }
     filterUI(cb: Predicate<SceneUI>): SceneUI[] {
         return this.ui.filter(cb);
+    }
+    deepFilterUI(cb: Predicate<SceneUI>) {
+        this.ui.stuff = this.filterUI(cb);
+    }
+    filterMisc(cb: Predicate<Renderable>) {
+        return this.misc.filter(cb);
+    }
+    deepFilterMisc(cb: Predicate<Renderable>) {
+        this.misc.stuff = this.filterMisc(cb);
     }
     on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
         this.evMng.on(name, handle as EventHandle);
@@ -3575,10 +3592,25 @@ class Scene {
     drawImg(path: string, x: number, y: number, w: number, h: number) {
         this.img(new Img(path), x, y, w, h);
     }
+    __detm(m: DrawMethod, f1: Function, f2: Function) {
+        if(m == "f") f1();
+        else f2();
+    }
+    __rect(x: number, y: number, w: number, h: number, c: string, m: DrawMethod) {
+        if(m == "f") {
+            this.color = c;
+            this.ctx.fillRect(x, y, w, h);
+        }
+        else {
+            this.colorsk = c;
+            this.ctx.strokeRect(x, y, w, h);
+        }
+    }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
     }
+    rects(x: number, y: number, w: number, h: number, color: string) {}
     bg(color: string) {
         this.rect(0, 0, this.width, this.height, color);
     }
@@ -3871,7 +3903,30 @@ class Scene {
         });
         save.trigger(this.toDataURL(format, quality));
     }
-    screenshotWith(file: string, format = "image/png", quality = 1, hideList: ("ent" | "ui" | "rend")[] = []) {}
+    /**
+     * Creates a screenshot of the canvas.
+     * 
+     * Uses the canvas's content (filtering elements of types present in `hideList`) as the image content.
+     * 
+     * Creates a clone, removing elements of type present in `hideList` off-screen, then orphans the clone.
+     * @param file The file name.
+     * @param hideList Elements to be hidden from the final screenshot.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshotWith(file: string, hideList: GenericIdentifier[] = [], format = "image/png", quality = 1) {
+        const orphan = clone(this);
+        // lose elements of type
+        // since deepFilter with false
+        // with filter everything
+        // we lose all objects
+        if(hideList.includes("ent")) orphan.deepFilter(() => false);
+        if(hideList.includes("ui")) orphan.deepFilterUI(() => false);
+        if(hideList.includes("rend")) orphan.deepFilterMisc(() => false);
+        // force another render pass
+        orphan.render();
+        orphan.screenshot(file, format, quality);
+    }
     find(cb: FindPredicateEntity): Entity | undefined {
         return this.items.find(cb);
     }
