@@ -289,6 +289,12 @@ npm install @beanthealien/phantomjs
 - Change `[x: string]: any` index property of `Entity` to `Entity.ct` property.
 ## v2.2.17.3
 - Add `Scene.screenshotWith`.
+## v2.2.18
+- Huge additions to add fill-vs-stroke methods to scene.
+- Support for stroke color in `Entity.colorsk` property.
+- Support for stroke color in `SceneUI.colorsk` property.
+## v2.2.19 [BREAKING]
+- Huge additions with `-c` and `-sc` assume color methods.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -3640,12 +3640,56 @@ class Scene {
     __rect(x: number, y: number, w: number, h: number, c: string, m: DrawMethod) {
         this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
     }
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     * 
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The fill color.
+     */
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.__rect(x, y, w, h, color, "f");
     }
-    rectc(x: number, y: number, w: number, h: number) {}
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     * 
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     */
+    rectc(x: number, y: number, w: number, h: number) {
+        this.rect(x, y, w, h, this.color as string);
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     * 
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
     rects(x: number, y: number, w: number, h: number, color: string) {
         this.__rect(x, y, w, h, color, "s");
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
+    rectsc(x: number, y: number, w: number, h: number) {
+        this.rects(x, y, w, h, this.color as string);
     }
     bg(color: string) {
         this.rect(0, 0, this.width, this.height, color);
@@ -4026,8 +4070,54 @@ class Scene {
     unfollow() {
         this.fol = undefined;
     }
-    text(text: string, x: number, y: number, maxWidth?: number) {
-        this.ctx.fillText(text, x, y, maxWidth);
+    __text(text: string, x: number, y: number, color: string, m: DrawMethod, maxWidth?: number) {
+        this.__detmcr(m, color, () => this.ctx.fillText(text, x, y, maxWidth), () => this.ctx.strokeText(text, x, y, maxWidth));
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     * 
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The fill color.
+     * @param maxWidth The maximum width.
+     */
+    text(text: string, x: number, y: number, color: string, maxWidth?: number) {
+        this.__text(text, x, y, color, "f", maxWidth);
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     * 
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textc(text: string, x: number, y: number, maxWidth?: number) {
+        this.text(text, x, y, this.color as string, maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     * 
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The stroke color.
+     * @param maxWidth The maximum width.
+     */
+    texts(text: string, x: number, y: number, color: string, maxWidth?: number) {
+        this.__text(text, x, y, color, "s", maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textsc(text: string, x: number, y: number, maxWidth?: number) {
+        this.texts(text, x, y, this.color as string, maxWidth);
     }
     get align(): CanvasTextAlign {
         return this.ctx.textAlign;
@@ -4167,11 +4257,51 @@ class Scene {
         this.ctx.closePath();
         this.__detmfs(m, color);
     }
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     * 
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The fill color.
+     */
     tri(p0: Vector, p1: Vector, p2: Vector, color: string) {
         this.__tri(p0, p1, p2, color, "f");
     }
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     * 
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    tric(p0: Vector, p1: Vector, p2: Vector) {
+        this.tri(p0, p1, p2, this.color as string);
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     * 
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The stroke color.
+     */
     tris(p0: Vector, p1: Vector, p2: Vector, color: string) {
         this.__tri(p0, p1, p2, color, "s");
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    trisc(p0: Vector, p1: Vector, p2: Vector) {
+        this.tris(p0, p1, p2, this.color as string);
     }
     __cone(p0: Vector, p1: Vector, rad: Vector, color: string, m: DrawMethod) {
         this.ctx.beginPath();
@@ -4182,11 +4312,51 @@ class Scene {
         this.ctx.closePath();
         this.__detmfs(m, color);
     }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     * 
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The fill color.
+     */
     cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
         this.__cone(p0, p1, rad, color, "f");
     }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     * 
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conec(p0: Vector, p1: Vector, rad: Vector) {
+        this.cone(p0, p1, rad, this.color as string);
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     * 
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The stroke color.
+     */
     cones(p0: Vector, p1: Vector, rad: Vector, color: string) {
         this.__cone(p0, p1, rad, color, "s");
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conesc(p0: Vector, p1: Vector, rad: Vector) {
+        this.cones(p0, p1, rad, this.color as string);
     }
     addMisc(...items: Renderable[]) {
         this.misc.add(...items);
@@ -4269,17 +4439,104 @@ class Scene {
         this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
         this.__detmfs(m, color);
     }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     * 
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The fill color.
+     */
     oval(x: number, y: number, rx: number, ry: number, color: string) {
         this.__oval(x, y, rx, ry, color, "f");
     }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     * 
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     */
+    ovalc(x: number, y: number, rx: number, ry: number) {
+        this.oval(x, y, rx, ry, this.color as string);
+    }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     * 
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
     ovals(x: number, y: number, rx: number, ry: number, color: string) {
         this.__oval(x, y, rx, ry, color, "s");
     }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
+    ovalsc(x: number, y: number, rx: number, ry: number) {
+        this.ovals(x, y, rx, ry, this.color as string);
+    }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     * 
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
     circ(x: number, y: number, r: number, color: string) {
         this.oval(x, y, r, r, color);
     }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     * 
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
+    circc(x: number, y: number, r: number) {
+        this.circ(x, y, r, this.color as string);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     * 
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
     circs(x: number, y: number, r: number, color: string) {
         this.ovals(x, y, r, r, color);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     * 
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
+    circsc(x: number, y: number, r: number) {
+        this.circs(x, y, r, this.color as string);
     }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
@@ -5585,10 +5842,9 @@ class TextUI extends SceneUI {
         this.rendRect = false;
     }
     render() {
-        this.scene.color = this.color;
         const f = this.scene.font;
         if(this.font) this.scene.font = this.font;
-        this.scene.text(this.tx, this.x, this.y, this.mw);
+        this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
         this.scene.font = f;
         super.render();
     }
