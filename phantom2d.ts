@@ -3383,6 +3383,9 @@ type DrawMethod = "f" | "s";
  * 
  * Since v2.2.18, methods that end in `""` *fill*,
  * and methods that end in `"s"` *stroke*.
+ * 
+ * Since v2.2.19, methods that end in `"c"` assume the
+ * last color applied, such that the color is `this.color`.
  * @since v0.0.0
  * @example Fill vs Stroke methods.
  * ```
@@ -3392,6 +3395,17 @@ type DrawMethod = "f" | "s";
  * scene.rect(0, 0, 10, 10, "red");
  * // stroking a rect
  * scene.rects(0, 0, 10, 10, "red");
+ * ```
+ * @example Color-assuming method.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // apply a red color
+ * scene.color = "red";
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect (assuming color)
+ * scene.rectc(0, 0, 10, 10);
+ * // stroking a rect (assuming color)
+ * scene.rectsc(0, 0, 10, 10);
  * ```
  */
 class Scene {
