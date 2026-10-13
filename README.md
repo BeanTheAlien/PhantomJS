@@ -297,6 +297,8 @@ npm install @beanthealien/phantomjs
 - Huge additions with `-c` and `-sc` assume color methods.
 - **Note**: The last *stable* version is v2.2.17. Only upgrade to v2.2.17+ if you trust experimental features.
 - **Note**: With some method signature changes, both v2.2.17 and v2.2.19 may break projects. Upgrade with caution and fix new signature errors.
+## v2.2.19.1
+- Add `get Runtime.started` property.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -4865,6 +4865,9 @@ class Runtime {
         this.delta = 0;
         this.processId = -1;
     }
+    get started() {
+        return this.processId != -1;
+    }
 }
 /**
  * The geometric object root class.
