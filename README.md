@@ -299,6 +299,9 @@ npm install @beanthealien/phantomjs
 - **Note**: With some method signature changes, both v2.2.17 and v2.2.19 may break projects. Upgrade with caution and fix new signature errors.
 ## v2.2.19.1
 - Add `get Runtime.started` property.
+## v2.2.19.2
+- Add `StorageRoot.rm`.
+- Change `StorageRoot.del` to return the value that was present before deleting.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

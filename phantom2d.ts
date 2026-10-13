@@ -4906,8 +4906,19 @@ class StorageRoot {
     get len(): number {
         return this.storage.length;
     }
+    /**
+     * Removes the key provided from the given Storage object if it exists.
+     * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem)
+     * @param k The key to remove.
+     * @returns The value that was present before removal.
+     */
     del(k: string) {
+        const v = this.get(k);
         this.storage.removeItem(k);
+        return v as string;
+    }
+    rm(k: string) {
+        return this.del(k);
     }
     clear() {
         this.storage.clear();
