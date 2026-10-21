@@ -6346,26 +6346,6 @@ interface Terrain1DOptions {
      */
     fy: number;
 }
-/**
- * function getDetailedSurfaceHeight(worldX: number): number {
-    // Base rolling hills (Large amplitude, low frequency)
-    const baseNoise = perlin.noise(worldX * 0.01, FIXED_Y);
-    
-    // Tiny rock detail / bumps (Small amplitude, high frequency)
-    const detailNoise = perlin.noise(worldX * 0.08, FIXED_Y + 12.34); // Use different Y slice to avoid repetition
-    
-    // Combine them
-    const combined = (baseNoise * 0.8) + (detailNoise * 0.2); 
-    
-    // Normalize and scale
-    const normalized = (combined + 1) / 2;
-    return BASE_HEIGHT + (normalized * AMPLITUDE);
-}
-
- */
-interface RichTerrain1DOptions extends Terrain1DOptions {
-    //
-}
 class Perlin {
     perm: Uint8Array;
     constructor() {
@@ -6456,7 +6436,6 @@ class PerlinTerrain1D {
         return this.bh + (((n + 1) / 2) * this.amp);
     }
 }
-class PerlinRichTerrain1D extends PerlinTerrain1D {}
 
 /**
  * Returns whether 2 objects are in collision.
