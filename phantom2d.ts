@@ -6318,6 +6318,54 @@ class Spawner<T extends keyof SpawnerOptionsMap, C extends SpawnerCtorMap[T], K 
 //         return this.hist[this.ptr];
 //     }
 // }
+interface Terrain1DOptions {
+    /**
+     * The frequency for terrain generation.
+     * 
+     * Higher values dictate more hills (in quantity and jaggedness).
+     * 
+     * Refers to 'frequency'.
+     */
+    frq: number;
+    /**
+     * The maximum height variance between hills.
+     * 
+     * Refers to 'amplitude'.
+     */
+    amp: number;
+    /**
+     * The height that hills start leveling out.
+     * 
+     * Refers to 'baseline height'.
+     */
+    bh: number;
+    /**
+     * The fixed, arbitary y-level to slice.
+     * 
+     * Refers to 'fixed y'.
+     */
+    fy: number;
+}
+/**
+ * function getDetailedSurfaceHeight(worldX: number): number {
+    // Base rolling hills (Large amplitude, low frequency)
+    const baseNoise = perlin.noise(worldX * 0.01, FIXED_Y);
+    
+    // Tiny rock detail / bumps (Small amplitude, high frequency)
+    const detailNoise = perlin.noise(worldX * 0.08, FIXED_Y + 12.34); // Use different Y slice to avoid repetition
+    
+    // Combine them
+    const combined = (baseNoise * 0.8) + (detailNoise * 0.2); 
+    
+    // Normalize and scale
+    const normalized = (combined + 1) / 2;
+    return BASE_HEIGHT + (normalized * AMPLITUDE);
+}
+
+ */
+interface RichTerrain1DOptions extends Terrain1DOptions {
+    //
+}
 class Perlin {
     perm: Uint8Array;
     constructor() {
@@ -6359,7 +6407,56 @@ class Perlin {
             lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1))
         );
     }
+    terrain1D(opt: Terrain1DOptions) {
+        return new PerlinTerrain1D(opt);
+    }
 }
+class PerlinTerrain1D {
+    perlin: Perlin;
+    /**
+     * The frequency for terrain generation.
+     * 
+     * Higher values dictate more hills (in quantity and jaggedness).
+     * 
+     * Refers to 'frequency'.
+     */
+    frq: number;
+    /**
+     * The maximum height variance between hills.
+     * 
+     * Refers to 'amplitude'.
+     */
+    amp: number;
+    /**
+     * The height that hills start leveling out.
+     * 
+     * Refers to 'baseline height'.
+     */
+    bh: number;
+    /**
+     * The fixed, arbitary y-level to slice.
+     * 
+     * Refers to 'fixed y'.
+     */
+    fy: number;
+    constructor(opt: Terrain1DOptions) {
+        this.perlin = new Perlin();
+        this.frq = opt.frq;
+        this.amp = opt.amp;
+        this.bh = opt.bh;
+        this.fy = opt.fy;
+    }
+    /**
+     * Returns the next generated surface height.
+     * @param x The x-coordinate of the world.
+     * @returns The newly-generated surface height.
+     */
+    next(x: number) {
+        const n = this.perlin.noise(x * this.frq, this.fy);
+        return this.bh + (((n + 1) / 2) * this.amp);
+    }
+}
+class PerlinRichTerrain1D extends PerlinTerrain1D {}
 
 /**
  * Returns whether 2 objects are in collision.
