@@ -302,6 +302,8 @@ npm install @beanthealien/phantomjs
 ## v2.2.20
 - Add `StorageRoot.rm`.
 - Change `StorageRoot.del` to return the value that was present before deleting.
+## v2.2.21
+- Add `PerlinTerrain1D` (access through `Perlin.terrain1D` or construction).
 
 # Phantom HTML v0.0.1
 ### 0.0.1

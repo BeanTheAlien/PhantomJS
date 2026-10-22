@@ -6387,7 +6387,7 @@ class Perlin {
             lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1))
         );
     }
-    terrain1D(opt: Terrain1DOptions) {
+    static terrain1D(opt: Terrain1DOptions) {
         return new PerlinTerrain1D(opt);
     }
 }
@@ -6750,6 +6750,6 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color
+    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
