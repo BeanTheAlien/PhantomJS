@@ -3,7 +3,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HealthComp_instances, _HealthComp_consume, _a, _Img_instances, _b, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick, _PagedUI_instances, _PagedUI_changeL, _PagedUI_changeR;
+var _HealthComp_instances, _HealthComp_consume, _a, _Skeleton_instances, _Skeleton_syncJoints, _SkeletalEntity_instances, _SkeletalEntity_syncBounds, _Img_instances, _b, _Img_realSrc, _Scene_instances, _Scene_tagTest, _Scene_buildFont, _Cooldown_instances, _Cooldown_handle, _ButtonUI_instances, _ButtonUI_boundsTest, _ButtonUI_applyColor, _ButtonUI_colorIdle, _ButtonUI_colorHover, _ButtonUI_colorClick, _PagedUI_instances, _PagedUI_changeL, _PagedUI_changeR;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -297,7 +297,7 @@ class PhantomRemovedEvent extends PhantomEvent {
  * @since v0.0.0
  */
 class PhantomHealthCompHurtEvent extends PhantomEvent {
-    constructor() { super("hurt"); }
+    constructor(dmg) { super("hurt"); this.dmg = dmg; }
 }
 /**
  * Fired when this ent dies.
@@ -311,7 +311,7 @@ class PhantomHealthCompDieEvent extends PhantomEvent {
  * @since v0.0.0
  */
 class PhantomHealthCompHealEvent extends PhantomEvent {
-    constructor() { super("heal"); }
+    constructor(hp) { super("heal"); this.hp = hp; }
 }
 class PhantomDestroyedEvent extends PhantomEvent {
     constructor() { super("destroyed"); }
@@ -363,7 +363,7 @@ class HealthComp extends Comp {
      */
     hurt(dmg) {
         this.hp -= dmg;
-        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHurt, "hurt", new PhantomHealthCompHurtEvent(dmg));
         if (this.hp <= 0)
             this.die();
     }
@@ -383,7 +383,7 @@ class HealthComp extends Comp {
         this.hp += hp;
         if (this.mhp)
             this.hp = Math.min(this.hp, this.mhp);
-        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHeal, "heal", new PhantomHealthCompHealEvent());
+        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHeal, "heal", new PhantomHealthCompHealEvent(hp));
     }
 }
 _HealthComp_instances = new WeakSet(), _HealthComp_consume = function _HealthComp_consume(fn, k, e) {
@@ -729,13 +729,18 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
         continue;
     KeyCodeMapReverse[v] = k;
 }
+var Color;
+(function (Color) {
+    Color["invis"] = "rgba(0, 0, 0, 0)";
+})(Color || (Color = {}));
+;
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
  */
 class Entity {
     constructor(opts) {
-        var _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
+        var _c, _d, _f, _g, _j, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
         this.collide = (_c = opts === null || opts === void 0 ? void 0 : opts.collide) !== null && _c !== void 0 ? _c : ((o) => { });
         this.upd = (_d = opts === null || opts === void 0 ? void 0 : opts.upd) !== null && _d !== void 0 ? _d : NoFunc;
         this.x = (_g = (_f = opts === null || opts === void 0 ? void 0 : opts.x) !== null && _f !== void 0 ? _f : Entity.defaults.get("x")) !== null && _g !== void 0 ? _g : 0;
@@ -746,21 +751,24 @@ class Entity {
         this.height = (_u = (_t = opts === null || opts === void 0 ? void 0 : opts.height) !== null && _t !== void 0 ? _t : Entity.defaults.get("height")) !== null && _u !== void 0 ? _u : 0;
         this.evStore = new Store();
         this.color = (_w = (_v = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _v !== void 0 ? _v : Entity.defaults.get("color")) !== null && _w !== void 0 ? _w : "#fff";
+        this.colorsk = (_y = (_x = opts === null || opts === void 0 ? void 0 : opts.color) !== null && _x !== void 0 ? _x : Entity.defaults.get("color")) !== null && _y !== void 0 ? _y : Color.invis;
+        this.ct = {};
         if (opts === null || opts === void 0 ? void 0 : opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
-                this[k] = v;
+                this.ct[k] = v;
             }
         this.comps = new Store();
-        this.moveMode = (_x = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _x !== void 0 ? _x : "move";
+        this.moveMode = (_z = opts === null || opts === void 0 ? void 0 : opts.moveMode) !== null && _z !== void 0 ? _z : "move";
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
-        this.legCol = (_y = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _y !== void 0 ? _y : false;
+        this.legCol = (_0 = opts === null || opts === void 0 ? void 0 : opts.legCol) !== null && _0 !== void 0 ? _0 : false;
         if (opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
-        this.render = (_z = opts === null || opts === void 0 ? void 0 : opts.render) !== null && _z !== void 0 ? _z : NoFunc;
+        this.render = (_1 = opts === null || opts === void 0 ? void 0 : opts.render) !== null && _1 !== void 0 ? _1 : NoFunc;
+        this.bounds = new ItemBox();
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -972,6 +980,14 @@ class Entity {
         for (const c of this.comps.values()) {
             c.upd();
         }
+        this.bounds.forEach(b => {
+            if (b.axis == "x") {
+                this.clampPosX(b.min, b.max);
+            }
+            else {
+                this.clampPosY(b.min, b.max);
+            }
+        });
     }
     /**
      * Returns the string representation of this object.
@@ -1150,6 +1166,12 @@ class Entity {
         const d = Math.sqrt(dx * dx + dy * dy);
         this.x += (dx / d) * spd;
         this.y += (dy / d) * spd;
+    }
+    bound(boundary) {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary) {
+        this.bounds.rm(boundary);
     }
 }
 /**
@@ -1330,6 +1352,7 @@ class WallObject extends Entity {
     constructor(opts) {
         super(opts);
         this.collide = (e) => {
+            var _c;
             // left vs right pen
             const xl = e.x + e.width - this.x;
             const xr = this.x + this.width - e.x;
@@ -1378,6 +1401,7 @@ class WallObject extends Entity {
                     }
                 }
             }
+            (_c = opts === null || opts === void 0 ? void 0 : opts.collide) === null || _c === void 0 ? void 0 : _c.call(opts, e);
         };
     }
     static from(opts) {
@@ -1763,7 +1787,227 @@ class Vector {
     compareTo(vec) {
         return Math.hypot(vec.x - this.x, vec.y - this.y);
     }
+    set(vec) {
+        this.x = vec.x;
+        this.y = vec.y;
+    }
+    static add(v0, v1) {
+        return new Vector(v0.x + v1.x, v0.y + v1.y);
+    }
+    add(vec) {
+        this.set(Vector.add(this, vec));
+    }
+    static sub(v0, v1) {
+        return new Vector(v0.x - v1.x, v0.y - v1.y);
+    }
+    sub(vec) {
+        this.set(Vector.sub(this, vec));
+    }
+    static mult(v0, v1) {
+        return new Vector(v0.x * v1.x, v0.y * v1.y);
+    }
+    mult(vec) {
+        this.set(Vector.mult(this, vec));
+    }
+    static div(v0, v1) {
+        return new Vector(v0.x / v1.x, v0.y / v1.y);
+    }
+    div(vec) {
+        this.set(Vector.div(this, vec));
+    }
+    div2(vec) {
+        this.set(Vector.div(vec, this));
+    }
+    /**
+     * Generates a new `Joint` from this position.
+     * @param strength The gravity strength to use.
+     * @returns A new `Joint`.
+     */
+    trace(strength) {
+        return new Joint(this.x, this.y, strength);
+    }
 }
+/**
+ * Used for ragdoll bone joints.
+ */
+class Joint extends Vector {
+    constructor(x, y, strength, damp) {
+        super(x, y);
+        this.ox = x;
+        this.oy = y;
+        this.strength = strength !== null && strength !== void 0 ? strength : 0;
+        this.damp = damp !== null && damp !== void 0 ? damp : 0.99;
+        this.vx = 0;
+        this.vy = 0;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx = 0;
+        this.vy = 0;
+        // slight damping
+        const vx = (this.x - this.ox) * this.damp;
+        const vy = (this.y - this.oy) * this.damp;
+        this.ox = this.x;
+        this.oy = this.y;
+        this.x += vx;
+        this.y += vy + this.strength;
+    }
+}
+/**
+ * Ragdoll bone constaint for 2 joints.
+ */
+class Bone {
+    constructor(j1, j2, len) {
+        this.j1 = j1;
+        this.j2 = j2;
+        this.len = len !== null && len !== void 0 ? len : Math.hypot(j2.x - j1.x, j2.y - j1.y);
+    }
+    resolve() {
+        const dx = this.j2.x - this.j1.x;
+        const dy = this.j2.y - this.j1.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist == 0) {
+            if (this.len == 0)
+                return;
+            const offset = this.len / 2;
+            this.j1.x -= offset;
+            this.j2.x += offset;
+            this.j1.ox -= offset;
+            this.j2.ox += offset;
+            return;
+        }
+        const diff = (this.len - dist) / dist * 0.5;
+        const ox = dx * diff;
+        const oy = dy * diff;
+        this.j1.x -= ox;
+        this.j1.y -= oy;
+        this.j2.x += ox;
+        this.j2.y += oy;
+    }
+    update() {
+        this.j1.update();
+        this.j2.update();
+    }
+}
+class Skeleton {
+    constructor(opts) {
+        var _c, _d;
+        _Skeleton_instances.add(this);
+        this.bn = opts.bn;
+        this.joints = [];
+        this.rig = [];
+        __classPrivateFieldGet(this, _Skeleton_instances, "m", _Skeleton_syncJoints).call(this);
+        this.pass = (_c = opts.pass) !== null && _c !== void 0 ? _c : 5;
+        this.soft = (_d = opts.soft) !== null && _d !== void 0 ? _d : false;
+        this.bc = opts.bc;
+        this.jc = opts.jc;
+        this.bw = opts.bw;
+        this.jr = opts.jr;
+        this.scene = opts.scene;
+        this.bounds = new ItemBox();
+    }
+    setSoft(enabled = true) {
+        this.soft = enabled;
+    }
+    render() {
+        // draw bones
+        this.scene.ctx.lineWidth = this.bw;
+        this.bn.forEach(b => this.scene.lnsk([b.j1, b.j2], this.bc));
+        // draw joints
+        this.bn.map(j => [j.j1, j.j2]).forEach(j => j.forEach(jj => this.scene.circ(jj.x, jj.y, this.jr, this.jc)));
+    }
+    update() {
+        __classPrivateFieldGet(this, _Skeleton_instances, "m", _Skeleton_syncJoints).call(this);
+        this.joints.forEach(j => j.update());
+        const constraints = this.soft ? this.bn : this.rig;
+        for (let i = 0; i < this.pass; i++) {
+            constraints.forEach(b => b.resolve());
+        }
+        this.bounds.forEach(b => {
+            const next = (k) => {
+                const lx = Math.max(...(k == "x" ? this.jx : this.jy));
+                if (lx <= b.max)
+                    return;
+                const o = b.max - lx;
+                this.joints.forEach(j => {
+                    if (this.soft) {
+                        if (j[k] > b.max) {
+                            j[k] = b.max;
+                            j[k == "x" ? "ox" : "oy"] = b.max;
+                        }
+                    }
+                    else {
+                        j[k] += o;
+                        j[k == "x" ? "ox" : "oy"] += o;
+                    }
+                });
+            };
+            if (b.axis == "x") {
+                next("x");
+            }
+            else {
+                next("y");
+            }
+        });
+    }
+    get jy() {
+        return this.joints.map(j => j.y);
+    }
+    get jx() {
+        return this.joints.map(j => j.x);
+    }
+    bound(boundary) {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary) {
+        this.bounds.rm(boundary);
+    }
+}
+_Skeleton_instances = new WeakSet(), _Skeleton_syncJoints = function _Skeleton_syncJoints() {
+    const joints = new Set();
+    this.bn.forEach(b => {
+        joints.add(b.j1);
+        joints.add(b.j2);
+    });
+    if (this.joints.length == joints.size && this.joints.every(j => joints.has(j)))
+        return;
+    this.joints = Array.from(joints);
+    this.rig = [];
+    for (let i = 0; i < this.joints.length; i++) {
+        for (let j = i + 1; j < this.joints.length; j++) {
+            this.rig.push(new Bone(this.joints[i], this.joints[j]));
+        }
+    }
+};
+class SkeletalEntity extends Entity {
+    constructor(opts) {
+        var _c, _d;
+        super(opts);
+        _SkeletalEntity_instances.add(this);
+        this.sk = opts.sk;
+        const x = (_c = opts.x) !== null && _c !== void 0 ? _c : 0;
+        const y = (_d = opts.y) !== null && _d !== void 0 ? _d : 0;
+        this.sk.joints.forEach(j => {
+            j.x += x;
+            j.ox += x;
+            j.y += y;
+            j.oy += y;
+        });
+        this.upd = () => __classPrivateFieldGet(this, _SkeletalEntity_instances, "m", _SkeletalEntity_syncBounds).call(this);
+        __classPrivateFieldGet(this, _SkeletalEntity_instances, "m", _SkeletalEntity_syncBounds).call(this);
+    }
+}
+_SkeletalEntity_instances = new WeakSet(), _SkeletalEntity_syncBounds = function _SkeletalEntity_syncBounds() {
+    const xs = this.sk.joints.map(j => j.x);
+    const ys = this.sk.joints.map(j => j.y);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    this.x = minX;
+    this.y = minY;
+    this.width = Math.max(...xs) - minX;
+    this.height = Math.max(...ys) - minY;
+};
 class DualLerpDevice {
     constructor(scene, tg, from, to, mode = "once", rate = 1) {
         this.scene = scene;
@@ -1923,6 +2167,14 @@ class Sound {
     play() {
         this.aud.play();
     }
+    /**
+     * Fires a one-shot player for this sound.
+     *
+     * Creates a clone of this `Sound` object and plays it.
+     */
+    fire() {
+        clone(this).play();
+    }
     pause() {
         this.aud.pause();
     }
@@ -2020,7 +2272,33 @@ class Items {
 }
 /**
  * The root canvas to display content.
+ *
+ * Since v2.2.18, methods that end in `""` *fill*,
+ * and methods that end in `"s"` *stroke*.
+ *
+ * Since v2.2.19, methods that end in `"c"` assume the
+ * last color applied, such that the color is `this.color`.
  * @since v0.0.0
+ * @example Fill vs Stroke methods.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect
+ * scene.rect(0, 0, 10, 10, "red");
+ * // stroking a rect
+ * scene.rects(0, 0, 10, 10, "red");
+ * ```
+ * @example Color-assuming method.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // apply a red color
+ * scene.color = "red";
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect (assuming color)
+ * scene.rectc(0, 0, 10, 10);
+ * // stroking a rect (assuming color)
+ * scene.rectsc(0, 0, 10, 10);
+ * ```
  */
 class Scene {
     constructor(opts) {
@@ -2065,6 +2343,7 @@ class Scene {
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
+        this.goff = new Vector();
     }
     get width() {
         return this.canvas.width;
@@ -2129,8 +2408,20 @@ class Scene {
     filter(cb) {
         return this.items.filter(cb);
     }
+    deepFilter(cb) {
+        this.items.stuff = this.filter(cb);
+    }
     filterUI(cb) {
         return this.ui.filter(cb);
+    }
+    deepFilterUI(cb) {
+        this.ui.stuff = this.filterUI(cb);
+    }
+    filterMisc(cb) {
+        return this.misc.filter(cb);
+    }
+    deepFilterMisc(cb) {
+        this.misc.stuff = this.filterMisc(cb);
     }
     on(name, handle) {
         this.evMng.on(name, handle);
@@ -2189,6 +2480,12 @@ class Scene {
     set color(color) {
         this.ctx.fillStyle = color;
     }
+    get colorsk() {
+        return this.ctx.strokeStyle;
+    }
+    set colorsk(color) {
+        this.ctx.strokeStyle = color;
+    }
     get alpha() {
         return this.ctx.globalAlpha;
     }
@@ -2201,18 +2498,105 @@ class Scene {
     drawImg(path, x, y, w, h) {
         this.img(new Img(path), x, y, w, h);
     }
+    __detm(m, f1, f2) {
+        if (m == "f")
+            f1();
+        else
+            f2();
+    }
+    __detmc(m, c1, c2, f1, f2) {
+        this.__detm(m, () => {
+            this.color = c1;
+            f1();
+        }, () => {
+            this.colorsk = c2;
+            f2();
+        });
+    }
+    __detmcr(m, c, f1, f2) {
+        this.__detmc(m, c, c, f1, f2);
+    }
+    __detmfs(m, c) {
+        this.__detmcr(m, c, this.ctx.fill, this.ctx.stroke);
+    }
+    __rect(x, y, w, h, c, m) {
+        this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
+    }
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The fill color.
+     */
     rect(x, y, w, h, color) {
-        this.color = color;
-        this.ctx.fillRect(x, y, w, h);
+        this.__rect(x, y, w, h, color, "f");
+    }
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     */
+    rectc(x, y, w, h) {
+        this.rect(x, y, w, h, this.color);
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
+    rects(x, y, w, h, color) {
+        this.__rect(x, y, w, h, color, "s");
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
+    rectsc(x, y, w, h) {
+        this.rects(x, y, w, h, this.color);
     }
     bg(color) {
         this.rect(0, 0, this.width, this.height, color);
     }
     ray(origin, angle, dist, color) {
-        this.ctx.strokeStyle = color;
+        this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(origin.x, origin.y);
         this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+        this.ctx.stroke();
+    }
+    ln(points, color) {
+        this.color = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++)
+            this.ctx.lineTo(points[i].x, points[i].y);
+        this.ctx.stroke();
+    }
+    lnsk(points, color) {
+        this.colorsk = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++)
+            this.ctx.lineTo(points[i].x, points[i].y);
         this.ctx.stroke();
     }
     clear() {
@@ -2244,9 +2628,9 @@ class Scene {
     }
     render() {
         this.items.forEach(i => {
-            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color);
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk);
             i.child.forEach(c => {
-                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, i.x, i.y);
+                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
             });
         });
         // UI will be rendered in a fixed position
@@ -2260,6 +2644,7 @@ class Scene {
                 this.ctx.rotate(u.rot);
                 this.alpha = u.alpha;
                 this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.rects(-w2, -h2, u.width, u.height, u.colorsk);
                 this.ctx.restore();
             }
             // for other rendering (other than a core rectangle)
@@ -2269,7 +2654,7 @@ class Scene {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex, ey, w, h, rot, color, offX = 0, offY = 0) {
+    rectRotd(ex, ey, w, h, rot, color, colorsk, offX = 0, offY = 0) {
         let ox = 0;
         let oy = 0;
         if (this.fol) {
@@ -2278,8 +2663,8 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        const dx = ex + ox + offX;
-        const dy = ey + oy + offY;
+        const dx = ex + ox + offX + this.goff.x;
+        const dy = ey + oy + offY + this.goff.y;
         this.ctx.save();
         const w2 = w / 2;
         const h2 = h / 2;
@@ -2310,6 +2695,7 @@ class Scene {
         }
         this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
+        this.rects(nx, ny, w, h, colorsk);
         this.ctx.restore();
     }
     __appendPost(func) {
@@ -2478,6 +2864,33 @@ class Scene {
         });
         save.trigger(this.toDataURL(format, quality));
     }
+    /**
+     * Creates a screenshot of the canvas.
+     *
+     * Uses the canvas's content (filtering elements of types present in `hideList`) as the image content.
+     *
+     * Creates a clone, removing elements of type present in `hideList` off-screen, then orphans the clone.
+     * @param file The file name.
+     * @param hideList Elements to be hidden from the final screenshot.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshotWith(file, hideList = [], format = "image/png", quality = 1) {
+        const orphan = clone(this);
+        // lose elements of type
+        // since deepFilter with false
+        // with filter everything
+        // we lose all objects
+        if (hideList.includes("ent"))
+            orphan.deepFilter(() => false);
+        if (hideList.includes("ui"))
+            orphan.deepFilterUI(() => false);
+        if (hideList.includes("rend"))
+            orphan.deepFilterMisc(() => false);
+        // force another render pass
+        orphan.render();
+        orphan.screenshot(file, format, quality);
+    }
     find(cb) {
         return this.items.find(cb);
     }
@@ -2532,8 +2945,54 @@ class Scene {
     unfollow() {
         this.fol = undefined;
     }
-    text(text, x, y, maxWidth) {
-        this.ctx.fillText(text, x, y, maxWidth);
+    __text(text, x, y, color, m, maxWidth) {
+        this.__detmcr(m, color, () => this.ctx.fillText(text, x, y, maxWidth), () => this.ctx.strokeText(text, x, y, maxWidth));
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The fill color.
+     * @param maxWidth The maximum width.
+     */
+    text(text, x, y, color, maxWidth) {
+        this.__text(text, x, y, color, "f", maxWidth);
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textc(text, x, y, maxWidth) {
+        this.text(text, x, y, this.color, maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The stroke color.
+     * @param maxWidth The maximum width.
+     */
+    texts(text, x, y, color, maxWidth) {
+        this.__text(text, x, y, color, "s", maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textsc(text, x, y, maxWidth) {
+        this.texts(text, x, y, this.color, maxWidth);
     }
     get align() {
         return this.ctx.textAlign;
@@ -2623,7 +3082,7 @@ class Scene {
     mouseInRect(rectPos, rectW, rectH) {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
-    frustum(x, y, r0, r1, h, fillColor, strokeColor, lineWidth) {
+    frustum(x, y, r0, r1, h, fillColor, lineWidth) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -2636,30 +3095,134 @@ class Scene {
         // 4. Close path (Side Slope Left)
         this.ctx.closePath();
         // Style the frustum
-        this.ctx.fillStyle = fillColor;
+        this.color = fillColor;
         this.ctx.fill();
-        this.ctx.strokeStyle = strokeColor !== null && strokeColor !== void 0 ? strokeColor : fillColor;
+    }
+    frustums(x, y, r0, r1, h, strokeColor, lineWidth) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+        // Style the frustum
+        this.colorsk = strokeColor;
         this.ctx.lineWidth = lineWidth !== null && lineWidth !== void 0 ? lineWidth : 2;
         this.ctx.stroke();
     }
-    triangle(p0, p1, p2, color) {
+    __tri(p0, p1, p2, color, m) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.lineTo(p2.x, p2.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
     }
-    cone(p0, p1, rad, color) {
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The fill color.
+     */
+    tri(p0, p1, p2, color) {
+        this.__tri(p0, p1, p2, color, "f");
+    }
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    tric(p0, p1, p2) {
+        this.tri(p0, p1, p2, this.color);
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The stroke color.
+     */
+    tris(p0, p1, p2, color) {
+        this.__tri(p0, p1, p2, color, "s");
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    trisc(p0, p1, p2) {
+        this.tris(p0, p1, p2, this.color);
+    }
+    __cone(p0, p1, rad, color, m) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
         this.ctx.lineTo(p0.x, p0.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
+    }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The fill color.
+     */
+    cone(p0, p1, rad, color) {
+        this.__cone(p0, p1, rad, color, "f");
+    }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conec(p0, p1, rad) {
+        this.cone(p0, p1, rad, this.color);
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The stroke color.
+     */
+    cones(p0, p1, rad, color) {
+        this.__cone(p0, p1, rad, color, "s");
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conesc(p0, p1, rad) {
+        this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items) {
         this.misc.add(...items);
@@ -2737,6 +3300,122 @@ class Scene {
     scale(sx, sy) {
         this.scaleX = sx;
         this.scaleY = sy;
+    }
+    __oval(x, y, rx, ry, color, m) {
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
+        this.__detmfs(m, color);
+    }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The fill color.
+     */
+    oval(x, y, rx, ry, color) {
+        this.__oval(x, y, rx, ry, color, "f");
+    }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     */
+    ovalc(x, y, rx, ry) {
+        this.oval(x, y, rx, ry, this.color);
+    }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
+    ovals(x, y, rx, ry, color) {
+        this.__oval(x, y, rx, ry, color, "s");
+    }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
+    ovalsc(x, y, rx, ry) {
+        this.ovals(x, y, rx, ry, this.color);
+    }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
+    circ(x, y, r, color) {
+        this.oval(x, y, r, r, color);
+    }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
+    circc(x, y, r) {
+        this.circ(x, y, r, this.color);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
+    circs(x, y, r, color) {
+        this.ovals(x, y, r, r, color);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
+    circsc(x, y, r) {
+        this.circs(x, y, r, this.color);
+    }
+    rgrad(x, y, r, ...stops) {
+        const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
+        for (let i = 0; i < stops.length; i++)
+            if (Array.isArray(stops))
+                g.addColorStop(stops[i][0], stops[i][1]);
+            else
+                g.addColorStop(i, stops[i]);
+        return g;
+    }
+    col(e) {
+        return this.items.some(x => isCol(e, x));
     }
 }
 _Scene_instances = new WeakSet(), _Scene_tagTest = function _Scene_tagTest(ent, tagName) {
@@ -2920,7 +3599,7 @@ class Raycast extends RaycastBase {
     cast() {
         let res = null;
         super.cast((i, hit, dir) => {
-            if ((res && hit < res.dist) || (res == null) && (!this.self || i != this.self))
+            if ((!this.self || i != this.self) && (res == null || hit < res.dist))
                 res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
         });
         return res;
@@ -3032,6 +3711,9 @@ class Runtime {
         this.delta = 0;
         this.processId = -1;
     }
+    get started() {
+        return this.processId != -1;
+    }
 }
 /**
  * The geometric object root class.
@@ -3072,8 +3754,19 @@ class StorageRoot {
     get len() {
         return this.storage.length;
     }
+    /**
+     * Removes the key provided from the given Storage object if it exists.
+     * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem)
+     * @param k The key to remove.
+     * @returns The value that was present before removal.
+     */
     del(k) {
+        const v = this.get(k);
         this.storage.removeItem(k);
+        return v;
+    }
+    rm(k) {
+        return this.del(k);
     }
     clear() {
         this.storage.clear();
@@ -3231,7 +3924,17 @@ class Angle {
      * @returns An angle +-`roffVal` from `inRadSource` (in radians).
      */
     static roff(inRadSource, roffVal) {
-        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+        return Angle.rad(random(Angle.deg(inRadSource) - roffVal, Angle.deg(inRadSource) + roffVal));
+    }
+    /**
+     * Convert an angle from deg => rad or rad => deg.
+     * @param angle The angle string to convert.
+     * @returns The opposite angle value.
+     */
+    static cv(angle) {
+        if (angle.endsWith("deg"))
+            return this.rad(Number(angle.slice(0, angle.indexOf("d"))));
+        return this.deg(Number(angle.slice(0, angle.indexOf("r"))));
     }
 }
 class Config {
@@ -3459,15 +4162,24 @@ class FilePicker extends FilePickerBase {
         const out = await Promise.all(files.map(async (o) => o.text()));
         return out;
     }
+    static async pick(opts) {
+        return await (new FilePicker()).pick(opts);
+    }
     async handle(opts) {
         const [...handles] = await window.showOpenFilePicker(Object.assign(Object.assign({}, this.cleanOpts(opts)), { multiple: opts.mult }));
         return handles;
+    }
+    static async handle(opts) {
+        return await (new FilePicker()).handle(opts);
     }
     async write(opts) {
         const [h] = await this.handle(opts);
         const w = await h.createWritable();
         await w.write(opts.tx);
         await w.close();
+    }
+    static async write(opts) {
+        await (new FilePicker()).write(opts);
     }
 }
 class SaveFilePicker extends FilePickerBase {
@@ -3487,13 +4199,8 @@ class SaveFilePicker extends FilePickerBase {
  */
 class DirPicker extends Picker {
     async pick(opts) {
-        try {
-            const handle = await window.showDirectoryPicker(this.cleanOpts(opts));
-            return handle;
-        }
-        catch (e) {
-            throw e;
-        }
+        const handle = await window.showDirectoryPicker(this.cleanOpts(opts));
+        return handle;
     }
     async handle(opts) {
         return this.pick(opts);
@@ -3640,7 +4347,7 @@ class Camera {
  */
 class SceneUI {
     constructor(opts) {
-        var _c, _d, _f, _g, _j, _l, _m, _o, _p;
+        var _c, _d, _f, _g, _j, _l, _m, _o, _p, _q;
         this.scene = opts.scene;
         this.x = (_c = opts.x) !== null && _c !== void 0 ? _c : 0;
         this.y = (_d = opts.y) !== null && _d !== void 0 ? _d : 0;
@@ -3648,10 +4355,11 @@ class SceneUI {
         this.height = (_g = opts.h) !== null && _g !== void 0 ? _g : 0;
         this.rot = (_j = opts.rot) !== null && _j !== void 0 ? _j : 0;
         this.color = (_l = opts.color) !== null && _l !== void 0 ? _l : "#fff";
-        this.rend = (_m = opts.rend) !== null && _m !== void 0 ? _m : NoFunc;
-        this.upd = (_o = opts.upd) !== null && _o !== void 0 ? _o : NoFunc;
+        this.colorsk = (_m = opts.color) !== null && _m !== void 0 ? _m : Color.invis;
+        this.rend = (_o = opts.rend) !== null && _o !== void 0 ? _o : NoFunc;
+        this.upd = (_p = opts.upd) !== null && _p !== void 0 ? _p : NoFunc;
         this.child = new ChildUI();
-        this.alpha = (_p = opts.alpha) !== null && _p !== void 0 ? _p : 1;
+        this.alpha = (_q = opts.alpha) !== null && _q !== void 0 ? _q : 1;
         this.rendRect = true;
     }
     render() {
@@ -3799,10 +4507,11 @@ class TextUI extends SceneUI {
         this.rendRect = false;
     }
     render() {
-        this.scene.color = this.color;
+        const f = this.scene.font;
         if (this.font)
             this.scene.font = this.font;
-        this.scene.text(this.tx, this.x, this.y, this.mw);
+        this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
+        this.scene.font = f;
         super.render();
     }
 }
@@ -3869,6 +4578,8 @@ class ImgUI extends SceneUI {
     constructor(opts) {
         super(opts);
         this.img = opts.img;
+        // invis, shouldn't show a bg
+        this.color = "#0000";
     }
     render() {
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
@@ -4099,25 +4810,89 @@ class AIController {
         this.tg = opts.tg;
     }
 }
-// type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
-// class History<T> {
-//     hist: HistoryCache<T>[];
-//     ptr: number;
-//     constructor() {
-//         this.hist = [];
-//         this.ptr = 0;
-//     }
-//     cache(cache: HistoryCache<T>) {
-//         this.hist.push(cache);
-//         this.ptr++;
-//     }
-//     point(pointer: number) {
-//         this.ptr = pointer;
-//     }
-//     read() {
-//         return this.hist[this.ptr];
-//     }
-// }
+const CtorMap = {
+    entity: Entity,
+    stcobj: StaticObject,
+    physobj: PhysicsObject,
+    mvobj: MovingObject,
+    bulobj: BulletObject,
+    wallobj: WallObject,
+    floorobj: FloorObject,
+    char: Character,
+    pc: PlayableCharacter,
+    aircf: Aircraft
+};
+class Spawner {
+    constructor(ctor, opt) {
+        this.ctor = CtorMap[ctor];
+        this.opt = opt;
+        this.itvl = new Itvl();
+    }
+    new() {
+        return new (this.ctor)(this.opt);
+    }
+    start(time) {
+        this.itvl.start(this.new.bind(this), time);
+    }
+    stop() {
+        this.itvl.stop();
+    }
+}
+class Perlin {
+    constructor() {
+        this.perm = new Uint8Array(512);
+        const p = Array.from({ length: 256 }, (_, i) => i);
+        // Shuffle the array
+        for (let i = 255; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [p[i], p[j]] = [p[j], p[i]];
+        }
+        // Duplicate the permutation array
+        for (let i = 0; i < 512; i++) {
+            this.perm[i] = p[i & 255];
+        }
+    }
+    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    grad(hash, x, y) {
+        const h = hash & 7;
+        const u = h < 4 ? x : y;
+        const v = h < 4 ? y : x;
+        return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+    }
+    noise(x, y) {
+        const X = Math.floor(x) & 255;
+        const Y = Math.floor(y) & 255;
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+        const u = this.fade(x);
+        const v = this.fade(y);
+        const p = this.perm;
+        const A = p[X] + Y;
+        const B = p[X + 1] + Y;
+        return lerp(v, lerp(u, this.grad(p[A], x, y), this.grad(p[B], x - 1, y)), lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1)));
+    }
+    static terrain1D(opt) {
+        return new PerlinTerrain1D(opt);
+    }
+}
+class PerlinTerrain1D {
+    constructor(opt) {
+        this.perlin = new Perlin();
+        this.frq = opt.frq;
+        this.amp = opt.amp;
+        this.bh = opt.bh;
+        this.fy = opt.fy;
+    }
+    /**
+     * Returns the next generated surface height.
+     * @param x The x-coordinate of the world.
+     * @returns The newly-generated surface height.
+     */
+    next(x) {
+        const n = this.perlin.noise(x * this.frq, this.fy);
+        return this.bh + (((n + 1) / 2) * this.amp);
+    }
+}
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
@@ -4256,8 +5031,52 @@ function random(a, b) {
     }
     return Math.floor(Math.random() * (max - min)) + min;
 }
+/**
+ * Generates a random 32-bit integer seed.
+ * @returns A 32-bit integer.
+ */
+function mulberrySeed() {
+    return Math.floor(Math.random() * 0x100000000) >>> 0;
+}
+/**
+ * Returns a random number from [`min`, `max`)
+ * while using the random algorithm provided.
+ *
+ * **Does NOT perform the same `[min, max] <=> [max, min]` swap
+ * if `max` > `min`!**
+ *
+ * @example Usage with `mulberry32` algorithm.
+ * ```
+ * // example seed, use mulberrySeed() for a random seed
+ * const seed = 123;
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @example Usage with `mulberry32` algorithm (random seed).
+ * ```
+ * // generate a seed
+ * const seed = mulberrySeed();
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @param randomFunction The random number function. MUST return a value between 0 and 1 to work.
+ * @param min The minimum value.
+ * @param max The maximum value.
+ * @returns A random number, using the random algorithm.
+ */
+function randomx(randomFunction, min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(randomFunction() * (max - min)) + min;
+}
 function chance(max, upperBound) {
-    return max <= random((upperBound !== null && upperBound !== void 0 ? upperBound : 100) + 1);
+    return random((upperBound !== null && upperBound !== void 0 ? upperBound : 100) + 1) <= max;
 }
 function objIs(obj, ctor) {
     return obj != undefined && obj instanceof ctor;
@@ -4295,4 +5114,18 @@ function easeSmoothStep(t) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey };
+function mulberry32(a) {
+    return function () {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
+}
+function clone(object) {
+    return Object.assign({}, object);
+}
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed, Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D };
