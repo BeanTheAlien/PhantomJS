@@ -306,6 +306,8 @@ npm install @beanthealien/phantomjs
 - Add `PerlinTerrain1D` (access through `Perlin.terrain1D` or construction).
 ## v2.2.22 [HOTFIX]
 - Context loss hotfix in `__detmfs`.
+## v2.2.23 [HOTFIX]
+- Add `get KeyedTextUI.val` because ig I never pushed or something???
 
 # Phantom HTML v0.0.1
 ### 0.0.1
