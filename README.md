@@ -308,6 +308,10 @@ npm install @beanthealien/phantomjs
 - Context loss hotfix in `__detmfs`.
 ## v2.2.23 [HOTFIX]
 - Add `get KeyedTextUI.val` because ig I never pushed or something???
+## v2.2.24 [SEMI-BREAKING]
+- Add some documentation.
+- Change `all` => `nall` in `FilePicker`.
+- Breaking for FilePicker usage; update to `nall` property. (figured it was confusing as `all`, so i changed it)
 
 # Phantom HTML v0.0.1
 ### 0.0.1
