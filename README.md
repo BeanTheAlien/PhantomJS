@@ -314,6 +314,8 @@ npm install @beanthealien/phantomjs
 - Breaking for FilePicker usage; update to `nall` property. (figured it was confusing as `all`, so i changed it)
 ## v2.2.25 [HOTFIX]
 - Hotfix `Scene.col` method to prevent collide-with-self.
+## v2.2.26 [HOTFIX]
+- Fix a `Perlin` generation error for swapped arguments.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
