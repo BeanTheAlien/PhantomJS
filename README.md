@@ -312,6 +312,8 @@ npm install @beanthealien/phantomjs
 - Add some documentation.
 - Change `all` => `nall` in `FilePicker`.
 - Breaking for FilePicker usage; update to `nall` property. (figured it was confusing as `all`, so i changed it)
+## v2.2.25 [HOTFIX]
+- Hotfix `Scene.col` method to prevent collide-with-self.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

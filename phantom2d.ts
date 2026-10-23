@@ -4558,7 +4558,7 @@ class Scene {
         return g;
     }
     col(e: Entity) {
-        return this.items.some(x => isCol(e, x));
+        return this.items.some(x => x != e && isCol(e, x));
     }
 }
 /**
@@ -5334,15 +5334,14 @@ interface PickerOptions {
      * 
      * If the same ID is used for another picker, the picker opens in the same directory.
      * 
-     * As specified by [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#id).
+     * As specified by MDN Web Docs.
      * @since v1.0.7
      */
     id?: string;
     /**
-     * A `FileSystemHandle` or a well known directory ("desktop", "documents", "downloads", "music", "pictures", 
-     * or "videos") to open the dialog in.
+     * A `FileSystemHandle` or a well known directory ("desktop", "documents", "downloads", "music", "pictures", or "videos") to open the dialog in.
      * 
-     * As specified by [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#startin).
+     * As specified by MDN Web Docs.
      * @since v1.0.7
      */
     start?: FileSystemStartPosition;
@@ -5355,27 +5354,7 @@ type OpenDirectoryFinalAccessMode = "read" | "readwrite";
 type FileSystemStartPosition = FileSystemHandle | WellKnownDir;
 type AcceptedFinal = { description?: string } & AcceptBase;
 interface FilePickerBaseOptions extends PickerOptions {
-    /**
-     * A boolean value that defaults to `false`. By default the picker should include an option to not apply any 
-     * file type filters (instigated with the type option below). Setting this option to `true` means
-     * that option is *not* available.
-     * 
-     * As specified by [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#excludeacceptalloption).
-     */
-    nall?: boolean;
-    /**
-     * An `Array` of allowed file types to pick. Each item is an object with the following options:
-     * 
-     * description
-     *      
-     * An optional description of the category of files types allowed. Defaults to an empty string.
-     * 
-     * accept
-     * 
-     * An Object with the keys set to the MIME type and the values an Array of file extensions (see below for an example).
-     * 
-     * As specified by [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#types).
-     */
+    all?: boolean;
     accept?: Accepted[];
 }
 interface FilePickerBaseFinalOptions extends PickerCleanedOptions {
@@ -5383,11 +5362,6 @@ interface FilePickerBaseFinalOptions extends PickerCleanedOptions {
     types?: AcceptedFinal[];
 }
 interface FilePickerOptions extends FilePickerBaseOptions {
-    /**
-     * A boolean value that defaults to `false`. When set to `true` multiple files may be selected.
-     * 
-     * As specified by [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#multiple).
-     */
     mult?: boolean;
 }
 interface FilePickerWritingOptions extends FilePickerBaseOptions {
@@ -5421,7 +5395,7 @@ abstract class FilePickerBase<T, H, R extends FilePickerBaseOptions, P extends F
     cleanOpts(opts: R): P {
         return {
             ...this.clean(opts),
-            excludeAcceptAllOption: opts.nall,
+            excludeAcceptAllOption: opts.all,
             types: opts.accept?.map(a => { return { description: a.desc, accept: a.accept } })
         } as P;
     }
@@ -6312,28 +6286,6 @@ const CtorMap: SpawnerCtorMap = {
     pc: PlayableCharacter,
     aircf: Aircraft
 } as const;
-/**
- * Custom Spawner. The raw base class for writing custom Spawners.
- */
-export class CSpawner<T, C extends Constructor<T>, K extends () => any[]> {
-    ctor: C;
-    opt: K;
-    itvl: Itvl;
-    constructor(ctor: C, opt: K) {
-        this.ctor = ctor;
-        this.opt = opt;
-        this.itvl = new Itvl();
-    }
-    new() {
-        return new (this.ctor)(...this.opt());
-    }
-    start(time: number) {
-        this.itvl.start(this.new.bind(this), time);
-    }
-    stop() {
-        this.itvl.stop();
-    }
-}
 class Spawner<T extends keyof SpawnerOptionsMap, C extends SpawnerCtorMap[T], K extends () => SpawnerOptionsMap[T]> {
     ctor: C;
     opt: K;
