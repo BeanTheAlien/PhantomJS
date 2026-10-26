@@ -3200,6 +3200,9 @@ class Sound {
     play() {
         this.aud.play();
     }
+    stop() {
+        this.aud.pause();
+    }
     /**
      * Fires a one-shot player for this sound.
      * 
@@ -3228,6 +3231,104 @@ class Sound {
     }
     set vol(vol: number) {
         this.aud.volume = vol;
+    }
+    /**
+     * Promises a new `Promise` that is automatically resolved when `aud` is completed.
+     * @returns A `Promise` that resolves on end.
+     */
+    done() {
+        return new Promise((resolve) => {
+            const e = () => {
+                this.aud.removeEventListener("ended", e);
+                resolve(null);
+            }
+            this.aud.addEventListener("ended", e);
+        });
+    }
+    /**
+     * Loops this `Sound` for the specified amount of times.
+     * 
+     * Returns a `SoundLoop` controller.
+     * 
+     * When `count` is a non-finite value (such as `Infinity`), it does not subtract from the
+     * continued looping count. Instead, it continues looping indefinitely.
+     * @param count The amount of times to repeat (may be non-finite, like `Infinity`).
+     * @returns A `SoundLoop` controller.
+     */
+    loop(count: number) {
+        return new SoundLoop(this, count);
+    }
+}
+class SoundLoop {
+    count: number;
+    pre: boolean;
+    tgs: Sound;
+    constructor(tgs: Sound, count: number) {
+        this.count = count;
+        this.pre = false;
+        this.tgs = tgs;
+    }
+    /**
+     * Kills (aborts) the active loop.
+     */
+    kill() {
+        this.pre = true;
+    }
+    loop() {
+        if(this.pre || this.count <= 0) return;
+        if(Number.isFinite(this.count)) {
+            this.count--;
+        }
+        this.tgs.play();
+        this.tgs.done().then(() => this.loop());
+    }
+}
+class SoundQueue extends ItemBox<Sound> {
+    active: boolean;
+    cur?: Sound;
+    constructor() {
+        super();
+        this.active = false;
+        this.cur = undefined;
+    }
+    add(...sounds: Sound[]): void;
+    add(sound: Sound, count: number): void;
+    add(sound: Sound, count?: number | Sound, ...sounds: Sound[]) {
+        if(typeof count == "number") {
+            for(let i = 0; i < count; i++) {
+                super.add(sound);
+            }
+        } else {
+            super.add(sound);
+            if(count) super.add(count);
+            super.add(...sounds);
+        }
+    }
+    async play() {
+        if(this.active) return;
+        this.active = true;
+        while(this.active && this.stuff.length > 0) {
+            // Peek at the first sound in the queue
+            this.cur = this.stuff[0];
+            this.cur.play();
+            await this.cur.done();
+            // If stopped while playing, break out before removing
+            if(!this.active) break;
+            // Remove the completed sound from the front of the queue
+            const c = this.stuff.shift(); 
+            if(c) {
+                this.rm(c);
+            }
+        }
+        this.cur = undefined;
+        this.active = false;
+    }
+    stop() {
+        this.active = false;
+        if(this.cur) {
+            this.cur.stop();
+            this.cur = undefined;
+        }
     }
 }
 /**
@@ -6763,6 +6864,8 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D
+    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D,
+
+    SoundQueue
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

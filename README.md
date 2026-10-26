@@ -316,6 +316,10 @@ npm install @beanthealien/phantomjs
 - Hotfix `Scene.col` method to prevent collide-with-self.
 ## v2.2.26 [HOTFIX]
 - Fix a `Perlin` generation error for swapped arguments.
+## v2.3.0
+- `Sound.done` method.
+- `Sound.loop` method.
+- `SoundQueue` class.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
