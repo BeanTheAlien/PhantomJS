@@ -316,6 +316,11 @@ class OutOfBoundsError extends ErrRoot {
         super("OutOfBoundsError", "Index exceeds length; could not get crucial value.");
     }
 }
+class UnexpectedHexLengthError extends ErrRoot {
+    constructor(hex: string) {
+        super("UnexpectedHexLengthError", `Hex string '${hex}' has unexpected length of '${hex.length}'.`);
+    }
+}
 
 /**
  * A storage for items.
@@ -1482,9 +1487,49 @@ interface Boundaries {
     bound(boundary: Bound): void;
     unbound(boundary: Bound): void;
 }
-enum Color {
-    invis = "rgba(0, 0, 0, 0)"
-};
+class Color {
+    static invis = "rgba(0, 0, 0, 0)" as const;
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+    constructor();
+    constructor(r: number, g: number, b: number);
+    constructor(r: number, g: number, b: number, a: number);
+    constructor(r?: number, g?: number, b?: number, a?: number) {
+        this.r = r ?? 0;
+        this.g = g ?? 0;
+        this.b = b ?? 0;
+        this.a = a ?? 255;
+    }
+    toHex() {
+        return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
+    }
+    static fromHex(hexString: string): Color {
+        if(hexString.length == 8) {
+            // long (expected) hex string
+            return new Color(
+                // slice 0-1
+                parseInt(hexString.slice(0, 2), 16),
+                // slice 2-3
+                parseInt(hexString.slice(2, 4), 16),
+                // slice 4-5
+                parseInt(hexString.slice(4, 6), 16),
+                // slice 6-7
+                parseInt(hexString.slice(6, 8), 16)
+            );
+        } else if(hexString.length == 3 || hexString.length == 4) {
+            // create long hex string and re-process
+            // safely process alpha if present
+            return Color.fromHex(`${hexString.charAt(0).repeat(2)}${hexString.charAt(1).repeat(2)}${hexString.charAt(2).repeat(2)}${(hexString.charAt(3) ?? "0").repeat(2)}`);
+        } else if(hexString.length == 6) {
+            // otherwise re-process with alpha hex attached
+            return Color.fromHex(hexString + "FF");
+        } else {
+            throw new UnexpectedHexLengthError(hexString);
+        }
+    }
+}
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0

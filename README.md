@@ -320,6 +320,8 @@ npm install @beanthealien/phantomjs
 - `Sound.done` method.
 - `Sound.loop` method.
 - `SoundQueue` class.
+## v2.3.1
+- Add `Color` class, replaces `Color` enum.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
