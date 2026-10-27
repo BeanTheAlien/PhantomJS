@@ -324,6 +324,8 @@ npm install @beanthealien/phantomjs
 - Add `Color` class, replaces `Color` enum.
 ## v2.3.1.1
 - `Color.fromHex` check for "\#" presedence before parsing.
+## v2.3.1.2
+- Add `Color.from` method that accepts a color or string.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -1505,6 +1505,15 @@ class Color {
     toHex() {
         return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
     }
+    static from(value: Color | string) {
+        if(objIs(value, Color)) {
+            // then simply return the value
+            return value;
+        } else if(typeof value == "string") {
+            // then we can return it from a hex string
+            return Color.fromHex(value);
+        }
+    }
     static fromHex(hexString: string): Color {
         if(hexString.length == 9) {
             // then it starts with a #
