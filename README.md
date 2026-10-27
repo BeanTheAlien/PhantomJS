@@ -322,6 +322,8 @@ npm install @beanthealien/phantomjs
 - `SoundQueue` class.
 ## v2.3.1
 - Add `Color` class, replaces `Color` enum.
+## v2.3.1.1
+- `Color.fromHex` check for "\#" presedence before parsing.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -1506,7 +1506,12 @@ class Color {
         return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
     }
     static fromHex(hexString: string): Color {
-        if(hexString.length == 8) {
+        if(hexString.length == 9) {
+            // then it starts with a #
+            // ...or not
+            if(!hexString.startsWith("#")) throw new UnexpectedHexLengthError(hexString);
+            return Color.fromHex(hexString.slice(1));
+        } else if(hexString.length == 8) {
             // long (expected) hex string
             return new Color(
                 // slice 0-1
