@@ -326,6 +326,8 @@ npm install @beanthealien/phantomjs
 - `Color.fromHex` check for "\#" presedence before parsing.
 ## v2.3.1.2
 - Add `Color.from` method that accepts a color or string.
+## v2.3.2
+- Add `Color.lerp`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

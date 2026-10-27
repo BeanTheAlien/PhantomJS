@@ -1509,7 +1509,7 @@ class Color {
         if(objIs(value, Color)) {
             // then simply return the value
             return value;
-        } else if(typeof value == "string") {
+        } else {
             // then we can return it from a hex string
             return Color.fromHex(value);
         }
@@ -1542,6 +1542,22 @@ class Color {
         } else {
             throw new UnexpectedHexLengthError(hexString);
         }
+    }
+    static lerp(a: Color | string, b: Color | string, time: number) {
+        const cl = (channel: keyof Color, c1: Color, c2: Color) => {
+            // C1 + (C2 - C1) * t
+            return (c1[channel] as number) + ((c2[channel] as number) - (c1[channel] as number)) * time;
+        };
+        // convert to colors
+        const c1 = Color.from(a);
+        const c2 = Color.from(b);
+        // run on each channel (r, g, b, a)
+        return new Color(
+            cl("r", c1, c2),
+            cl("g", c1, c2),
+            cl("b", c1, c2),
+            cl("a", c1, c2)
+        );
     }
 }
 /**
