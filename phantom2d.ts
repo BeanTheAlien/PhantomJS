@@ -6230,6 +6230,23 @@ class UpgradeMenuUI<C extends CostMap> extends SceneUI {
         this.mult = opt.mult;
     }
 }
+/**
+ * Collection for `SceneUI` to manage showing and hiding UI collections.
+ */
+class Screen extends ItemBox<SceneUI> {
+    scene: Scene;
+    constructor(scene: Scene, ...ui: SceneUI[]) {
+        super();
+        this.scene = scene;
+        this.add(...ui);
+    }
+    show() {
+        this.scene.addUI(...this.stuff);
+    }
+    hide() {
+        this.scene.rmUI(...this.stuff);
+    }
+}
 
 class Itvl {
     id: number;
@@ -6941,6 +6958,6 @@ export {
 
     Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D,
 
-    SoundQueue
+    SoundQueue, Screen
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

@@ -328,6 +328,8 @@ npm install @beanthealien/phantomjs
 - Add `Color.from` method that accepts a color or string.
 ## v2.3.2
 - Add `Color.lerp`.
+## v2.3.3
+- Add `Screen` class.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
