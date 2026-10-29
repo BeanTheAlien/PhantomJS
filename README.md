@@ -347,6 +347,7 @@ npm install @beanthealien/phantomjs
 - `Skeleton.eachJoint` to apply a callback for each joint. (QoL change)
 - `Skeleton.jointProp` to apply a property to each joint. (QoL change)
 - `Skeleton.jointDamp` to set all joint dampings. (QoL change)
+- Add `Vector.centerIn`, `centerCIC` method. (QoL change)
 
 # Phantom HTML v0.0.1
 ### 0.0.1

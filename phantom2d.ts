@@ -2776,6 +2776,15 @@ class Aircraft extends Entity {
         this.thrust += thrust;
     }
 }
+interface Positioned {
+    x: number;
+    y: number;
+}
+interface Container {
+    width: number;
+    height: number;
+}
+interface PositionedContainer extends Container, Positioned {}
 /**
  * A 2D vector.
  * 
@@ -2886,6 +2895,10 @@ class Vector {
      */
     trace(strength?: number) {
         return new Joint(this.x, this.y, strength);
+    }
+    centerIn(container: Container) {
+        this.x = this.x - (container.width / 2);
+        this.y = this.y - (container.height / 2);
     }
 }
 /**
@@ -7061,6 +7074,17 @@ function clamp(val: number, min: number, max: number) {
 function clone<T>(object: T) {
     return Object.assign({}, object) as T;
 }
+/**
+ * Center a positioned container-in-container (CIC).
+ * 
+ * Adjusts the position of `innerContainer` to `outerContainer` to be centered.
+ * @param innerContainer The innermost container.
+ * @param outerContainer The outermost container.
+ */
+function centerCIC(innerContainer: PositionedContainer, outerContainer: PositionedContainer) {
+    innerContainer.x = (outerContainer.width - innerContainer.width) / 2;
+    innerContainer.y = (outerContainer.height - outerContainer.height) / 2;
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -7101,6 +7125,6 @@ export {
 
     Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D,
 
-    SoundQueue, Screen, TextfulButtonUI
+    SoundQueue, Screen, TextfulButtonUI, centerCIC
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
