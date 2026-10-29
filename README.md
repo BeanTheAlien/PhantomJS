@@ -336,6 +336,15 @@ npm install @beanthealien/phantomjs
 - Break (\<br\>) Scene UI (line break, shift next element down)
 - More Soft-body support (specifically with collisions and fast generation)
 - Add global `Color` support
+- Intrinsic text on buttons
+- CURRENT COMPLETED:
+- Some CSS for Scene UI (UNTESTED)
+- Intrinsic text (via `TextfulButtonUI`) (UNTESTED)
+- `Entity.use` returns used component. (QoL fix)
+- `Skeleton.jointStrength` to set all joint strengths. (QoL change)
+- `Skeleton.eachJoint` to apply a callback for each joint. (QoL change)
+- `Skeleton.jointProp` to apply a property to each joint. (QoL change)
+- `Skeleton.jointDamp` to set all joint dampings. (QoL change)
 
 # Phantom HTML v0.0.1
 ### 0.0.1

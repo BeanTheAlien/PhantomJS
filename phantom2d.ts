@@ -1959,6 +1959,7 @@ class Entity implements Boundaries {
         if(this.uses(c)) throw new AlreadyUsingError();
         const _opts = (opts ?? {}) as CompOptions;
         this.comps.set(c, new (PhantomCompRecord[c])(this, _opts));
+        return this.comp(c);
     }
     /**
      * Removes a component.
@@ -3072,6 +3073,20 @@ class Skeleton implements Renderable, Boundaries {
     unbound(boundary: Bound) {
         this.bounds.rm(boundary);
     }
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: V): void;
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: (old: V) => V): void;
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: V | ((old: V) => V)) {
+        this.eachJoint(j => (typeof v == "function") ? (v as any)(j[k]) : v);
+    }
+    jointStrength(newStrength: number) {
+        this.jointProp("strength", newStrength);
+    }
+    jointDamp(newDamp: number) {
+        this.jointProp("damp", newDamp);
+    }
+    eachJoint(callback: Callback<Joint>) {
+        this.joints.forEach(callback);
+    }
 }
 interface SkeletalEntityOptions extends EntityOptions {
     sk: Skeleton;
@@ -3089,10 +3104,10 @@ class SkeletalEntity extends Entity {
             j.y += y;
             j.oy += y;
         });
-        this.upd = () => this.#syncBounds();
-        this.#syncBounds();
+        this.upd = () => this.syncBounds();
+        this.syncBounds();
     }
-    #syncBounds() {
+    syncBounds() {
         const xs = this.sk.joints.map(j => j.x);
         const ys = this.sk.joints.map(j => j.y);
         const minX = Math.min(...xs);
@@ -5822,6 +5837,51 @@ interface SceneUIOptions {
     upd?: Function;
     alpha?: number;
 }
+type UICSSDisplay = "block" | "flex" | "grid";
+type UICSSGap = number;
+type UICSSFlexDirection = "row" | "column";
+type UICSSTemplateRows = "auto" | number;
+type UICSSTemplateColumns = number;
+interface SceneUICSS {
+    /**
+     * The way to render the UI.
+     * 
+     * When the value is `block`, it will
+     * render like normal.
+     * 
+     * When the value is `flex`, it will
+     * render like a flexbox.
+     * 
+     * When the value is `grid`, it will
+     * render like a grid.
+     */
+    display: UICSSDisplay;
+    /**
+     * The gap between elements when
+     * the display is `flex`.
+     */
+    gap: UICSSGap;
+    /**
+     * The direction to flex in
+     * when the display is `flex`.
+     */
+    flexDirection: UICSSFlexDirection;
+    /**
+     * SImplified version of `grid-template-rows`.
+     * 
+     * The amount of rows to fit children into.
+     * 
+     * A value of `auto` means it will not force
+     * children to fit into a set amount of rows.
+     */
+    gridTemplateRows: UICSSTemplateRows;
+    /**
+     * SImplified version of `grid-template-columns`.
+     * 
+     * The amount of columsn to fit children into.
+     */
+    gridTemplateColumns: UICSSTemplateColumns;
+}
 /**
  * The core class for UI elements.
  * @since v1.0.30
@@ -5846,6 +5906,12 @@ class SceneUI {
      * @since v1.1.0
      */
     child: ChildUI;
+    /**
+     * The active CSS-mimick rendering hints.
+     * 
+     * Includes properties such as `display` and `gap`.
+     */
+    style: SceneUICSS;
     constructor(opts: SceneUIOptions) {
         this.scene = opts.scene;
         this.x = opts.x ?? 0;
@@ -5860,10 +5926,64 @@ class SceneUI {
         this.child = new ChildUI();
         this.alpha = opts.alpha ?? 1;
         this.rendRect = true;
+        this.style = {
+            display: "block",
+            gap: 0,
+            flexDirection: "row",
+            gridTemplateRows: 0,
+            gridTemplateColumns: 0
+        };
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param child The active index.
+     * @param maxChild The maximum index.
+     */
+    __assumeFlexHints(vec: Vector, child: number, maxChild: number) {
+        // dont apply when at 0 or last element
+        if(child == 0 || child == maxChild - 1) return;
+        if(this.style.display == "flex") {
+            // then continue on
+            if(this.style.flexDirection == "row") {
+                // x add
+                vec.x += this.style.gap;
+            } else {
+                // y add
+                vec.y += this.style.gap;
+            }
+        }
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param i The active index.
+     */
+    __assumeGridHints(vec: Vector, i: number) {
+        if(this.style.display == "grid") {
+            let row = Math.floor(i / this.style.gridTemplateColumns);
+            if(this.style.gridTemplateRows != "auto") {
+                row = clamp(row, 0, this.style.gridTemplateRows);
+            }
+            const col = i % this.style.gridTemplateColumns;
+            vec.x = col * (this.child.stuff[i].width + this.style.gap);
+            vec.y = row * (this.child.stuff[i].width + this.style.gap);
+        }
     }
     render() {
         this.rend();
-        this.child.forEach((c) => {
+        this.child.forEach((c, i, src) => {
+            // rendering hints: display = block
+            // (do nothing different)
+            // rendering hints: display = flex
+            // update position with gap
+            // rendering hints: flexDirection => row
+            // apply on x
+            // rendering hints: flexDirection => column
+            // apply on y
+
             // to avoid overwriting original pos
             // in the case of detachment at later stage
             // store the original position
@@ -5874,6 +5994,16 @@ class SceneUI {
             // to this position
             c.x = this.x + cx;
             c.y = this.y + cy;
+            const v = new Vector(c.x, c.y);
+            // assume flex
+            this.__assumeFlexHints(v, i, src.length);
+            // assume grid (safe to use v)
+            // (again since if flex failed)
+            // (then v never changed)
+            this.__assumeGridHints(v, i);
+            // apply post-assumption for hints
+            c.x = v.x;
+            c.y = v.y;
             c.render();
             // restore original position
             c.x = cx;
@@ -6051,6 +6181,19 @@ class TextUI extends SceneUI {
         this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
         this.scene.font = f;
         super.render();
+    }
+}
+interface TextfulButtonUIOptions extends ButtonUIOptions, TextUIOptions {}
+class TextfulButtonUI extends ButtonUI {
+    tx: TextUI;
+    constructor(opt: TextfulButtonUIOptions) {
+        super(opt);
+        // create textui as property
+        // so you can access it
+        // even after it becomes a child
+        // (no orphans)
+        this.tx = new TextUI(opt);
+        this.addChild(this.tx);
     }
 }
 interface KeyedTextUIOptions<T> extends TextUIOptions {
@@ -6958,6 +7101,6 @@ export {
 
     Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D,
 
-    SoundQueue, Screen
+    SoundQueue, Screen, TextfulButtonUI
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
