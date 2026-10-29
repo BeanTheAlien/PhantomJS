@@ -330,6 +330,12 @@ npm install @beanthealien/phantomjs
 - Add `Color.lerp`.
 ## v2.3.3
 - Add `Screen` class.
+## v3.0.0 [IN DEVELOPMENT]
+- ROADMAP FOR 3.0:
+- Flexbox Scene UI (alignment, gap, etc)
+- Break (\<br\>) Scene UI (line break, shift next element down)
+- More Soft-body support (specifically with collisions and fast generation)
+- Add global `Color` support
 
 # Phantom HTML v0.0.1
 ### 0.0.1
