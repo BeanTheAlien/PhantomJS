@@ -340,7 +340,7 @@ npm install @beanthealien/phantomjs
 - Vector center to container (method, take entity / sceneui or container props)
 - Flex display justify-content and align-items (properties for scene ui css)
 - CURRENT COMPLETED:
-- Some CSS for Scene UI (UNTESTED)
+- Some CSS for Scene UI (FIXED IN)
 - Intrinsic text (via `TextfulButtonUI`) (UNTESTED)
 - `Entity.use` returns used component. (QoL fix)
 - `Skeleton.jointStrength` to set all joint strengths. (QoL change)

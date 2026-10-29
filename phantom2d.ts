@@ -316,9 +316,35 @@ class OutOfBoundsError extends ErrRoot {
         super("OutOfBoundsError", "Index exceeds length; could not get crucial value.");
     }
 }
+/**
+ * Thrown when `Color` receives a hexadecimal value that is not a critical length.
+ * @example
+ * ```
+ * // absurd example
+ * // total length 10
+ * // which is not a regular
+ * // hex string
+ * const color = Color.fromHex("#fffffffff");
+ * ```
+ */
 class UnexpectedHexLengthError extends ErrRoot {
     constructor(hex: string) {
         super("UnexpectedHexLengthError", `Hex string '${hex}' has unexpected length of '${hex.length}'.`);
+    }
+}
+class __RootBadGridError extends ErrRoot {
+    constructor(name: string) {
+        super("BadGridRangeError", `Value of gridTemplate${name} must be a positive number when display is grid.`);
+    }
+}
+class BadGridColumnRangeError extends __RootBadGridError {
+    constructor() {
+        super("Columns");
+    }
+}
+class BadGridRowsRangeError extends __RootBadGridError {
+    constructor() {
+        super("Rows");
     }
 }
 
@@ -5849,6 +5875,7 @@ interface SceneUIOptions {
     rend?: Function;
     upd?: Function;
     alpha?: number;
+    style?: Partial<SceneUICSS>;
 }
 type UICSSDisplay = "block" | "flex" | "grid";
 type UICSSGap = number;
@@ -5882,7 +5909,8 @@ interface SceneUICSS {
     /**
      * SImplified version of `grid-template-rows`.
      * 
-     * The amount of rows to fit children into.
+     * The number of explicit rows. Children beyond them continue into
+     * additional rows.
      * 
      * A value of `auto` means it will not force
      * children to fit into a set amount of rows.
@@ -5943,8 +5971,9 @@ class SceneUI {
             display: "block",
             gap: 0,
             flexDirection: "row",
-            gridTemplateRows: 0,
-            gridTemplateColumns: 0
+            gridTemplateRows: "auto",
+            gridTemplateColumns: 1,
+            ...opts.style
         };
     }
     /**
@@ -5952,19 +5981,20 @@ class SceneUI {
      * when the display is that of `flex`.
      * @param vec The vector to apply to.
      * @param child The active index.
-     * @param maxChild The maximum index.
      */
-    __assumeFlexHints(vec: Vector, child: number, maxChild: number) {
-        // dont apply when at 0 or last element
-        if(child == 0 || child == maxChild - 1) return;
-        if(this.style.display == "flex") {
-            // then continue on
+    __assumeFlexHints(vec: Vector, child: number) {
+        if(this.style.display == "flex" && child > 0) {
+            const siblings = this.child.stuff;
             if(this.style.flexDirection == "row") {
-                // x add
-                vec.x += this.style.gap;
+                vec.x = this.x + siblings[0].x;
+                for(let i = 0; i < child; i++) {
+                    vec.x += siblings[i].width + this.style.gap;
+                }
             } else {
-                // y add
-                vec.y += this.style.gap;
+                vec.y = this.y + siblings[0].y;
+                for(let i = 0; i < child; i++) {
+                    vec.y += siblings[i].height + this.style.gap;
+                }
             }
         }
     }
@@ -5976,18 +6006,44 @@ class SceneUI {
      */
     __assumeGridHints(vec: Vector, i: number) {
         if(this.style.display == "grid") {
-            let row = Math.floor(i / this.style.gridTemplateColumns);
-            if(this.style.gridTemplateRows != "auto") {
-                row = clamp(row, 0, this.style.gridTemplateRows);
+            const columns = Math.floor(this.style.gridTemplateColumns);
+            if(!Number.isFinite(columns) || columns < 1) {
+                throw new BadGridColumnRangeError();
             }
-            const col = i % this.style.gridTemplateColumns;
-            vec.x = col * (this.child.stuff[i].width + this.style.gap);
-            vec.y = row * (this.child.stuff[i].width + this.style.gap);
+            const row = Math.floor(i / columns);
+            if(this.style.gridTemplateRows != "auto") {
+                const rows = Math.floor(this.style.gridTemplateRows);
+                if(!Number.isFinite(rows) || rows < 1) {
+                    throw new BadGridRowsRangeError();
+                }
+            }
+            const col = i % columns;
+            const children = this.child.stuff;
+            let xOffset = 0;
+            for(let column = 0; column < col; column++) {
+                let columnWidth = 0;
+                for(let childIndex = column; childIndex < children.length; childIndex += columns) {
+                    columnWidth = Math.max(columnWidth, children[childIndex].width);
+                }
+                xOffset += columnWidth + this.style.gap;
+            }
+            let yOffset = 0;
+            for(let gridRow = 0; gridRow < row; gridRow++) {
+                let rowHeight = 0;
+                const rowStart = gridRow * columns;
+                const rowEnd = Math.min(rowStart + columns, children.length);
+                for(let childIndex = rowStart; childIndex < rowEnd; childIndex++) {
+                    rowHeight = Math.max(rowHeight, children[childIndex].height);
+                }
+                yOffset += rowHeight + this.style.gap;
+            }
+            vec.x += xOffset;
+            vec.y += yOffset;
         }
     }
     render() {
         this.rend();
-        this.child.forEach((c, i, src) => {
+        this.child.forEach((c, i) => {
             // rendering hints: display = block
             // (do nothing different)
             // rendering hints: display = flex
@@ -6009,7 +6065,7 @@ class SceneUI {
             c.y = this.y + cy;
             const v = new Vector(c.x, c.y);
             // assume flex
-            this.__assumeFlexHints(v, i, src.length);
+            this.__assumeFlexHints(v, i);
             // assume grid (safe to use v)
             // (again since if flex failed)
             // (then v never changed)

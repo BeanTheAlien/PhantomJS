@@ -22,7 +22,7 @@
   "keywords": [],
   "author": "BeanTheAlien",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/BeanTheAlien/PhantomJS/issues"
   },
