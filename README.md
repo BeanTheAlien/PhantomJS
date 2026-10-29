@@ -340,7 +340,7 @@ npm install @beanthealien/phantomjs
 - Vector center to container (method, take entity / sceneui or container props)
 - Flex display justify-content and align-items (properties for scene ui css)
 - CURRENT COMPLETED:
-- Some CSS for Scene UI (FIXED IN)
+- Some CSS for Scene UI (FIXED IN 2781b73dc79bbf86317e10fe3cb0bd23968df96c)
 - Intrinsic text (via `TextfulButtonUI`) (UNTESTED)
 - `Entity.use` returns used component. (QoL fix)
 - `Skeleton.jointStrength` to set all joint strengths. (QoL change)
@@ -348,6 +348,7 @@ npm install @beanthealien/phantomjs
 - `Skeleton.jointProp` to apply a property to each joint. (QoL change)
 - `Skeleton.jointDamp` to set all joint dampings. (QoL change)
 - Add `Vector.centerIn`, `centerCIC` method. (QoL change)
+- Global `Color` support (via `GFill`).
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -182,7 +182,18 @@ type Frames = Img[];
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
 type AbstractConstructor<T> = abstract new (...args: any[]) => T;
+/**
+ * The color (or other pattern) to fill with for the canvas.
+ * @deprecated Since v3.0.0.
+ */
 type FillStyle = string | CanvasGradient | CanvasPattern;
+/**
+ * Introduced as part of v3.0.0.
+ * 
+ * Global Fill Style, extension of the previous (now deprecated `FillStyle`).
+ * @since v3.0.0
+ */
+type GFill = FillStyle | Color;
 type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
 type Real<T> = Exclude<T, null | undefined>;
@@ -322,8 +333,7 @@ class OutOfBoundsError extends ErrRoot {
  * ```
  * // absurd example
  * // total length 10
- * // which is not a regular
- * // hex string
+ * // which is not a regular hex string
  * const color = Color.fromHex("#fffffffff");
  * ```
  */
@@ -500,14 +510,18 @@ interface EntityOptions {
     upd?: Function;
     /**
      * The display color.
+     * 
+     * Changed to `GFill` in v3.0.0.
      * @since v0.0.0
      */
-    color?: string;
+    color?: GFill;
     /**
      * The outline (stroke) color.
+     * 
+     * Changed to `GFill` in v3.0.0.
      * @since v2.2.18
      */
-    colorsk?: string;
+    colorsk?: GFill;
     /**
      * The movement mode.
      * @since v1.0.4
@@ -899,21 +913,21 @@ interface HealthCompOptions extends CompOptions {
      * Default to consuming the `PhantomHealthCompHurtEvent`.
      * @since v0.0.0
      */
-    onHurt?: PhantomEventHandle;
+    onHurt?: PhantomEventHandle<PhantomHealthCompHurtEvent>;
     /**
      * A handle for the die event.
      * 
      * Default to consuming the `PhantomHealthCompDieEvent`.
      * @since v0.0.0
      */
-    onDie?: PhantomEventHandle;
+    onDie?: PhantomEventHandle<PhantomHealthCompDieEvent>;
     /**
      * A handle for the heal event.
      * 
      * Default to consuming the `PhantomHealthCompHealEvent`.
      * @since v0.0.0
      */
-    onHeal?: PhantomEventHandle;
+    onHeal?: PhantomEventHandle<PhantomHealthCompHealEvent>;
 }
 /**
  * The options for a `InvComp`.
@@ -1632,12 +1646,12 @@ class Entity implements Boundaries {
      * The display color.
      * @since v0.0.0
      */
-    color: string;
+    color: GFill;
     /**
      * The outline (stroke) color.
      * @since v2.2.18
      */
-    colorsk: string;
+    colorsk: GFill;
     /**
      * The storage for listeners for events.
      * @since v0.0.0
@@ -3838,17 +3852,22 @@ class Scene {
         lvl.items = this.items;
         return lvl;
     }
+    demote(color: GFill): FillStyle {
+        return objIs(color, Color) ? color.toHex() : color;
+    }
     get color(): FillStyle {
         return this.ctx.fillStyle;
     }
-    set color(color: FillStyle) {
-        this.ctx.fillStyle = color;
+    set color(color: GFill) {
+        // reduce color to hex
+        // if it is a Color
+        this.ctx.fillStyle = this.demote(color);
     }
     get colorsk(): FillStyle {
         return this.ctx.strokeStyle;
     }
-    set colorsk(color: FillStyle) {
-        this.ctx.strokeStyle = color;
+    set colorsk(color: GFill) {
+        this.ctx.strokeStyle = this.demote(color);
     }
     get alpha(): number {
         return this.ctx.globalAlpha;
@@ -3866,7 +3885,7 @@ class Scene {
         if(m == "f") f1();
         else f2();
     }
-    __detmc(m: DrawMethod, c1: string, c2: string, f1: Function, f2: Function) {
+    __detmc(m: DrawMethod, c1: GFill, c2: GFill, f1: Function, f2: Function) {
         this.__detm(m, () => {
             this.color = c1;
             f1();
@@ -3875,13 +3894,13 @@ class Scene {
             f2();
         });
     }
-    __detmcr(m: DrawMethod, c: string, f1: Function, f2: Function) {
+    __detmcr(m: DrawMethod, c: GFill, f1: Function, f2: Function) {
         this.__detmc(m, c, c, f1, f2);
     }
-    __detmfs(m: DrawMethod, c: string) {
+    __detmfs(m: DrawMethod, c: GFill) {
         this.__detmcr(m, c, () => this.ctx.fill(), () => this.ctx.stroke());
     }
-    __rect(x: number, y: number, w: number, h: number, c: string, m: DrawMethod) {
+    __rect(x: number, y: number, w: number, h: number, c: GFill, m: DrawMethod) {
         this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
     }
     /**
@@ -3894,7 +3913,7 @@ class Scene {
      * @param h The height.
      * @param color The fill color.
      */
-    rect(x: number, y: number, w: number, h: number, color: string) {
+    rect(x: number, y: number, w: number, h: number, color: GFill) {
         this.__rect(x, y, w, h, color, "f");
     }
     /**
@@ -3907,7 +3926,7 @@ class Scene {
      * @param h The height.
      */
     rectc(x: number, y: number, w: number, h: number) {
-        this.rect(x, y, w, h, this.color as string);
+        this.rect(x, y, w, h, this.color);
     }
     /**
      * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
@@ -3919,7 +3938,7 @@ class Scene {
      * @param h The height.
      * @param color The stroke color.
      */
-    rects(x: number, y: number, w: number, h: number, color: string) {
+    rects(x: number, y: number, w: number, h: number, color: GFill) {
         this.__rect(x, y, w, h, color, "s");
     }
     /**
@@ -3933,26 +3952,26 @@ class Scene {
      * @param color The stroke color.
      */
     rectsc(x: number, y: number, w: number, h: number) {
-        this.rects(x, y, w, h, this.color as string);
+        this.rects(x, y, w, h, this.color);
     }
-    bg(color: string) {
+    bg(color: GFill) {
         this.rect(0, 0, this.width, this.height, color);
     }
-    ray(origin: Vector, angle: number, dist: number, color: string) {
+    ray(origin: Vector, angle: number, dist: number, color: GFill) {
         this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(origin.x, origin.y);
         this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
         this.ctx.stroke();
     }
-    ln(points: Vector[], color: string) {
+    ln(points: Vector[], color: GFill) {
         this.color = color;
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         for(let i = 1; i < points.length; i++) this.ctx.lineTo(points[i].x, points[i].y);
         this.ctx.stroke();
     }
-    lnsk(points: Vector[], color: string) {
+    lnsk(points: Vector[], color: GFill) {
         this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
@@ -4011,7 +4030,7 @@ class Scene {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: string, colorsk: string, offX: number = 0, offY: number = 0) {
+    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: GFill, colorsk: GFill, offX: number = 0, offY: number = 0) {
         let ox = 0;
         let oy = 0;
         if(this.fol) {
@@ -4314,7 +4333,7 @@ class Scene {
     unfollow() {
         this.fol = undefined;
     }
-    __text(text: string, x: number, y: number, color: string, m: DrawMethod, maxWidth?: number) {
+    __text(text: string, x: number, y: number, color: GFill, m: DrawMethod, maxWidth?: number) {
         this.__detmcr(m, color, () => this.ctx.fillText(text, x, y, maxWidth), () => this.ctx.strokeText(text, x, y, maxWidth));
     }
     /**
@@ -4326,7 +4345,7 @@ class Scene {
      * @param color The fill color.
      * @param maxWidth The maximum width.
      */
-    text(text: string, x: number, y: number, color: string, maxWidth?: number) {
+    text(text: string, x: number, y: number, color: GFill, maxWidth?: number) {
         this.__text(text, x, y, color, "f", maxWidth);
     }
     /**
@@ -4338,7 +4357,7 @@ class Scene {
      * @param maxWidth The maximum width.
      */
     textc(text: string, x: number, y: number, maxWidth?: number) {
-        this.text(text, x, y, this.color as string, maxWidth);
+        this.text(text, x, y, this.color, maxWidth);
     }
     /**
      * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
@@ -4349,7 +4368,7 @@ class Scene {
      * @param color The stroke color.
      * @param maxWidth The maximum width.
      */
-    texts(text: string, x: number, y: number, color: string, maxWidth?: number) {
+    texts(text: string, x: number, y: number, color: GFill, maxWidth?: number) {
         this.__text(text, x, y, color, "s", maxWidth);
     }
     /**
@@ -4361,7 +4380,7 @@ class Scene {
      * @param maxWidth The maximum width.
      */
     textsc(text: string, x: number, y: number, maxWidth?: number) {
-        this.texts(text, x, y, this.color as string, maxWidth);
+        this.texts(text, x, y, this.color, maxWidth);
     }
     get align(): CanvasTextAlign {
         return this.ctx.textAlign;
@@ -4452,7 +4471,7 @@ class Scene {
     mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
-    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, lineWidth?: number) {
+    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: GFill, lineWidth?: number) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -4472,7 +4491,7 @@ class Scene {
         this.color = fillColor;
         this.ctx.fill();
     }
-    frustums(x: number, y: number, r0: number, r1: number, h: number, strokeColor: string, lineWidth?: number) {
+    frustums(x: number, y: number, r0: number, r1: number, h: number, strokeColor: GFill, lineWidth?: number) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -4493,7 +4512,7 @@ class Scene {
         this.ctx.lineWidth = lineWidth ?? 2;
         this.ctx.stroke();
     }
-    __tri(p0: Vector, p1: Vector, p2: Vector, color: string, m: DrawMethod) {
+    __tri(p0: Vector, p1: Vector, p2: Vector, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
@@ -4510,7 +4529,7 @@ class Scene {
      * @param p2 The top-coord.
      * @param color The fill color.
      */
-    tri(p0: Vector, p1: Vector, p2: Vector, color: string) {
+    tri(p0: Vector, p1: Vector, p2: Vector, color: GFill) {
         this.__tri(p0, p1, p2, color, "f");
     }
     /**
@@ -4522,7 +4541,7 @@ class Scene {
      * @param p2 The top-coord.
      */
     tric(p0: Vector, p1: Vector, p2: Vector) {
-        this.tri(p0, p1, p2, this.color as string);
+        this.tri(p0, p1, p2, this.color);
     }
     /**
      * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
@@ -4533,7 +4552,7 @@ class Scene {
      * @param p2 The top-coord.
      * @param color The stroke color.
      */
-    tris(p0: Vector, p1: Vector, p2: Vector, color: string) {
+    tris(p0: Vector, p1: Vector, p2: Vector, color: GFill) {
         this.__tri(p0, p1, p2, color, "s");
     }
     /**
@@ -4545,9 +4564,9 @@ class Scene {
      * @param p2 The top-coord.
      */
     trisc(p0: Vector, p1: Vector, p2: Vector) {
-        this.tris(p0, p1, p2, this.color as string);
+        this.tris(p0, p1, p2, this.color);
     }
-    __cone(p0: Vector, p1: Vector, rad: Vector, color: string, m: DrawMethod) {
+    __cone(p0: Vector, p1: Vector, rad: Vector, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
@@ -4565,7 +4584,7 @@ class Scene {
      * @param rad The radius.
      * @param color The fill color.
      */
-    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+    cone(p0: Vector, p1: Vector, rad: Vector, color: GFill) {
         this.__cone(p0, p1, rad, color, "f");
     }
     /**
@@ -4577,7 +4596,7 @@ class Scene {
      * @param rad The radius.
      */
     conec(p0: Vector, p1: Vector, rad: Vector) {
-        this.cone(p0, p1, rad, this.color as string);
+        this.cone(p0, p1, rad, this.color);
     }
     /**
      * Strokes a cone from `p0` to `p1` with a radius of `rad`.
@@ -4588,7 +4607,7 @@ class Scene {
      * @param rad The radius.
      * @param color The stroke color.
      */
-    cones(p0: Vector, p1: Vector, rad: Vector, color: string) {
+    cones(p0: Vector, p1: Vector, rad: Vector, color: GFill) {
         this.__cone(p0, p1, rad, color, "s");
     }
     /**
@@ -4600,7 +4619,7 @@ class Scene {
      * @param rad The radius.
      */
     conesc(p0: Vector, p1: Vector, rad: Vector) {
-        this.cones(p0, p1, rad, this.color as string);
+        this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items: Renderable[]) {
         this.misc.add(...items);
@@ -4623,7 +4642,7 @@ class Scene {
     __sortByLayer() {
         this.items.stuff.sort((a, b) => a.z - b.z);
     }
-    *loopLvls(): Generator<Level, void, unknown> {
+    *loopLvls() {
         for(const lvl of this.lvlStore.items()) {
             yield lvl[1];
         }
@@ -4678,7 +4697,7 @@ class Scene {
         this.scaleX = sx;
         this.scaleY = sy;
     }
-    __oval(x: number, y: number, rx: number, ry: number, color: string, m: DrawMethod) {
+    __oval(x: number, y: number, rx: number, ry: number, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
         this.__detmfs(m, color);
@@ -4693,7 +4712,7 @@ class Scene {
      * @param ry The y radius.
      * @param color The fill color.
      */
-    oval(x: number, y: number, rx: number, ry: number, color: string) {
+    oval(x: number, y: number, rx: number, ry: number, color: GFill) {
         this.__oval(x, y, rx, ry, color, "f");
     }
     /**
@@ -4706,7 +4725,7 @@ class Scene {
      * @param ry The y radius.
      */
     ovalc(x: number, y: number, rx: number, ry: number) {
-        this.oval(x, y, rx, ry, this.color as string);
+        this.oval(x, y, rx, ry, this.color);
     }
     /**
      * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
@@ -4718,7 +4737,7 @@ class Scene {
      * @param ry The y radius.
      * @param color The stroke color.
      */
-    ovals(x: number, y: number, rx: number, ry: number, color: string) {
+    ovals(x: number, y: number, rx: number, ry: number, color: GFill) {
         this.__oval(x, y, rx, ry, color, "s");
     }
     /**
@@ -4732,7 +4751,7 @@ class Scene {
      * @param color The stroke color.
      */
     ovalsc(x: number, y: number, rx: number, ry: number) {
-        this.ovals(x, y, rx, ry, this.color as string);
+        this.ovals(x, y, rx, ry, this.color);
     }
     /**
      * Fills a circle at `(x, y)` with a radius of `r`.
@@ -4743,7 +4762,7 @@ class Scene {
      * @param r The radius.
      * @param color The fill color.
      */
-    circ(x: number, y: number, r: number, color: string) {
+    circ(x: number, y: number, r: number, color: GFill) {
         this.oval(x, y, r, r, color);
     }
     /**
@@ -4756,7 +4775,7 @@ class Scene {
      * @param color The fill color.
      */
     circc(x: number, y: number, r: number) {
-        this.circ(x, y, r, this.color as string);
+        this.circ(x, y, r, this.color);
     }
     /**
      * Strokes a circle at `(x, y)` with a radius of `r`.
@@ -4767,7 +4786,7 @@ class Scene {
      * @param r The radius.
      * @param color The stroke color.
      */
-    circs(x: number, y: number, r: number, color: string) {
+    circs(x: number, y: number, r: number, color: GFill) {
         this.ovals(x, y, r, r, color);
     }
     /**
@@ -4780,7 +4799,7 @@ class Scene {
      * @param color The stroke color.
      */
     circsc(x: number, y: number, r: number) {
-        this.circs(x, y, r, this.color as string);
+        this.circs(x, y, r, this.color);
     }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
