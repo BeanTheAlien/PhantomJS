@@ -337,6 +337,8 @@ npm install @beanthealien/phantomjs
 - More Soft-body support (specifically with collisions and fast generation)
 - Add global `Color` support
 - Intrinsic text on buttons
+- Vector center to container (method, take entity / sceneui or container props)
+- Flex display justify-content and align-items (properties for scene ui css)
 - CURRENT COMPLETED:
 - Some CSS for Scene UI (UNTESTED)
 - Intrinsic text (via `TextfulButtonUI`) (UNTESTED)
