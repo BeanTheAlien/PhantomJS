@@ -5143,8 +5143,12 @@ class StorageRoot {
     constructor(obj: Storage) {
         this.storage = obj;
     }
-    get(k: string): string | null {
-        return this.storage.getItem(k);
+    get(k: string): string | null;
+    get(k: string, def: string): string | null;
+    get(k: string, def?: string) {
+        const r = this.storage.getItem(k);
+        if(def) return r ?? def;
+        return r;
     }
     set(k: string, v: any) {
         this.storage.setItem(k, Util.strOf(v));
@@ -5901,6 +5905,8 @@ type UICSSGap = number;
 type UICSSFlexDirection = "row" | "column";
 type UICSSTemplateRows = "auto" | number;
 type UICSSTemplateColumns = number;
+type UICSSJustifyContent = "normal" | "start" | "end" | "center" | "space-evenly";
+type UICSSAlignItems = "normal" | "start" | "end" | "center";
 interface SceneUICSS {
     /**
      * The way to render the UI.
@@ -5941,6 +5947,24 @@ interface SceneUICSS {
      * The amount of columsn to fit children into.
      */
     gridTemplateColumns: UICSSTemplateColumns;
+    /**
+     * How content should be justified.
+     * 
+     * This is the x-alignment for a flexbox.
+     * 
+     * Current support is limited to `normal`, `start`,
+     * `end`, `center` and `space-evenly`.
+     */
+    justifyContent: UICSSJustifyContent;
+    /**
+     * How content should be aligned.
+     * 
+     * This is the y-alignment for a flexbox.
+     * 
+     * Current support is limited to `normal`, `start`,
+     * `end` and `center`.
+     */
+    alignItems: UICSSAlignItems;
 }
 /**
  * The core class for UI elements.
@@ -5992,6 +6016,8 @@ class SceneUI {
             flexDirection: "row",
             gridTemplateRows: "auto",
             gridTemplateColumns: 1,
+            justifyContent: "normal",
+            alignItems: "normal",
             ...opts.style
         };
     }
@@ -6060,6 +6086,54 @@ class SceneUI {
             vec.y += yOffset;
         }
     }
+    /**
+     * Assumes and applies a justification rendering hint.
+     * 
+     * Overrides previous flexbox alignment justification
+     * when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The active index.
+     */
+    __assumeJustifyHints(vec: Vector, i: number) {
+        // since start is the same as the standard flex
+        // then do nothing for start
+        if(this.style.display == "flex" && this.style.justifyContent != "normal" && this.style.justifyContent != "start") {
+            if(this.style.justifyContent == "center") {
+                // apply centering with gap respect
+                // this width / expected x
+                // is the gap-respected centered x
+                vec.x = this.width / (this.style.gap * (i + 1));
+            } else if(this.style.justifyContent == "space-evenly") {
+                // otherwise this width / index
+                // is the even-spaced x
+                vec.x = this.width / (i + 1);
+            } else {
+                // otherwise, end can be figured out by
+                // this.width - vec.x
+                // since this is following flex styling
+                vec.x = this.width - vec.x;
+            }
+        }
+    }
+    /**
+     * Assumes and applies an alignment rendering hint.
+     * 
+     * Overrides previous flexbox alignment when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The current index.
+     */
+    __assumeAlignHints(vec: Vector, i: number) {
+        if(this.style.display == "flex" && this.style.alignItems != "normal" && this.style.alignItems != "start") {
+            if(this.style.alignItems == "center") {
+                // same idea as justify
+                // just height instead
+                vec.y = this.height / (this.style.gap * (i + 1));
+            } else {
+                // again, same idea as justify
+                vec.y = this.height - vec.y;
+            }
+        }
+    }
     render() {
         this.rend();
         this.child.forEach((c, i) => {
@@ -6089,6 +6163,10 @@ class SceneUI {
             // (again since if flex failed)
             // (then v never changed)
             this.__assumeGridHints(v, i);
+            // assume justify
+            this.__assumeJustifyHints(v, i);
+            // assume align
+            this.__assumeAlignHints(v, i);
             // apply post-assumption for hints
             c.x = v.x;
             c.y = v.y;
