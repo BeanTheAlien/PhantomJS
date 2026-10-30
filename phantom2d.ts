@@ -23,9 +23,13 @@ class ArrayUtil {
         arr.push(...items);
     }
     static rm(arr: any[], ...items: any[]) {
+        ArrayUtil.rmx(arr, () => {}, ...items);
+    }
+    static rmx(arr: any[], then: Callback<any>, ...items: any[]) {
         for(const i of items) {
             if(ArrayUtil.has(arr, i)) {
                 arr.splice(arr.indexOf(i), 1);
+                then(i, 0, arr);
             }
         }
     }
@@ -444,6 +448,9 @@ class ItemBox<T> {
     }
     rm(...stuff: T[]) {
         ArrayUtil.rm(this.stuff, ...stuff);
+    }
+    rmx(then: Callback<T>, ...stuff: T[]) {
+        ArrayUtil.rmx(this.stuff, then, ...stuff);
     }
     forEach(cb: Callback<T>) {
         this.stuff.forEach(cb);
@@ -3141,12 +3148,15 @@ class Skeleton implements Renderable, Boundaries {
         this.joints.forEach(callback);
     }
 }
-interface SkeletalEntityOptions extends EntityOptions {
+interface Clean {
+    clean(): void;
+}
+interface SkEntOptions extends EntityOptions {
     sk: Skeleton;
 }
-class SkeletalEntity extends Entity {
+class SkEnt extends Entity {
     sk: Skeleton;
-    constructor(opts: SkeletalEntityOptions) {
+    constructor(opts: SkEntOptions) {
         super(opts);
         this.sk = opts.sk;
         const x = opts.x ?? 0;
@@ -3769,8 +3779,14 @@ class Scene {
     rm(...items: Entity[]) {
         this.items.rm(...items);
     }
+    rmx(removed: Callback<Entity>, ...items: Entity[]) {
+        this.items.rmx(removed, ...items);
+    }
     rmUI(...items: SceneUI[]) {
         this.ui.rm(...items);
+    }
+    rmUIx(removed: Callback<SceneUI>, ...items: SceneUI[]) {
+        this.ui.rmx(removed, ...items);
     }
     has(...items: Entity[]): boolean {
         return this.items.has(...items);
@@ -4626,6 +4642,9 @@ class Scene {
     }
     rmMisc(...items: Renderable[]) {
         this.misc.rm(...items);
+    }
+    rmMiscx(removed: Callback<Renderable>, ...items: Renderable[]) {
+        this.misc.rmx(removed, ...items);
     }
     hasMisc(...items: Renderable[]) {
         return this.misc.has(...items);
@@ -7276,7 +7295,7 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D,
+    Joint, Bone, Skeleton, SkEnt, clamp, clone, Color, PerlinTerrain1D,
 
     SoundQueue, Screen, TextfulButtonUI, centerCIC
 };

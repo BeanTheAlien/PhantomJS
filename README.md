@@ -353,6 +353,8 @@ npm install @beanthealien/phantomjs
 - Add `StorageRoot.get(string, string)` overload. (QoL change)
 - Add support for `justifyContent` normal, start, end, center, space-evenly. (UNTESTED)
 - Add support for `alignItems` normal, start, end, center. (UNTESTED)
+- Change `SkeletalEntity` => `SkEnt`.
+- Add `rm*x` methods to take an on removed. (QoL change)
 
 # Phantom HTML v0.0.1
 ### 0.0.1
