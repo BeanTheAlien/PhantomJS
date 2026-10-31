@@ -3633,6 +3633,41 @@ type FittingMode = "none" | "shrink" | "grow" | "fill";
 type GenericIdentifier = "ent" | "ui" | "rend";
 type DrawMethod = "f" | "s";
 /**
+ * Dictates a temporary value change, cleaned up afterwards to the original value.
+ */
+interface Temporary<T, K extends keyof T> {
+    /**
+     * What key is being assigned to.
+     */
+    key: K;
+    /**
+     * The original value (prior the assignment of the new value).
+     */
+    old: T[K];
+    /**
+     * Takes and assumes a new value for the key-value pair referenced by the key
+     * and returns a reference to this `Temporary` implementation.
+     * 
+     * Either done during construction (such as by `Scene`) or following return;
+     * see specific implementation documentation for details.
+     * @param newValue The new value to be assigned onto the parent.
+     * @returns A reference to this `Temporary`.
+     */
+    take(newValue: T[K]): Temporary<T, K>;
+    /**
+     * Completes an action, passing the parent taking the action in as a parameter
+     * and returning a reference to this `Temporary` implementation.
+     * @param thenRun The function to run, taking the parent that is managing the temporary change.
+     * @returns A reference to this `Temporary`.
+     */
+    then(thenRun: (parent: T) => void): Temporary<T, K>;
+    /**
+     * Completes the temporary exchange and swaps the new value
+     * with the previous, old value.
+     */
+    done(): void;
+}
+/**
  * The root canvas to display content.
  * 
  * Since v2.2.18, methods that end in `""` *fill*,
@@ -3776,17 +3811,32 @@ class Scene {
     addUIIfNotHas(...items: SceneUI[]) {
         this.addUIIf(u => !this.hasUI(u), ...items);
     }
+    isClean(value: any): value is Clean {
+        return "clean" in value && typeof value.clean == "function";
+    }
+    __globalOnRemove<T extends Entity | SceneUI | Renderable>(init: T, then?: Callback<T>, index?: number, src?: T[]) {
+        if(this.isClean(init)) {
+            init.clean();
+        }
+        if(then && index && src) {
+            then(init, index, src);
+        }
+    }
     rm(...items: Entity[]) {
-        this.items.rm(...items);
+        this.rmx(() => {}, ...items);
     }
     rmx(removed: Callback<Entity>, ...items: Entity[]) {
-        this.items.rmx(removed, ...items);
+        this.items.rmx((e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     rmUI(...items: SceneUI[]) {
-        this.ui.rm(...items);
+        this.rmUIx(() => {}, ...items);
     }
     rmUIx(removed: Callback<SceneUI>, ...items: SceneUI[]) {
-        this.ui.rmx(removed, ...items);
+        this.ui.rmx((e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     has(...items: Entity[]): boolean {
         return this.items.has(...items);
@@ -4641,10 +4691,12 @@ class Scene {
         this.misc.add(...items);
     }
     rmMisc(...items: Renderable[]) {
-        this.misc.rm(...items);
+        this.rmMiscx(() => {}, ...items);
     }
     rmMiscx(removed: Callback<Renderable>, ...items: Renderable[]) {
-        this.misc.rmx(removed, ...items);
+        this.misc.rmx((e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     hasMisc(...items: Renderable[]) {
         return this.misc.has(...items);
@@ -4827,6 +4879,51 @@ class Scene {
     }
     col(e: Entity) {
         return this.items.some(x => x != e && isCol(e, x));
+    }
+    /**
+     * Creates and returns an implementation of the `Temporary` interface.
+     * 
+     * Does **not** assign a value.
+     * @param key The key to assign to.
+     * @returns A `Temporary` implementation.
+     */
+    temp<T extends keyof Scene>(key: T): Temporary<Scene, T>;
+    /**
+     * Creates and returns an implementation of the `Temporary` interface.
+     * 
+     * Applies a `take` call upon construction.
+     * @param key The key to assign to.
+     * @param newValue The new value to be assigned.
+     * @returns A `Temporary` implementation.
+     */
+    temp<T extends keyof Scene>(key: T, newValue: Scene[T]): Temporary<Scene, T>;
+    temp<T extends keyof Scene>(key: T, newValue?: Scene[T]) {
+        // have to trick TS here
+        // due to this error:
+        // Type 'Scene[T]' is not assignable to type 'this[T]'.
+        // Type 'Scene' is not assignable to type 'this'.
+        // 'Scene' is assignable to the constraint of type 'this', but 'this' could be instantiated with a different subtype of constraint 'Scene'.
+        const self = this as Scene;
+        // have to declare instead of direct return
+        // since some methods have return-self
+        const tmp: Temporary<Scene, T> = {
+            key,
+            old: self[key],
+            take: (v) => {
+                self[key] = v;
+                return tmp;
+            },
+            then: (run) => {
+                run(self);
+                return tmp;
+            },
+            done: () => {
+                self[key] = tmp.old;
+            }
+        };
+        // apply `take` when `newValue` exists
+        if(newValue) tmp.take(newValue);
+        return tmp;
     }
 }
 /**
@@ -7257,6 +7354,32 @@ function centerCIC(innerContainer: PositionedContainer, outerContainer: Position
     innerContainer.x = (outerContainer.width - innerContainer.width) / 2;
     innerContainer.y = (outerContainer.height - outerContainer.height) / 2;
 }
+/**
+ * A simple factory for `Temporary` implementations.
+ * @param parent The parent object.
+ * @param key The key to assign to.
+ * @returns A simple `Temporary` implementation.
+ */
+export function tempFactory<T, K extends keyof T>(parent: T, key: K) {
+    // have to declare instead of direct return
+    // since some methods have return-self
+    const tmp: Temporary<T, K> = {
+        key,
+        old: parent[key],
+        take: (v) => {
+            parent[key] = v;
+            return tmp;
+        },
+        then: (run) => {
+            run(parent);
+            return tmp;
+        },
+        done: () => {
+            parent[key] = tmp.old;
+        }
+    };
+    return tmp;
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -7299,4 +7422,4 @@ export {
 
     SoundQueue, Screen, TextfulButtonUI, centerCIC
 };
-export type { Renderable, Constructor, AbstractConstructor, KeyCode };
+export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };

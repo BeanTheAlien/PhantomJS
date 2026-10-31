@@ -340,6 +340,7 @@ npm install @beanthealien/phantomjs
 - DONE ~~Vector center to container (method, take entity / sceneui or container props)~~
 - Flex display justify-content and align-items (properties for scene ui css)
 - Deprecate `ItemBox` and `Store` (replace with array and record)
+- DONE ~~Temporary Scene change~~
 - CURRENT COMPLETED:
 - Some CSS for Scene UI. (FIXED IN 2781b73dc79bbf86317e10fe3cb0bd23968df96c)
 - Intrinsic text (via `TextfulButtonUI`). (UNTESTED)
@@ -355,6 +356,8 @@ npm install @beanthealien/phantomjs
 - Add support for `alignItems` normal, start, end, center. (UNTESTED)
 - Change `SkeletalEntity` => `SkEnt`.
 - Add `rm*x` methods to take an on removed. (QoL change)
+- Add `Clean` interface for on-removed callback.
+- `Temporary` interface for temporary changes (only implemented for `Scene` as of now).
 
 # Phantom HTML v0.0.1
 ### 0.0.1
