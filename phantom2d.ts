@@ -365,6 +365,7 @@ class BadGridRowsRangeError extends __RootBadGridError {
 /**
  * A storage for items.
  * @since v0.0.0
+ * @deprecated Since v3.0.0.
  */
 class Store<TI, TO> {
     store: Map<TI, TO>;
@@ -437,6 +438,7 @@ class Store<TI, TO> {
  * 
  * Useful for array-based classes.
  * @since v1.0.8
+ * @deprecated Since v3.0.0. Replaced with arrays.
  */
 class ItemBox<T> {
     stuff: T[];
@@ -1530,7 +1532,7 @@ interface Bound<T extends XYAxis = XYAxis> {
 interface BoundX extends Bound<"x"> {}
 interface BoundY extends Bound<"y"> {}
 interface Boundaries {
-    bounds: ItemBox<Bound>;
+    bounds: Bound[];
     bound(boundary: Bound): void;
     unbound(boundary: Bound): void;
 }
@@ -1669,7 +1671,7 @@ class Entity implements Boundaries {
     evMng: PhantomEventManager;
     initState: SavedState;
     tags: TagList;
-    child: ItemBox<Entity>;
+    child: Entity[];
     /**
      * Whether legacy collision is enabled.
      * 
@@ -1679,7 +1681,7 @@ class Entity implements Boundaries {
      */
     legCol: boolean;
     render: Function;
-    bounds: ItemBox<Bound<XYAxis>>;
+    bounds: Bound<XYAxis>[];
     ct: Custom;
     constructor();
     constructor(opts: EntityOptions);
@@ -1705,13 +1707,13 @@ class Entity implements Boundaries {
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
-        this.child = new ItemBox();
+        this.child = [];
         this.legCol = opts?.legCol ?? false;
         if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
         this.render = opts?.render ?? NoFunc;
-        this.bounds = new ItemBox();
+        this.bounds = [];
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -2131,10 +2133,10 @@ class Entity implements Boundaries {
         this.y += (dy / d) * spd;
     }
     bound(boundary: Bound): void {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary: Bound): void {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
     }
 }
 /**
@@ -2460,7 +2462,7 @@ class WallObject extends Entity {
 class FloorObject extends WallObject {
     constructor(opts: WallObjectOptions) {
         super(opts);
-        this.tags.add(new Tag("floor"));
+        ArrayUtil.add(this.tags, new Tag("floor"));
     }
     /**
      * Returns a new entity, based on options.
@@ -3050,7 +3052,7 @@ class Skeleton implements Renderable, Boundaries {
     bw: number;
     jr: number;
     scene: Scene;
-    bounds: ItemBox<Bound>;
+    bounds: Bound[];
     constructor(opts: SkeletonOptions) {
         this.bn = opts.bn;
         this.joints = [];
@@ -3063,7 +3065,7 @@ class Skeleton implements Renderable, Boundaries {
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
-        this.bounds = new ItemBox();
+        this.bounds = []
     }
     setSoft(enabled = true) {
         this.soft = enabled;
@@ -3128,10 +3130,10 @@ class Skeleton implements Renderable, Boundaries {
         return this.joints.map(j => j.x);
     }
     bound(boundary: Bound) {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary: Bound) {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
     }
     jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: V): void;
     jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: (old: V) => V): void;
@@ -3436,7 +3438,7 @@ class SoundLoop {
         this.tgs.done().then(() => this.loop());
     }
 }
-class SoundQueue extends ItemBox<Sound> {
+class SoundQueue extends Array<Sound> {
     active: boolean;
     cur?: Sound;
     constructor() {
@@ -3449,28 +3451,28 @@ class SoundQueue extends ItemBox<Sound> {
     add(sound: Sound, count?: number | Sound, ...sounds: Sound[]) {
         if(typeof count == "number") {
             for(let i = 0; i < count; i++) {
-                super.add(sound);
+                super.push(sound);
             }
         } else {
-            super.add(sound);
-            if(count) super.add(count);
-            super.add(...sounds);
+            super.push(sound);
+            if(count) super.push(count);
+            super.push(...sounds);
         }
     }
     async play() {
         if(this.active) return;
         this.active = true;
-        while(this.active && this.stuff.length > 0) {
+        while(this.active && this.length > 0) {
             // Peek at the first sound in the queue
-            this.cur = this.stuff[0];
+            this.cur = this[0];
             this.cur.play();
             await this.cur.done();
             // If stopped while playing, break out before removing
             if(!this.active) break;
             // Remove the completed sound from the front of the queue
-            const c = this.stuff.shift(); 
+            const c = this.shift(); 
             if(c) {
-                this.rm(c);
+                ArrayUtil.rm(this, c);
             }
         }
         this.cur = undefined;
@@ -3711,7 +3713,7 @@ class Scene {
     static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    items: ItemBox<Entity>;
+    items: Entity[];
     evStore: Store<EventType, EventHandle[]>;
     lvlStore: Store<string, Level>;
     mousePos: Vector;
@@ -3719,10 +3721,10 @@ class Scene {
     comps: Store<PhantomSceneCompType, SceneComp>;
     evMng: SceneEventManager;
     fol?: Entity;
-    ui: ItemBox<SceneUI>;
+    ui: SceneUI[];
     fontControl: SceneFont;
-    misc: ItemBox<Renderable>;
-    post: ItemBox<Function>;
+    misc: Renderable[];
+    post: Function[];
     dualRuntime: Runtime;
     scaleX: number;
     scaleY: number;
@@ -3747,7 +3749,7 @@ class Scene {
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
-        this.items = new ItemBox();
+        this.items = [];
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -3757,13 +3759,13 @@ class Scene {
         this.runtime = new Runtime();
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
-        this.ui = new ItemBox();
+        this.ui = [];
         this.fontControl = {
             size: 10,
             family: "sans-serif"
         };
-        this.misc = new ItemBox();
-        this.post = new ItemBox();
+        this.misc = [];
+        this.post = [];
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
@@ -3794,19 +3796,19 @@ class Scene {
         this.canvas.style.height = h;
     }
     add(...items: Entity[]) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     addIf(predicate: PredicateEntity, ...items: Entity[]) {
-        this.items.add(...items.filter(predicate));
+        ArrayUtil.add(this.items, ...items.filter(predicate));
     }
     addIfNotHas(...items: Entity[]) {
         this.addIf(i => !this.has(i), ...items);
     }
     addUI(...items: SceneUI[]) {
-        this.ui.add(...items);
+        ArrayUtil.add(this.ui, ...items);
     }
     addUIIf(predicate: Predicate<SceneUI>, ...items: SceneUI[]) {
-        this.ui.add(...items.filter(predicate));
+        ArrayUtil.add(this.ui, ...items.filter(predicate));
     }
     addUIIfNotHas(...items: SceneUI[]) {
         this.addUIIf(u => !this.hasUI(u), ...items);
@@ -3826,7 +3828,7 @@ class Scene {
         this.rmx(() => {}, ...items);
     }
     rmx(removed: Callback<Entity>, ...items: Entity[]) {
-        this.items.rmx((e, i, a) => {
+        ArrayUtil.rmx(this.items, (e, i, a) => {
             this.__globalOnRemove(e, removed, i, a);
         }, ...items);
     }
@@ -3834,39 +3836,39 @@ class Scene {
         this.rmUIx(() => {}, ...items);
     }
     rmUIx(removed: Callback<SceneUI>, ...items: SceneUI[]) {
-        this.ui.rmx((e, i, a) => {
+        ArrayUtil.rmx(this.ui, (e, i, a) => {
             this.__globalOnRemove(e, removed, i, a);
         }, ...items);
     }
     has(...items: Entity[]): boolean {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     hasUI(...items: SceneUI[]): boolean {
-        return this.ui.has(...items);
+        return ArrayUtil.has(this.ui, ...items);
     }
     idxOf(item: Entity): number {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     idxOfUI(item: SceneUI): number {
-        return this.ui.stuff.indexOf(item);
+        return this.ui.indexOf(item);
     }
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
     }
     deepFilter(cb: PredicateEntity) {
-        this.items.stuff = this.filter(cb);
+        this.items = this.filter(cb);
     }
     filterUI(cb: Predicate<SceneUI>): SceneUI[] {
         return this.ui.filter(cb);
     }
     deepFilterUI(cb: Predicate<SceneUI>) {
-        this.ui.stuff = this.filterUI(cb);
+        this.ui = this.filterUI(cb);
     }
     filterMisc(cb: Predicate<Renderable>) {
         return this.misc.filter(cb);
     }
     deepFilterMisc(cb: Predicate<Renderable>) {
-        this.misc.stuff = this.filterMisc(cb);
+        this.misc = this.filterMisc(cb);
     }
     on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
         this.evMng.on(name, handle as EventHandle);
@@ -4054,12 +4056,12 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.stuff.length;
+        const len = this.items.length;
         for(let i = 0; i < len; i++) {
             for(let j = 0; j < len; j++) {
                 if(i == j) continue;
-                const a = this.items.stuff[i];
-                const b = this.items.stuff[j];
+                const a = this.items[i];
+                const b = this.items[j];
                 // if both a and b are using legacy
                 // collision detection, then run legacy
                 // instead of modern
@@ -4343,7 +4345,7 @@ class Scene {
     }
     #tagTest(ent: Entity, tagName: Tag | string): boolean {
         if(objIs(tagName, Tag)) {
-            return ent.tags.has(tagName);
+            return ArrayUtil.has(ent.tags, tagName);
         } else {
             return ent.tags.some((t) => t.test(tagName));
         }
@@ -4688,30 +4690,30 @@ class Scene {
         this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items: Renderable[]) {
-        this.misc.add(...items);
+        ArrayUtil.add(this.misc, ...items);
     }
     rmMisc(...items: Renderable[]) {
         this.rmMiscx(() => {}, ...items);
     }
     rmMiscx(removed: Callback<Renderable>, ...items: Renderable[]) {
-        this.misc.rmx((e, i, a) => {
+        ArrayUtil.rmx(this.misc, (e, i, a) => {
             this.__globalOnRemove(e, removed, i, a);
         }, ...items);
     }
     hasMisc(...items: Renderable[]) {
-        return this.misc.has(...items);
+        return ArrayUtil.has(this.misc, ...items);
     }
     postAdd(fn: Function) {
-        this.post.add(fn);
+        ArrayUtil.add(this.post, fn);
     }
     postRm(fn: Function) {
-        this.post.rm(fn);
+        ArrayUtil.rm(this.post, fn);
     }
     postHas(fn: Function) {
-        return this.post.has(fn);
+        return ArrayUtil.has(this.post, fn);
     }
     __sortByLayer() {
-        this.items.stuff.sort((a, b) => a.z - b.z);
+        this.items.sort((a, b) => a.z - b.z);
     }
     *loopLvls() {
         for(const lvl of this.lvlStore.items()) {
@@ -4933,21 +4935,21 @@ class Scene {
  * @since v0.0.0
  */
 class Level {
-    items: ItemBox<Entity>;
+    items: Entity[];
     constructor() {
-        this.items = new ItemBox();
+        this.items = [];
     }
     add(...items: Entity[]) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     rm(...items: Entity[]) {
-        this.items.rm(...items);
+        ArrayUtil.rm(this.items, ...items);
     }
     has(...items: Entity[]): boolean {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     idxOf(item: Entity): number {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     filter(cb: Callback<unknown>): Entity[] {
         return this.items.filter(cb);
@@ -5064,7 +5066,7 @@ class RaycastBase {
     }
     cast(onHit: (i: Entity, hit: number, dir: Vector) => void) {
         const dir = this.dir();
-        for(const i of this.scene.items.stuff) {
+        for(const i of this.scene.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
@@ -5117,9 +5119,9 @@ class DebugRay extends Raycast implements Renderable {
         super(opts);
         this.color = opts.color;
         this.life = opts.life ?? Infinity;
-        this.scene.misc.add(this);
+        ArrayUtil.add(this.scene.misc, this);
         if(Number.isFinite(this.life)) {
-            setTimeout(() => this.scene.misc.rm(this), this.life);
+            setTimeout(() => ArrayUtil.rm(this.scene.misc, (this)), this.life);
         }
     }
     update() {}
@@ -5926,7 +5928,7 @@ class Tag {
         }
     }
 }
-class TagList extends ItemBox<Tag> {}
+class TagList extends Array<Tag> {}
 class SavedState {
     atts: { any?: any };
     timestamp: string;
@@ -6145,7 +6147,7 @@ class SceneUI {
      */
     __assumeFlexHints(vec: Vector, child: number) {
         if(this.style.display == "flex" && child > 0) {
-            const siblings = this.child.stuff;
+            const siblings = this.child;
             if(this.style.flexDirection == "row") {
                 vec.x = this.x + siblings[0].x;
                 for(let i = 0; i < child; i++) {
@@ -6179,7 +6181,7 @@ class SceneUI {
                 }
             }
             const col = i % columns;
-            const children = this.child.stuff;
+            const children = this.child;
             let xOffset = 0;
             for(let column = 0; column < col; column++) {
                 let columnWidth = 0;
@@ -6299,22 +6301,22 @@ class SceneUI {
         });
     }
     addChild(child: SceneUI) {
-        this.child.add(child);
+        ArrayUtil.add(this.child, child);
     }
     addChilds(...childs: SceneUI[]) {
-        this.child.add(...childs);
+        ArrayUtil.add(this.child, ...childs);
     }
     rmChild(child: SceneUI) {
-        this.child.rm(child);
+        ArrayUtil.rm(this.child, child);
     }
     rmChilds(...childs: SceneUI[]) {
-        this.child.rm(...childs);
+        ArrayUtil.rm(this.child, ...childs);
     }
     hasChild(child: SceneUI): boolean {
-        return this.child.has(child);
+        return ArrayUtil.has(this.child, child);
     }
     hasChilds(...childs: SceneUI[]): boolean {
-        return this.child.has(...childs);
+        return ArrayUtil.has(this.child, ...childs);
     }
     pos() {
         return new Vector(this.x, this.y);
@@ -6349,7 +6351,7 @@ class SceneUI {
         return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
 }
-class ChildUI extends ItemBox<SceneUI> {}
+class ChildUI extends Array<SceneUI> {}
 interface ButtonUIMouseInteractionStyling {
     /**
      * Applied when there is no interactions from the mouse.
@@ -6658,18 +6660,18 @@ class UpgradeMenuUI<C extends CostMap> extends SceneUI {
 /**
  * Collection for `SceneUI` to manage showing and hiding UI collections.
  */
-class Screen extends ItemBox<SceneUI> {
+class Screen extends Array<SceneUI> {
     scene: Scene;
     constructor(scene: Scene, ...ui: SceneUI[]) {
         super();
         this.scene = scene;
-        this.add(...ui);
+        this.push(...ui);
     }
     show() {
-        this.scene.addUI(...this.stuff);
+        this.scene.addUI(...this);
     }
     hide() {
-        this.scene.rmUI(...this.stuff);
+        this.scene.rmUI(...this);
     }
 }
 

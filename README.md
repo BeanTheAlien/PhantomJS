@@ -358,6 +358,7 @@ npm install @beanthealien/phantomjs
 - Add `rm*x` methods to take an on removed. (QoL change)
 - Add `Clean` interface for on-removed callback.
 - `Temporary` interface for temporary changes (only implemented for `Scene` as of now).
+- Deprecate `ItemBox`; replaced with Array.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
