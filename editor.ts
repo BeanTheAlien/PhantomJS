@@ -35,7 +35,12 @@ function select(ent: Entity) {
     barLeft.innerHTML = out.join("<br>");
     for(const k of Object.keys(ent)) {
         const i = document.getElementById(k) as HTMLInputElement | undefined;
-        if(i) i.addEventListener("change", () => { console.log("value change:", ent[k]); ent[k] = i.value; console.log("=>", ent[k]); });
+        if(i) {
+            i.addEventListener("change", () => {
+                console.log("value change:", ent[k as keyof Entity]);
+                console.log("=>", i.value);
+            });
+        }
     }
 }
 function deselect() {
