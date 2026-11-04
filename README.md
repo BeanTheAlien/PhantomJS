@@ -360,6 +360,9 @@ npm install @beanthealien/phantomjs
 - `Temporary` interface for temporary changes (only implemented for `Scene` as of now).
 - Deprecate `ItemBox`; replaced with Array.
 - Add Perlin terrain generation handler. (QoL change)
+- Refactor `KeyInputs` to extend new `KeyBinder` class.
+- Add `GlobalInputs` const.
+- Overload `mulberry32` to have a generate-seed-automatically overload.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

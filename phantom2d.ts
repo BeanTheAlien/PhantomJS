@@ -2674,20 +2674,14 @@ class PlayableCharacter extends Character {
 type KeyBinds = Store<KeyCode, Function>;
 type KeyBindsCD = Store<KeyCode, PCExecCDPair>;
 type Binding = [KeyCode, Function] | [KeyCode, Function, number];
-class KeyInputs {
+class KeyBinder {
     kbinds: KeyBinds;
-    keys: Store<string, boolean>;
     bindCD: KeyBindsCD;
-    constructor(binds?: KeyBinds) {
+    constructor(binds: KeyBinds | undefined, keyDown: (e: KeyboardEvent) => void, keyUp: (e: KeyboardEvent) => void) {
         this.kbinds = binds ?? new Store();
-        this.keys = new Store();
         this.bindCD = new Store();
-        window.addEventListener("keydown", (e) => {
-            this.keys.set(e.code, true);
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys.set(e.code, false);
-        });
+        window.addEventListener("keydown", keyDown);
+        window.addEventListener("keyup", keyUp);
     }
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
@@ -2723,21 +2717,26 @@ class KeyInputs {
     bindCDOf(code: KeyCode): PCExecCDPair | undefined {
         return this.bindCD.get(code);
     }
+    exec(key: KeyCode) {
+        const e = this.kbinds.get(key);
+        const ce = this.bindCD.get(key);
+        if(e) {
+            e();
+        } else if(ce && ce[1].ready) {
+            ce[0]();
+            ce[1].consume();
+        }
+    }
+}
+class KeyInputs extends KeyBinder {
+    keys: Store<string, boolean>;
+    constructor(binds?: KeyBinds) {
+        super(binds, (e) => this.keys.set(e.code, true), (e) => this.keys.set(e.code, false));
+        this.keys = new Store();
+    }
     update() {
         for(const [k, v] of this.keys.items()) {
-            if(v) {
-                const _k = KeyCodeMapReverse[k] as KeyCode;
-                const exec = this.kbinds.get(_k);
-                const cdExec = this.bindCD.get(_k);
-                if(exec) {
-                    exec();
-                } else if(cdExec) {
-                    if(cdExec[1].ready) {
-                        cdExec[0]();
-                        cdExec[1].consume();
-                    }
-                }
-            }
+            if(v) this.exec(KeyCodeMapReverse[k] as KeyCode);
         }
     }
     isDown(key: string) {
@@ -2747,6 +2746,7 @@ class KeyInputs {
         return !this.isDown(key);
     }
 }
+const GlobalInputs = new KeyBinder(undefined, (e) => GlobalInputs.exec(e.code as KeyCode), () => {});
 interface AircraftOptions extends EntityOptions {
     scene: Scene;
     wing: number;
@@ -7392,7 +7392,10 @@ function easeSmoothStep(t: number) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
-function mulberry32(a: number) {
+function mulberry32(): () => number;
+function mulberry32(seed: number): () => number;
+function mulberry32(seed?: number) {
+    let a = seed ?? mulberrySeed();
     return function() {
       let t = a += 0x6D2B79F5;
       t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -7483,6 +7486,8 @@ export {
 
     Joint, Bone, Skeleton, SkEnt, clamp, clone, Color, PerlinTerrain1D,
 
-    SoundQueue, Screen, TextfulButtonUI, centerCIC
+    SoundQueue, Screen, TextfulButtonUI, centerCIC, GlobalInputs,
+
+    PerlinTerrain1DGenerator,
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };
