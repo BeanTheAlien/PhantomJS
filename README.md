@@ -330,18 +330,7 @@ npm install @beanthealien/phantomjs
 - Add `Color.lerp`.
 ## v2.3.3
 - Add `Screen` class.
-## v3.0.0 [IN DEVELOPMENT]
-- ROADMAP FOR 3.0:
-- DONE ~~Flexbox Scene UI (alignment, gap, etc)~~
-- Break (\<br\>) Scene UI (line break, shift next element down)
-- More Soft-body support (specifically with collisions and fast generation)
-- DONE ~~Add global `Color` support~~
-- DONE ~~Intrinsic text on buttons~~
-- DONE ~~Vector center to container (method, take entity / sceneui or container props)~~
-- Flex display justify-content and align-items (properties for scene ui css)
-- Deprecate `ItemBox` and `Store` (replace with array and record)
-- DONE ~~Temporary Scene change~~
-- CURRENT COMPLETED:
+## v3.0.0 [HEAVILY BREAKING]
 - Some CSS for Scene UI. (FIXED IN 2781b73dc79bbf86317e10fe3cb0bd23968df96c)
 - Intrinsic text (via `TextfulButtonUI`). (UNTESTED)
 - `Entity.use` returns used component. (QoL fix)
@@ -363,6 +352,10 @@ npm install @beanthealien/phantomjs
 - Refactor `KeyInputs` to extend new `KeyBinder` class.
 - Add `GlobalInputs` const.
 - Overload `mulberry32` to have a generate-seed-automatically overload.
+- Change `Screen` => `ScreenUI` (prevent overshadowing of `Screen` interface).
+- Add native skeletal entity (hard-body) collision support.
+- Add simulated break in `SceneUI` (via `br` method).
+- Add `StorageRoot.add` method. (QoL change)
 
 # Phantom HTML v0.0.1
 ### 0.0.1

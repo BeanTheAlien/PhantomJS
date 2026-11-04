@@ -3153,11 +3153,18 @@ class Skeleton implements Renderable, Boundaries {
 interface Clean {
     clean(): void;
 }
+interface SkEntCollidingStruct {
+    src: SkEnt[];
+    boss: Entity;
+    scene: Scene;
+}
 interface SkEntOptions extends EntityOptions {
     sk: Skeleton;
+    colStruct?: SkEntCollidingStruct;
 }
 class SkEnt extends Entity {
     sk: Skeleton;
+    colStruct?: SkEntCollidingStruct;
     constructor(opts: SkEntOptions) {
         super(opts);
         this.sk = opts.sk;
@@ -3171,6 +3178,67 @@ class SkEnt extends Entity {
         });
         this.upd = () => this.syncBounds();
         this.syncBounds();
+        this.colStruct = opts.colStruct;
+        this.collide = () => {
+            if(this.colStruct) {
+                const b = this.colStruct.boss;
+                const s = this.colStruct.src;
+                const scene = this.colStruct.scene;
+                const leftEdge = b.x - scene.width / 2 - this.width * 2;
+                for(let i = s.length - 1; i >= 0; i--) {
+                    const x = s[i];
+                    if(x && (!scene.has(x) || x.x + x.width < leftEdge)) {
+                        scene.rm(x);
+                        scene.rmMisc(x.sk);
+                        s.splice(i, 1);
+                    }
+                }
+                for(let i = 0; i < s.length; i++) {
+                    const a = s[i];
+                    if(!a || !scene.has(a)) continue;
+                    for(let j = i + 1; j < s.length; j++) {
+                        const q = s[j];
+                        if(!q || !scene.has(q)) continue;
+                        a.syncBounds();
+                        q.syncBounds();
+                        const moveBox = (box: SkEnt, x: number, y: number) => {
+                            box.sk.joints.forEach(j => {
+                                j.x += x;
+                                j.ox += x;
+                                j.y += y;
+                                j.oy += y;
+                            });
+                            box.syncBounds();
+                        }
+                        const overlapX = Math.min(a.x + a.width, q.x + q.width) - Math.max(a.x, q.x);
+                        const overlapY = Math.min(a.y + a.height, q.y + q.height) - Math.max(a.y, q.y);
+                        if(overlapX <= 0 || overlapY <= 0) continue;
+                        const horizontal = overlapX < overlapY;
+                        const normalX = horizontal ? (q.x + q.width / 2 < a.x + a.width / 2 ? -1 : 1) : 0;
+                        const normalY = horizontal ? 0 : (q.y + q.height / 2 < a.y + a.height / 2 ? -1 : 1);
+                        const overlap = horizontal ? overlapX : overlapY;
+                        moveBox(a, -normalX * overlap / 2, -normalY * overlap / 2);
+                        moveBox(q, normalX * overlap / 2, normalY * overlap / 2);
+
+                        const averageVelocity = (box: SkEnt, axis: "x" | "y") =>
+                            box.sk.joints.reduce((sum, joint) => sum + joint[axis] - joint[axis == "x" ? "ox" : "oy"], 0) / box.sk.joints.length;
+                        const relativeVelocity = (averageVelocity(q, "x") - averageVelocity(a, "x")) * normalX
+                            + (averageVelocity(q, "y") - averageVelocity(a, "y")) * normalY;
+                        if(relativeVelocity < 0) {
+                            const impulse = -(1.1 * relativeVelocity) / 2;
+                            a.sk.joints.forEach(j => {
+                                j.ox += impulse * normalX;
+                                j.oy += impulse * normalY;
+                            });
+                            q.sk.joints.forEach(j => {
+                                j.ox -= impulse * normalX;
+                                j.oy -= impulse * normalY;
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
     syncBounds() {
         const xs = this.sk.joints.map(j => j.x);
@@ -5265,8 +5333,7 @@ class StorageRoot {
     get(k: string, def: string): string | null;
     get(k: string, def?: string) {
         const r = this.storage.getItem(k);
-        if(def) return r ?? def;
-        return r;
+        return def ? (r ?? def) : r;
     }
     set(k: string, v: any) {
         this.storage.setItem(k, Util.strOf(v));
@@ -5293,6 +5360,14 @@ class StorageRoot {
     }
     clear() {
         this.storage.clear();
+    }
+    /**
+     * Creates a key-value pair, when there is no key-value pair there.
+     * @param key The key to set.
+     * @param value The value to use.
+     */
+    add(key: string, value: any) {
+        if(!this.has(key)) this.set(key, value);
     }
 }
 const Local = new StorageRoot(localStorage);
@@ -6350,6 +6425,20 @@ class SceneUI {
     lerpHeight(scene: Scene, to: number, mode?: LerpDeviceLerpMode, rate?: number) {
         return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
+    /**
+     * Applies a simulated `HTMLBreakStatement`.
+     * 
+     * It shifts each element at and after the index by the specified size on the y-axis.
+     * @param index The index to start at.
+     * @param size The size of the break.
+     */
+    br(index: number, size: number) {
+        for(let i = index; i < this.child.length; i++) {
+            // shift everything down
+            // (simulate break statement)
+            this.child[i].y += size;
+        }
+    }
 }
 class ChildUI extends Array<SceneUI> {}
 interface ButtonUIMouseInteractionStyling {
@@ -6660,7 +6749,7 @@ class UpgradeMenuUI<C extends CostMap> extends SceneUI {
 /**
  * Collection for `SceneUI` to manage showing and hiding UI collections.
  */
-class Screen extends Array<SceneUI> {
+class ScreenUI extends Array<SceneUI> {
     scene: Scene;
     constructor(scene: Scene, ...ui: SceneUI[]) {
         super();
@@ -7486,7 +7575,7 @@ export {
 
     Joint, Bone, Skeleton, SkEnt, clamp, clone, Color, PerlinTerrain1D,
 
-    SoundQueue, Screen, TextfulButtonUI, centerCIC, GlobalInputs,
+    SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
 
     PerlinTerrain1DGenerator,
 };
