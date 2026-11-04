@@ -6003,7 +6003,14 @@ class Tag {
         }
     }
 }
-class TagList extends Array<Tag> {}
+class TagList extends Array<Tag> {
+    has(tag: string | Tag) {
+        return this.some(x => x.test(tag as Tag));
+    }
+    add(tag: Tag) {
+        this.push(tag);
+    }
+}
 class SavedState {
     atts: { any?: any };
     timestamp: string;
