@@ -6972,6 +6972,13 @@ interface Terrain1DOptions {
      */
     fy: number;
 }
+interface Terrain1DGeneratorOptions extends Terrain1DOptions {
+    y?: (height: number) => number;
+    width: number;
+    color: GFill;
+    scene: Scene;
+    boss: Entity;
+}
 class Perlin {
     perm: Uint8Array;
     constructor() {
@@ -7023,6 +7030,9 @@ class Perlin {
     static terrain1D(opt: Terrain1DOptions) {
         return new PerlinTerrain1D(opt);
     }
+    static terGen1D(opt: Terrain1DGeneratorOptions) {
+        return new PerlinTerrain1DGenerator(opt);
+    }
 }
 class PerlinTerrain1D {
     perlin: Perlin;
@@ -7067,6 +7077,57 @@ class PerlinTerrain1D {
     next(x: number) {
         const n = this.perlin.noise(x * this.frq, this.fy);
         return this.bh + (((n + 1) / 2) * this.amp);
+    }
+}
+class PerlinTerrain1DGenerator extends PerlinTerrain1D {
+    scene: Scene;
+    y: (h: number) => number;
+    width: number;
+    color: GFill;
+    gen: FloorObject[];
+    stillGen: boolean;
+    boss: Entity;
+    nx: number;
+    constructor(opt: Terrain1DGeneratorOptions) {
+        super(opt);
+        this.scene = opt.scene;
+        this.y = opt.y ?? ((h) => this.scene.height - h);
+        this.width = opt.width;
+        this.color = opt.color;
+        this.gen = [];
+        this.stillGen = true;
+        this.boss = opt.boss;
+        this.nx = -this.scene.width / 2;
+    }
+    on() {
+        this.stillGen = true;
+    }
+    off() {
+        this.stillGen = false;
+    }
+    add(x: number, atStart = false) {
+        if(!this.stillGen) return;
+        const h = this.next(x);
+        const f = new FloorObject({ x, y: this.y(h), width: this.width, height: h, color: this.color });
+        if(atStart) this.gen.unshift(f);
+        else this.gen.push(f);
+        this.scene.add(f);
+    }
+    update() {
+        if(!this.stillGen) return;
+        const le = this.boss.x - this.scene.width / 2;
+        const re = this.boss.x + this.scene.width / 2;
+        while(this.nx <= re) {
+            this.add(this.nx);
+            this.nx += this.width;
+        }
+        while(this.gen.length > 0 && this.gen[0].x > le) {
+            this.add(this.gen[0].x - this.width, true);
+        }
+        while(this.gen.length > 0 && this.gen[0].x + this.gen[0].width < le - this.width) {
+            const oldFloor = this.gen.shift();
+            if(oldFloor) this.scene.rm(oldFloor);
+        }
     }
 }
 
