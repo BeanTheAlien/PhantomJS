@@ -357,8 +357,10 @@ npm install @beanthealien/phantomjs
 - Add simulated break in `SceneUI` (via `br` method).
 - Add `StorageRoot.add` method. (QoL change)
 ## v3.0.1
-- Add `TagList.has`
-- Add `TagList.add`
+- Add `TagList.has`.
+- Add `TagList.add`.
+## v3.1.0
+- Fix `Color` class (specifically `Color.fromHex`).
 
 # Phantom HTML v0.0.1
 ### 0.0.1
