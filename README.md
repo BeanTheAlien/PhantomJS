@@ -361,6 +361,9 @@ npm install @beanthealien/phantomjs
 - Add `TagList.add`.
 ## v3.1.0
 - Fix `Color` class (specifically `Color.fromHex`).
+## v3.1.1
+- New `Color` class additions.
+- `circInt` function.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

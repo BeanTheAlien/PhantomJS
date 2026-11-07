@@ -1536,6 +1536,7 @@ interface Boundaries {
     bound(boundary: Bound): void;
     unbound(boundary: Bound): void;
 }
+type ColorChannel = "r" | "g" | "b" | "a";
 class Color {
     static invis = "rgba(0, 0, 0, 0)" as const;
     r: number;
@@ -1555,6 +1556,15 @@ class Color {
         return [this.r, this.g, this.b, this.a]
             .map(channel => channel.toString(16).padStart(2, "0"))
             .join("");
+    }
+    __rgb(pre: string, then: string) {
+        return `rgb${pre}(${this.r}, ${this.g}, ${this.b}${then})`;
+    }
+    toRGB() {
+        return this.__rgb("", "");
+    }
+    toRGBA() {
+        return this.__rgb("a", `, ${this.a}`);
     }
     static from(value: Color | string) {
         if(objIs(value, Color)) {
@@ -1584,21 +1594,46 @@ class Color {
             parseInt(rgba.slice(6, 8), 16)
         );
     }
-    static lerp(a: Color | string, b: Color | string, time: number) {
-        const cl = (channel: keyof Color, c1: Color, c2: Color) => {
+    static __baseFromRGB(rgb: string, t3 = false) {
+        if(!rgb.startsWith("rgb")) throw new TypeError(`Non-rgb string '${rgb}'`);
+        const chunk = rgb.slice(rgb.indexOf("(") + 1, rgb.indexOf(")")).split(", ").map(s => s.trim());
+        const b = new Color(Number(chunk[0]), Number(chunk[1]), Number(chunk[2]));
+        if(t3) return b.with("a", Number(chunk[3]));
+        return b;
+    }
+    static fromRGB(rgbString: string) {
+        return Color.__baseFromRGB(rgbString);
+    }
+    static fromRGBA(rgbaString: string) {
+        return Color.__baseFromRGB(rgbaString, true);
+    }
+    static lerp(a: Color | string, b: Color | string, time: number): Color;
+    static lerp(a: Color | string, b: Color | string, time: number, roundChannels: boolean): Color;
+    static lerp(a: Color | string, b: Color | string, time: number, rc?: boolean) {
+        const cl = (channel: ColorChannel, c1: Color, c2: Color) => {
             // C1 + (C2 - C1) * t
-            return (c1[channel] as number) + ((c2[channel] as number) - (c1[channel] as number)) * time;
+            return c1[channel] + (c2[channel] - c1[channel]) * time;
         };
         // convert to colors
         const c1 = Color.from(a);
         const c2 = Color.from(b);
+        const r = (c: number) => (rc ?? false) ? Math.round(c) : c;
         // run on each channel (r, g, b, a)
         return new Color(
-            cl("r", c1, c2),
-            cl("g", c1, c2),
-            cl("b", c1, c2),
-            cl("a", c1, c2)
+            r(cl("r", c1, c2)),
+            r(cl("g", c1, c2)),
+            r(cl("b", c1, c2)),
+            r(cl("a", c1, c2))
         );
+    }
+    with(channel: ColorChannel, newChannelValue: number) {
+        const n = (c: ColorChannel) => channel == c ? newChannelValue : this[c];
+        return new Color(n("r"), n("g"), n("b"), n("a"));
+    }
+    withAll(...channelPairs: [ColorChannel, number][]) {
+        let c: Color = this;
+        channelPairs.forEach(p => c = c.with(p[0], p[1]));
+        return c;
     }
 }
 /**
@@ -7534,6 +7569,45 @@ export function tempFactory<T, K extends keyof T>(parent: T, key: K) {
     };
     return tmp;
 }
+interface CircularInt {
+    val: number;
+    min: number;
+    max: number;
+    get(): number;
+    inc(count: number): CircularInt;
+    useMin(newMin: number): CircularInt;
+    useMax(newMax: number): CircularInt;
+    use(newMin: number, newMax: number): CircularInt;
+}
+/**
+ * Creates and returns an implementation of the `CircularInt` interface,
+ * which is used to define circular integer values (such that the value
+ * exceeding max would make it min).
+ * @param min The minimum boundry.
+ * @param max The maximum boundry.
+ * @param v0 The (optional) inital value to be applied.
+ * @returns A circular integer implementation.
+ */
+function circInt(min: number, max: number, v0?: number) {
+    const ci: CircularInt = {
+        val: v0 ?? min,
+        min,
+        max,
+        get: () => ci.val,
+        inc: (c) => {
+            ci.val = min <= ci.val + c && ci.val + c <= ci.max ? ci.val + c : ci.max - (ci.val + c);
+            return ci;
+        },
+        use: (m0, m1) => {
+            ci.min = m0;
+            ci.max = m1;
+            return ci;
+        },
+        useMin: (m) => ci.use(m, ci.max),
+        useMax: (m) => ci.use(ci.min, m)
+    };
+    return ci;
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -7576,6 +7650,6 @@ export {
 
     SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
 
-    PerlinTerrain1DGenerator,
+    PerlinTerrain1DGenerator, circInt,
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };
