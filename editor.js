@@ -33,10 +33,14 @@ function select(ent) {
         out.push(input(k, v));
     }
     barLeft.innerHTML = out.join("<br>");
-    for (const [k] of Object.entries(ent)) {
+    for (const k of Object.keys(ent)) {
         const i = document.getElementById(k);
-        if (i)
-            i.addEventListener("change", () => { console.log("value change:", ent[k]); ent[k] = i.value; console.log("=>", ent[k]); });
+        if (i) {
+            i.addEventListener("change", () => {
+                console.log("value change:", ent[k]);
+                console.log("=>", i.value);
+            });
+        }
     }
 }
 function deselect() {
