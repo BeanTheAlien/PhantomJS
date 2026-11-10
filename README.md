@@ -364,6 +364,8 @@ npm install @beanthealien/phantomjs
 ## v3.1.1
 - New `Color` class additions.
 - `circInt` function.
+## v3.1.2
+- `Vector.random` method.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

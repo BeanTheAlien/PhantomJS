@@ -2861,6 +2861,15 @@ interface Container {
     height: number;
 }
 interface PositionedContainer extends Container, Positioned {}
+interface RangeX {
+    x0: number;
+    x1: number;
+}
+interface RangeY {
+    y0: number;
+    y1: number;
+}
+interface Range extends RangeX, RangeY {}
 /**
  * A 2D vector.
  * 
@@ -2975,6 +2984,18 @@ class Vector {
     centerIn(container: Container) {
         this.x = this.x - (container.width / 2);
         this.y = this.y - (container.height / 2);
+    }
+    static random(range: Range): Vector;
+    static random(range: Range, parent: Entity, ...noCollide: Entity[]): Vector;
+    static random(rg: Range, src?: Entity, ...nc: Entity[]) {
+        const v = new Vector();
+        // generate random
+        // while colliding
+        do {
+            v.x = random(rg.x0, rg.x1);
+            v.y = random(rg.y0, rg.y1);
+        } while(src && nc.some(x => isCol(src, x)));
+        return v;
     }
 }
 /**
