@@ -366,6 +366,8 @@ npm install @beanthealien/phantomjs
 - `circInt` function.
 ## v3.1.2
 - `Vector.random` method.
+## v3.2.0
+- `Scene.md` markdown text rendering.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

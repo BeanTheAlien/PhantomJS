@@ -5043,6 +5043,133 @@ class Scene {
         if(newValue) tmp.take(newValue);
         return tmp;
     }
+    /**
+     * Renders Markdown (MD) text.
+     * 
+     * Uses Regular Expression (RegExp) matching to extract groups of bold and italic.
+     * 
+     * Support headers (`# header`, `## header 2`), bold (`**bold**`) and italic (`*italic*`).
+     * @param text The text to draw.
+     * @param startX The starting x.
+     * @param startY The starting y.
+     * @param maxWidth The maximum displayable width.
+     * @param lineSpacing The spacing between each newline.
+     */
+    md(text: string, startX: number, startY: number, maxWidth?: number, lineSpacing = 1.4) {
+        this.ctx.save();
+        const lines = text.split("\n");
+        let cy = startY;
+        // Default configuration base
+        const bFS = 16;
+        const bFF = "Arial, sans-serif";
+        lines.forEach(line => {
+            // 1. Detect Block-Level Elements (Headers)
+            let isHeader1 = false;
+            let isHeader2 = false;
+            let cleanLine = line;
+
+            if(line.startsWith("# ")) {
+                isHeader1 = true;
+                cleanLine = line.substring(2);
+            } else if(line.startsWith("## ")) {
+                isHeader2 = true;
+                cleanLine = line.substring(3);
+            }
+            // Set contextual typography traits per block
+            let csize = bFS;
+            let isBoldBlock = false;
+            if(isHeader1) {
+                csize = bFS * 2; // 32px
+                isBoldBlock = true;
+            } else if(isHeader2) {
+                csize = bFS * 1.5; // 24px
+                isBoldBlock = true;
+            }
+            this.ctx.fillStyle = "#000000"; // Default text color
+            // 2. Tokenize the line for inline text elements (Bold / Italic)
+            // Tokenizer regex splits by ** or * while capturing the delimiters
+            const tokens = cleanLine.split(/(\*\*|\*)/g);
+            let activeBold = isBoldBlock;
+            let activeItalic = false;
+            interface WF {
+                text: string;
+                bold: boolean;
+                italic: boolean;
+                fontSize: number;
+            }
+            // Structure formatting chunks for line-wrapping math
+            let wf: WF[] = [];
+
+            for(let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if(token == "**") {
+                    if(!isBoldBlock) activeBold = !activeBold; // Toggle unless overridden by header
+                } else if(token == "*") {
+                    activeItalic = !activeItalic;
+                } else if(token.length > 0) {
+                    // Break text segment down into individual words to manage wrapping boundary limits
+                    const words = token.split(/(\s+)/);
+                    words.forEach(word => {
+                        if(word.length > 0) {
+                            wf.push({
+                                text: word,
+                                bold: activeBold,
+                                italic: activeItalic,
+                                fontSize: csize
+                            });
+                        }
+                    });
+                }
+            }
+            // 3. Measure & Wrap Tokens into Screen-Fitting Lines
+            let lineBuffer: (WF & { width: number })[] = [];
+            let clw = 0;
+            let mlh = csize;
+            const styleMod = (wf: WF, fontFamily: string) => {
+                this.ctx.font = `${wf.bold && wf.italic ? "bold italic " : wf.bold ? "bold " : wf.italic ? "italic " : ""}${wf.fontSize}px ${fontFamily}`;
+            }
+            const renderRow = (ctx: CanvasRenderingContext2D, lineItems: typeof lineBuffer, startX: number, y: number, fontFamily: string) => {
+                let currentX = startX;
+
+                lineItems.forEach(item => {
+                    styleMod(item, fontFamily);
+                    ctx.textBaseline = "top";
+                    ctx.fillText(item.text, currentX, y);
+                    currentX += item.width; // Advance cursor position horizontally
+                });
+            }
+            wf.forEach(item => {
+                // Apply transient state to safely tap canvas text-metrics measurements
+                styleMod(item, bFF);
+                const metrics = this.ctx.measureText(item.text);
+                // Check if word forces wrap over available layout boundary width
+                if(clw + metrics.width > (maxWidth ?? Infinity) && clw > 0) {
+                    // Flush wrapped block line down onto context surface
+                    renderRow(this.ctx, lineBuffer, startX, cy, bFF);
+                    cy += mlh * lineSpacing;
+                    // Clear state contexts tracking current line composition
+                    lineBuffer = [];
+                    clw = 0;
+                    mlh = item.fontSize;
+                }
+                lineBuffer.push({ ...item, width: metrics.width });
+                clw += metrics.width;
+                if(item.fontSize > mlh) {
+                    mlh = item.fontSize;
+                }
+            });
+
+            // Flush remaining trailing segments within line block execution lifecycle
+            if(lineBuffer.length > 0) {
+                renderRow(this.ctx, lineBuffer, startX, cy, bFF);
+                cy += mlh * lineSpacing;
+            } else if(line.length == 0) {
+                // Fallback rule creating explicit vertical empty space for carriage returns
+                cy += bFS * lineSpacing;
+            }
+        });
+        this.ctx.restore();
+    }
 }
 /**
  * A collection of items.
