@@ -8,6 +8,17 @@ Avalible with `npm`!
 ```
 npm install @beanthealien/phantomjs
 ```
+## Copy-install (command) (NOT AVALIABLE YET)
+You can use the automatic copy-install command for PhantomJS v3.3.0:
+```cmd
+:: installs TypeScript file
+npx @beanthealien/phantomjs cp-cmd
+```
+```sh
+# installs TypeScript file
+npx @beanthealien/phantomjs cp-sh
+```
+## Copy-install (manual)
 You can also copy the index file into your working directory:
 ```cmd
 :: replace with phantom2d.js for compiled file
@@ -16,6 +27,20 @@ copy ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
 ```sh
 # replace with phantom2d.js for compiled file
 cp ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
+```
+## Copy-install & Compile
+To copy-install and compile the index file:
+```cmd
+:: replace with phantom2d.js for compiled file
+copy ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
+:: if TypeScript is globally installed, use tsc
+npx typescript "phantom2d.ts"
+```
+```sh
+# replace with phantom2d.js for compiled file
+cp ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
+# if TypeScript is globally installed, use tsc
+npx typescript "phantom2d.ts"
 ```
 
 # Phantom 2D v1.0.2 LEGACY
