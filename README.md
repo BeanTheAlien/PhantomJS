@@ -10,10 +10,11 @@ npm install @beanthealien/phantomjs
 ```
 You can also copy the index file into your working directory:
 ```cmd
-# replace with phantom2d.js for compiled file
+:: replace with phantom2d.js for compiled file
 copy ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
 ```
-```bash
+```sh
+# replace with phantom2d.js for compiled file
 cp ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
 ```
 
