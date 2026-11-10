@@ -8,6 +8,14 @@ Avalible with `npm`!
 ```
 npm install @beanthealien/phantomjs
 ```
+You can also copy the index file into your working directory:
+```cmd
+# replace with phantom2d.js for compiled file
+copy ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
+```
+```bash
+cp ".\node_modules\@beanthealien\phantomjs\phantom2d.ts" ".\phantom2d.ts"
+```
 
 # Phantom 2D v1.0.2 LEGACY
 ### 1.0.1
