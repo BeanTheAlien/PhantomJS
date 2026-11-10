@@ -208,6 +208,7 @@ interface Equals<T = unknown> {
 interface CompareTo<T = unknown> {
     compareTo: (obj: T) => number;
 }
+export type RBool<T extends boolean, A, B> = T extends true ? A : B;
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0

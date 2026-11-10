@@ -370,6 +370,8 @@ npm install @beanthealien/phantomjs
 - `Scene.md` markdown text rendering.
 ## v3.2.1
 - Add `StorageRoot.keep`.
+## v3.2.1.1
+- Add `RBool` type.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
