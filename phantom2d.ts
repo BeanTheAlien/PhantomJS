@@ -5505,7 +5505,7 @@ class StorageRoot {
         this.storage = obj;
     }
     get(k: string): string | null;
-    get(k: string, def: string): string | null;
+    get(k: string, def: string): string;
     get(k: string, def?: string) {
         const r = this.storage.getItem(k);
         return def ? (r ?? def) : r;
@@ -5543,6 +5543,36 @@ class StorageRoot {
      */
     add(key: string, value: any) {
         if(!this.has(key)) this.set(key, value);
+    }
+    /**
+     * Creates a core pair with the key. (specify type via type annotation)
+     * @param key The key to be used.
+     */
+    keep<T>(key: string): CorePair<T>;
+    /**
+     * Creates a core pair.
+     * 
+     * Type can be specified by payload stub.
+     * @param key The key to be used.
+     * @param Tpayload A payload to specify the type of core pair, for users who implement PhantomJS in JavaScript.
+     */
+    keep<T>(key: string, Tpayload: T): CorePair<T>;
+    keep<T>(key: string, _?: T) {
+        return new CorePair<T>(this, key);
+    }
+}
+class CorePair<T> {
+    scope: StorageRoot;
+    key: string;
+    constructor(scope: StorageRoot, key: string) {
+        this.scope = scope;
+        this.key = key;
+    }
+    get() {
+        return JSON.parse(this.scope.get(this.key) as string) as T;
+    }
+    set(value: T) {
+        this.scope.set(this.key, value);
     }
 }
 const Local = new StorageRoot(localStorage);
