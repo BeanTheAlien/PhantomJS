@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
 const [,, cmd, ...args] = process.argv;
 const commandsDir = path.join(__dirname, "cmds");
