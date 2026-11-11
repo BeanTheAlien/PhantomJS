@@ -1330,6 +1330,58 @@ class EnhancedPhysicsComp extends Comp {
         this.ax = 0;
         this.ay = 0;
     }
+    /**
+     * Applies a smart "push" to this physics component.
+     * 
+     * When the value of `this.vx + forceX` has a sign of 1, applies the force. (same for y channel)
+     * 
+     * When the value of `this.vx` has a sign of 1, makes the new velocity 0. (same for y channel)
+     * 
+     * Otherwise, when the value of `this.vx` has a sign of -1, applies the *backwards* force. (same for y channel)
+     * @param forceX The amount of force to be applied on the x axis.
+     * @param forceY The amount of force to be applied on the y axis.
+     */
+    push(forceX: number, forceY: number) {
+        const app = (channel: "x" | "y", force: number) => {
+            const v = this[`v${channel}`];
+            const af = this[`addForce${channel.toUpperCase() as "X" | "Y"}`];
+            if(Math.sign(v + force) == 1) {
+                af(force);
+            } else if(Math.sign(v) == 1) {
+                this[`v${channel}`] = 0;
+            } else if(Math.sign(v) == -1) {
+                af(-force);
+            }
+        }
+        app("x", forceX);
+        app("y", forceY);
+    }
+    /**
+     * Applies a smart "push" to this physics component.
+     * 
+     * When the value of `this.vx + forceX` has a sign of 1, applies the force.
+     * 
+     * When the value of `this.vx` has a sign of 1, makes the new velocity 0.
+     * 
+     * Otherwise, when the value of `this.vx` has a sign of -1, applies the *backwards* force.
+     * @param force The amount of force to be applied on the x axis.
+     */
+    pushX(force: number) {
+        this.push(force, 0);
+    }
+    /**
+     * Applies a smart "push" to this physics component.
+     * 
+     * When the value of `this.vy + forceY` has a sign of 1, applies the force.
+     * 
+     * When the value of `this.vy` has a sign of 1, makes the new velocity 0.
+     * 
+     * Otherwise, when the value of `this.vy` has a sign of -1, applies the *backwards* force.
+     * @param force The amount of force to be applied on the x axis.
+     */
+    pushY(force: number) {
+        this.push(0, force);
+    }
 }
 class GravityComp extends Comp {
     strength: number;

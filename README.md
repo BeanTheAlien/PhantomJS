@@ -406,6 +406,8 @@ npx typescript "phantom2d.ts"
 - Add `StorageRoot.keep`.
 ## v3.2.1.1
 - Add `RBool` type.
+## v3.2.2
+- Add smart push to `EnhancedPhysicsComp`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
