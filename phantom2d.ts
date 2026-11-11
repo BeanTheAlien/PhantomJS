@@ -3582,6 +3582,101 @@ class Sound {
     loop(count: number) {
         return new SoundLoop(this, count);
     }
+    static boost(opts: SoundOptions) {
+        return new BoostSound(opts);
+    }
+    static spacial(opts: SoundOptions, atc: Entity, rec: Entity) {
+        return new SpacialSound(new Sound(opts), atc, rec);
+    }
+}
+/**
+ * Boosted (gain-enhanced) sound.
+ * 
+ * Connects directly into the volume controls with a `GainNode`.
+ */
+class BoostSound extends Sound {
+    gain: GainNode;
+    ctx: AudioContext;
+    track: MediaElementAudioSourceNode;
+    constructor(opts: SoundOptions) {
+        super(opts);
+        this.ctx = new AudioContext();
+        this.gain = this.ctx.createGain();
+        this.track = this.ctx.createMediaElementSource(this.aud);
+        this.track.connect(this.gain);
+        this.gain.connect(this.ctx.destination);
+    }
+    get vol() {
+        return this.gain.gain.value;
+    }
+    set vol(newVolume: number) {
+        this.gain.gain.value = newVolume;
+    }
+    play() {
+        this.ctx.resume();
+    }
+    stop() {
+        this.ctx.suspend();
+    }
+    pause() {
+        this.stop();
+    }
+}
+/**
+ * An implementation of spacialized sound.
+ * 
+ * When the update is called, the sound's volume is changed, such that it is equal
+ * to the distance between the attached entity and the observing (receiver) entity.
+ * 
+ * The sound's volume is clamped to 0-1.
+ */
+class SpacialSound implements Renderable {
+    src: Sound;
+    atc: Entity;
+    rec: Entity;
+    /**
+     * Constructs a spacialized sound.
+     * @param src The source sound.
+     * @param attached The entity that this is attached to.
+     * @param receiver The entity that will be listening for the sound.
+     */
+    constructor(src: Sound, attached: Entity, receiver: Entity) {
+        this.src = src;
+        this.atc = attached;
+        this.rec = receiver;
+    }
+    update() {
+        this.src.vol = clamp(Vector.dist(this.atc.getPos(), this.rec.getPos()), 0, 1);
+    }
+    render() {}
+}
+/**
+ * An extention of spacialized sound.
+ * 
+ * When the update is called, the sound's volume is changed, such that it is equal
+ * to the distance between the attached entity and the observing (receiver) entity.
+ * 
+ * The sound's volume is left unclamped.
+ */
+class BoostSpacialSound implements Renderable {
+    src: BoostSound;
+    atc: Entity;
+    rec: Entity;
+    /**
+     * Constructs a spacialized sound.
+     * @param src The source sound.
+     * @param attached The entity that this is attached to.
+     * @param receiver The entity that will be listening for the sound.
+     */
+    constructor(src: BoostSound, attached: Entity, receiver: Entity) {
+        this.src = src;
+        this.atc = attached;
+        this.rec = receiver;
+    }
+    update() {
+        this.src.vol = Vector.dist(this.atc.getPos(), this.rec.getPos());
+    }
+    render() {}
 }
 class SoundLoop {
     count: number;
@@ -7881,6 +7976,6 @@ export {
 
     SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
 
-    PerlinTerrain1DGenerator, circInt,
+    PerlinTerrain1DGenerator, circInt, BoostSound, SpacialSound, BoostSpacialSound
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };

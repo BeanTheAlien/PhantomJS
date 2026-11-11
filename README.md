@@ -8,7 +8,7 @@ Avalible with `npm`!
 ```
 npm install @beanthealien/phantomjs
 ```
-## Copy-install (command) (NOT AVALIABLE YET)
+## Copy-install (command) (NEWLY AVAILABLE)
 You can use the automatic copy-install command for PhantomJS v3.3.0:
 ```cmd
 :: installs TypeScript file
@@ -408,6 +408,8 @@ npx typescript "phantom2d.ts"
 - Add `RBool` type.
 ## v3.2.2
 - Add smart push to `EnhancedPhysicsComp`.
+## v3.3.0
+- New sound classes: `BoostSound`, `SpatialSound`, `BoostSpatialSound`.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
