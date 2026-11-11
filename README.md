@@ -410,6 +410,10 @@ npx typescript "phantom2d.ts"
 - Add smart push to `EnhancedPhysicsComp`.
 ## v3.3.0
 - New sound classes: `BoostSound`, `SpatialSound`, `BoostSpatialSound`.
+## v3.3.1
+- `normal` function.
+- `normUnb` function.
+- Add normal unbounded properties to spatial sound.
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -3585,8 +3585,8 @@ class Sound {
     static boost(opts: SoundOptions) {
         return new BoostSound(opts);
     }
-    static spacial(opts: SoundOptions, atc: Entity, rec: Entity) {
-        return new SpacialSound(new Sound(opts), atc, rec);
+    static spatial(opts: SoundOptions, atc: Entity, rec: Entity) {
+        return new SpatialSound(new Sound(opts), atc, rec);
     }
 }
 /**
@@ -3623,47 +3623,53 @@ class BoostSound extends Sound {
     }
 }
 /**
- * An implementation of spacialized sound.
+ * An implementation of spatialized sound.
  * 
  * When the update is called, the sound's volume is changed, such that it is equal
  * to the distance between the attached entity and the observing (receiver) entity.
  * 
  * The sound's volume is clamped to 0-1.
  */
-class SpacialSound implements Renderable {
+class SpatialSound implements Renderable {
     src: Sound;
     atc: Entity;
     rec: Entity;
+    method: UnboundedNormalCalcMethod;
+    scale?: number;
     /**
-     * Constructs a spacialized sound.
+     * Constructs a spatialized sound.
      * @param src The source sound.
      * @param attached The entity that this is attached to.
      * @param receiver The entity that will be listening for the sound.
+     * @param method The method to use for calculating unbounded normal. (default "tanh")
+     * @param scale The scale to be passed into the calculation for unbounded normal. (default undefined)
      */
-    constructor(src: Sound, attached: Entity, receiver: Entity) {
+    constructor(src: Sound, attached: Entity, receiver: Entity, method?: UnboundedNormalCalcMethod, scale?: number) {
         this.src = src;
         this.atc = attached;
         this.rec = receiver;
+        this.method = method ?? "tanh";
+        this.scale = scale;
     }
     update() {
-        this.src.vol = clamp(Vector.dist(this.atc.getPos(), this.rec.getPos()), 0, 1);
+        this.src.vol = clamp(normUnb(Vector.dist(this.atc.getPos(), this.rec.getPos()), this.method, this.scale), 0, 1);
     }
     render() {}
 }
 /**
- * An extention of spacialized sound.
+ * An extention of spatialized sound.
  * 
  * When the update is called, the sound's volume is changed, such that it is equal
  * to the distance between the attached entity and the observing (receiver) entity.
  * 
  * The sound's volume is left unclamped.
  */
-class BoostSpacialSound implements Renderable {
+class BoostSpatialSound implements Renderable {
     src: BoostSound;
     atc: Entity;
     rec: Entity;
     /**
-     * Constructs a spacialized sound.
+     * Constructs a spatialized sound.
      * @param src The source sound.
      * @param attached The entity that this is attached to.
      * @param receiver The entity that will be listening for the sound.
@@ -7934,6 +7940,41 @@ function circInt(min: number, max: number, v0?: number) {
     };
     return ci;
 }
+/**
+ * Returns the normalized value (a value from 0-1).
+ * @param value The input value.
+ * @param min The minimum boundry.
+ * @param max The maximum boundry.
+ * @returns The normalized value.
+ */
+export function normal(value: number, min: number, max: number) {
+    return (value - min) / (max - min);
+}
+/**
+ * Methods for calculating unbounded normal.
+ * 
+ * A value of "tanh" performs `Math.tanh(value / scale)`.
+ * 
+ * A value of "inv" performs `value / (value + scale)`.
+ * 
+ * A value of "exp" performs `Math.exp(-value / scale)`.
+ */
+type UnboundedNormalCalcMethod = "tanh" | "inv" | "exp";
+/**
+ * Unbounded normal clamping.
+ * @param value The input value.
+ * @param method The method to be used ("tanh" for Hyperbolic Tangent,
+ * "inv" for Inverse and "exp" for Exponential Decay).
+ * @param scale The scaling factor (S) to be applied.
+ * @returns The normalized value.
+ */
+export function normUnb(value: number, method: UnboundedNormalCalcMethod, scale = 1000) {
+    return {
+        tanh: () => Math.tanh(value / scale),
+        inv: () => value / (value + scale),
+        exp: () => Math.exp(-value / scale)
+    }[method]();
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -7976,6 +8017,6 @@ export {
 
     SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
 
-    PerlinTerrain1DGenerator, circInt, BoostSound, SpacialSound, BoostSpacialSound
+    PerlinTerrain1DGenerator, circInt, BoostSound, SpatialSound, BoostSpatialSound
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };
