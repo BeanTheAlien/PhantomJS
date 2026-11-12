@@ -414,6 +414,10 @@ npx typescript "phantom2d.ts"
 - `normal` function.
 - `normUnb` function.
 - Add normal unbounded properties to spatial sound.
+## v3.3.2
+- Add `ScreenShake`.
+- Add support for `ScreenShake` in canvas.
+- TODO: make local scrnshk
 
 # Phantom HTML v0.0.1
 ### 0.0.1

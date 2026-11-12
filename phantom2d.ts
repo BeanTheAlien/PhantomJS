@@ -4005,6 +4005,7 @@ class Scene {
      * and `goff.y` down.
      */
     goff: Vector;
+    scrnshk?: ScreenShake;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -4320,6 +4321,7 @@ class Scene {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
     update() {
+        if(this.scrnshk) this.scrnshk.update();
         this.forEach(i => i.update());
         this.forEachUI(u => u.update());
         this.misc.forEach(m => m.update());
@@ -4341,12 +4343,19 @@ class Scene {
         }
     }
     render() {
+        this.save();
+        if(this.scrnshk) {
+            this.goto(this.width / 2 + this.scrnshk.x, this.height / 2 + this.scrnshk.y);
+            this.rot(this.scrnshk.rot);
+            this.goto(-this.width / 2, -this.height / 2);
+        }
         this.items.forEach(i => {
             this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk);
             i.child.forEach(c => {
                 this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
             });
         });
+        this.res();
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {
             // test if it should also render a rectangle (true, by default)
@@ -4503,7 +4512,23 @@ class Scene {
         this.stop();
         this.dualRuntime.stop();
     }
-    save(file: string) {
+    save() {
+        this.ctx.save();
+    }
+    res() {
+        this.ctx.restore();
+    }
+    goto(x: number, y: number): void;
+    goto(newPosition: Vector): void;
+    goto(xp: number | Vector, yx?: number) {
+        const x = objIs(xp, Vector) ? xp.x : xp;
+        const y = objIs(xp, Vector) ? xp.y : yx as number;
+        this.ctx.translate(x, y);
+    }
+    rot(rotation: number) {
+        this.ctx.rotate(rotation);
+    }
+    saveScene(file: string) {
         const s = new SaveJSON(file);
         s.save(this, 4);
     }
@@ -5323,6 +5348,76 @@ class Scene {
             }
         });
         this.ctx.restore();
+    }
+}
+interface ScreenShakeOptions {
+    trauma: number;
+    decay: number;
+    frq: number;
+    time: number;
+    mx: number;
+    my: number;
+    mr: number;
+    x: number;
+    y: number;
+    scene: Scene;
+}
+class ScreenShake {
+    trauma: number;
+    decay: number;
+    frq: number;
+    time: number;
+    mx: number;
+    my: number;
+    mr: number;
+    x: number;
+    y: number;
+    bx: number;
+    by: number;
+    rot: number;
+    perlin: Perlin;
+    scene: Scene;
+    constructor(opts: ScreenShakeOptions) {
+        this.trauma = opts.trauma;
+        this.decay = opts.decay;
+        this.frq = opts.frq;
+        this.time = opts.time;
+        this.mx = opts.mx;
+        this.my = opts.my;
+        this.mr = opts.mr;
+        this.x = opts.x;
+        this.y = opts.y;
+        this.bx = opts.x;
+        this.by = opts.y;
+        this.rot = 0;
+        this.perlin = new Perlin();
+        this.scene = opts.scene;
+    }
+    add(amount: number) {
+        this.trauma = Math.min(1.0, this.trauma + amount);
+    }
+    update() {
+        if(this.trauma > 0) {
+            // 1. Decay trauma over time
+            this.trauma = Math.max(0, this.trauma - this.decay * (this.scene.delta / 1000));
+            // 2. Advance time through the noise landscape
+            this.time += this.scene.delta * this.frq;
+            // 3. Trauma squared for the non-linear punch feel
+            const shakePower = this.trauma * this.trauma;
+            // 4. Sample noise using unique tracking coordinates per axis
+            const moveX = this.perlin.noise(this.time, 1.5);
+            const moveY = this.perlin.noise(this.time, 3.7);
+            const roll  = this.perlin.noise(this.time, 7.2);
+            // 5. Compute real screen offsets
+            this.x = this.bx + moveX * this.mx * shakePower;
+            this.y = this.by + moveY * this.my * shakePower;
+            this.rot = roll * this.mr * shakePower;
+        } else {
+            // Calm state
+            this.x = this.bx;
+            this.y = this.by;
+            this.rot = 0;
+        }
     }
 }
 /**
@@ -8017,6 +8112,8 @@ export {
 
     SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
 
-    PerlinTerrain1DGenerator, circInt, BoostSound, SpatialSound, BoostSpatialSound
+    PerlinTerrain1DGenerator, circInt, BoostSound, SpatialSound, BoostSpatialSound,
+
+    ScreenShake
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };
