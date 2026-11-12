@@ -418,6 +418,9 @@ npx typescript "phantom2d.ts"
 - Add `ScreenShake`.
 - Add support for `ScreenShake` in canvas.
 - TODO: make local scrnshk
+## v3.3.3
+- Add `return this` to math methods on `Vector`.
+- Add `fling` method to `EnhancedPhysicsComp`. ([#26](https://github.com/BeanTheAlien/PhantomJS/issues/26))
 
 # Phantom HTML v0.0.1
 ### 0.0.1

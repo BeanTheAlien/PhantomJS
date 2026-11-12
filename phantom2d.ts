@@ -1382,6 +1382,13 @@ class EnhancedPhysicsComp extends Comp {
     pushY(force: number) {
         this.push(0, force);
     }
+    fling(minAngle: number, maxAngle: number, velocity: number, lerpTime: number) {
+        if(!this.scene) throw new NoSceneAvailableError();
+        const dir = Angle.toVector(Angle.rad(random(minAngle, maxAngle)));
+        dir.scale(random(-velocity, velocity+1));
+        dir.add(this.ent.getPos());
+        this.ent.lerp("pos", this.scene, dir, "once", lerpTime);
+    }
 }
 class GravityComp extends Comp {
     strength: number;
@@ -2944,6 +2951,7 @@ class Vector {
     scale(fx: number, fy?: number) {
         this.x *= fx;
         this.y *= fy ?? fx;
+        return this;
     }
     static rotBtwn(a: Vector, b: Vector): number {
         return Math.atan2(b.y - a.y, b.x - a.x);
@@ -3004,27 +3012,32 @@ class Vector {
     }
     add(vec: Vector) {
         this.set(Vector.add(this, vec));
+        return this;
     }
     static sub(v0: Vector, v1: Vector) {
         return new Vector(v0.x - v1.x, v0.y - v1.y);
     }
     sub(vec: Vector) {
         this.set(Vector.sub(this, vec));
+        return this;
     }
     static mult(v0: Vector, v1: Vector) {
         return new Vector(v0.x * v1.x, v0.y * v1.y);
     }
     mult(vec: Vector) {
         this.set(Vector.mult(this, vec));
+        return this;
     }
     static div(v0: Vector, v1: Vector) {
         return new Vector(v0.x / v1.x, v0.y / v1.y);
     }
     div(vec: Vector) {
         this.set(Vector.div(this, vec));
+        return this;
     }
     div2(vec: Vector) {
         this.set(Vector.div(vec, this));
+        return this;
     }
     /**
      * Generates a new `Joint` from this position.
