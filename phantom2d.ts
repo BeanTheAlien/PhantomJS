@@ -72,7 +72,7 @@ type Dir = 0 | 1;
  * Takes one argument, the event.
  * @since v0.0.0
  */
-type EventHandle = (e: Event) => void;
+type EventHandle<E extends Event = Event> = (e: E) => void;
 /**
  * An event from `HTMLElementEventMap`.
  * @see {@link HTMLElementEventMap}
@@ -5361,6 +5361,12 @@ class Scene {
             }
         });
         this.ctx.restore();
+    }
+    onClick(handle: EventHandle<PointerEvent>) {
+        this.on("click", handle);
+    }
+    offClick(handle: EventHandle<PointerEvent>) {
+        this.off("click", handle);
     }
 }
 interface ScreenShakeOptions {
