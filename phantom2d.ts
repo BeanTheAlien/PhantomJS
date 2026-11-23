@@ -886,6 +886,7 @@ interface PhantomCompMap {
     grav: GravityComp;
     arcmoveorbit: ArcMoveOrbitComp;
     arcmovesling: ArcMoveSlingComp;
+    planetgrav: PlanetGravComp;
 }
 /**
  * The map for `SceneComp`.
@@ -1478,6 +1479,35 @@ class EntityVisionComp extends Comp {
         return this.entList;
     }
 }
+interface PlanetGravCompOptions extends CompOptions {
+    mass?: number;
+    rad?: number;
+    scene?: Scene;
+}
+class PlanetGravComp extends Comp {
+    static readonly Grav = 6.67 * (10 ** -11);
+    mass: number;
+    radius: number;
+    scene: Scene;
+    constructor(entity: Entity, opts: PlanetGravCompOptions) {
+        super(entity);
+        this.mass = opts.mass ?? 1;
+        this.radius = opts.rad ?? 1;
+        this.scene = opts.scene ?? shallow<Scene>();
+    }
+    dist(ent: Entity) {
+        return this.radius + Vector.dist(this.ent.getPos(), ent.getPos());
+    }
+    grav(ent: Entity) {
+        return (PlanetGravComp.Grav * this.mass * ent.comp("planetgrav").mass) / (this.dist(ent) ** 2);
+    }
+    upd() {
+        if(!this.scene) throw new NoSceneAvailableError();
+        this.scene.forEach(x => {
+            //
+        });
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1492,7 +1522,8 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     grav: GravityComp,
     arcmoveorbit: ArcMoveOrbitComp,
     arcmovesling: ArcMoveSlingComp,
-    vis: EntityVisionComp
+    vis: EntityVisionComp,
+    planetgrav: PlanetGravComp
 };
 /**
  * Maps components to their respective option interface.
@@ -1509,6 +1540,7 @@ interface PhantomCompOptionsMap {
     arcmoveorbit: ArcMoveOrbitOptions;
     arcmovesling: ArcMoveSlingOptions;
     vis: EntityVisionOptions;
+    planetgrav: PlanetGravCompOptions;
 }
 /**
  * The class used for creating components for the scene.
