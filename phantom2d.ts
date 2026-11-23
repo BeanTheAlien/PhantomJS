@@ -362,6 +362,11 @@ class BadGridRowsRangeError extends __RootBadGridError {
         super("Rows");
     }
 }
+class NotUsingRequiredCompError extends ErrRoot {
+    constructor(inName: keyof PhantomCompMap) {
+        super("NotUsingRequiredCompError", `Missing depedent component '${inName}'.`);
+    }
+}
 
 /**
  * A storage for items.
@@ -1499,12 +1504,15 @@ class PlanetGravComp extends Comp {
         return this.radius + Vector.dist(this.ent.getPos(), ent.getPos());
     }
     grav(ent: Entity) {
+        if(!ent.uses("planetgrav")) throw new NotUsingRequiredCompError("planetgrav");
         return (PlanetGravComp.Grav * this.mass * ent.comp("planetgrav").mass) / (this.dist(ent) ** 2);
     }
     upd() {
         if(!this.scene) throw new NoSceneAvailableError();
-        this.scene.forEach(x => {
-            //
+        this.scene.filter(x => x.uses("planetgrav", "enhancedphys")).forEach(x => {
+            const dist = this.radius + Vector.dist(this.ent.getPos(), x.getPos());
+            const v = Vector.sub(this.ent.getPos(), x.getPos());
+            x.comp("enhancedphys").addForce((v.x / dist) * this.grav(x), (v.y / dist) * this.grav(x)); 
         });
     }
 }
@@ -2155,8 +2163,8 @@ class Entity implements Boundaries {
      * @returns If it is in use.
      * @since v0.0.0
      */
-    uses(c: PhantomCompType): boolean {
-        return this.comps.has(c);
+    uses(...c: PhantomCompType[]): boolean {
+        return c.every(_ => this.comps.has(_));
     }
     /**
      * Returns a reference to this component.
