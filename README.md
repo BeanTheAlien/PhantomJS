@@ -421,6 +421,11 @@ npx typescript "phantom2d.ts"
 ## v3.3.3
 - Add `return this` to math methods on `Vector`.
 - Add `fling` method to `EnhancedPhysicsComp`. ([#26](https://github.com/BeanTheAlien/PhantomJS/issues/26))
+## v3.4.0
+- Add `onDrag` to `Scene`.
+- Add `sksize` to `Entity`.
+- Add `renderOne`, `renderShook` methods to `Scene`.
+- TODO: add stroke-with-size methods onto scene
 
 # Phantom HTML v0.0.1
 ### 0.0.1

@@ -533,6 +533,11 @@ interface EntityOptions {
      */
     colorsk?: GFill;
     /**
+     * The stroked line width.
+     * @since v3.4.0.
+     */
+    sksize?: number;
+    /**
      * The movement mode.
      * @since v1.0.4
      */
@@ -1749,6 +1754,11 @@ class Entity implements Boundaries {
      */
     colorsk: GFill;
     /**
+     * The stroke width.
+     * @since v3.4.0
+     */
+    sksize: number;
+    /**
      * The storage for listeners for events.
      * @since v0.0.0
      */
@@ -1801,6 +1811,7 @@ class Entity implements Boundaries {
         }
         this.render = opts?.render ?? NoFunc;
         this.bounds = [];
+        this.sksize = opts?.sksize ?? 0;
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -3952,6 +3963,16 @@ interface Temporary<T, K extends keyof T> {
      */
     done(): void;
 }
+interface WrapHandle<T extends Event> {
+    event: T;
+}
+// handles down-up simulated drag
+interface DragWrapHandle extends WrapHandle<MouseEvent> {
+    pos0: Vector;
+    pos1: Vector;
+    diff: Vector;
+}
+type WrapHandler<E extends Event, T extends WrapHandle<E>> = (handler: T) => void;
 /**
  * The root canvas to display content.
  * 
@@ -4221,6 +4242,12 @@ class Scene {
     set colorsk(color: GFill) {
         this.ctx.strokeStyle = this.demote(color);
     }
+    get sksize() {
+        return this.ctx.lineWidth;
+    }
+    set sksize(size: number) {
+        this.ctx.lineWidth = size;
+    }
     get alpha(): number {
         return this.ctx.globalAlpha;
     }
@@ -4355,20 +4382,37 @@ class Scene {
             }
         }
     }
-    render() {
-        this.save();
+    __applyScrnshk() {
         if(this.scrnshk) {
             this.goto(this.width / 2 + this.scrnshk.x, this.height / 2 + this.scrnshk.y);
             this.rot(this.scrnshk.rot);
             this.goto(-this.width / 2, -this.height / 2);
         }
+    }
+    renderOne(i: Entity) {
+        this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk, i.sksize);
+        i.child.forEach(c => {
+            this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
+        });
+    }
+    renderShook(i: Entity) {
+        this.save();
+        this.__applyScrnshk();
+        this.renderOne(i);
+        this.res();
+    }
+    __renderEnts() {
+        this.save();
+        this.__applyScrnshk();
         this.items.forEach(i => {
-            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk);
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk, i.sksize);
             i.child.forEach(c => {
                 this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
             });
         });
         this.res();
+    }
+    __renderUI() {
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {
             // test if it should also render a rectangle (true, by default)
@@ -4387,10 +4431,17 @@ class Scene {
             // call the UI's render method
             u.render();
         });
+    }
+    __renderMisc() {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: GFill, colorsk: GFill, offX: number = 0, offY: number = 0) {
+    render() {
+        this.__renderEnts();
+        this.__renderUI();
+        this.__renderMisc();
+    }
+    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: GFill, colorsk: GFill, sksize: number, offX: number = 0, offY: number = 0) {
         let ox = 0;
         let oy = 0;
         if(this.fol) {
@@ -4441,6 +4492,7 @@ class Scene {
 
         this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
+        this.sksize = sksize;
         this.rects(nx, ny, w, h, colorsk);
         this.ctx.restore();
     }
@@ -5367,6 +5419,30 @@ class Scene {
     }
     offClick(handle: EventHandle<PointerEvent>) {
         this.off("click", handle);
+    }
+    onMDown(handle: EventHandle<MouseEvent>) {
+        this.on("mousedown", handle);
+    }
+    offMDown(handle: EventHandle<MouseEvent>) {
+        this.off("mousedown", handle);
+    }
+    onMUp(handle: EventHandle<MouseEvent>) {
+        this.on("mouseup", handle);
+    }
+    offMUp(handle: EventHandle<MouseEvent>) {
+        this.off("mouseup", handle);
+    }
+    onDrag(handle: WrapHandler<MouseEvent, DragWrapHandle>) {
+        let wrap: Partial<DragWrapHandle> = {};
+        this.on("mousedown", (e) => {
+            wrap.pos0 = this.mouseAt(e);
+        });
+        this.on("mouseup", (e) => {
+            wrap.pos1 = this.mouseAt(e);
+            wrap.diff = wrap.pos1.sub(wrap.pos0 as Vector);
+            wrap.event = e;
+            handle(wrap as Required<typeof wrap>);
+        });
     }
 }
 interface ScreenShakeOptions {
