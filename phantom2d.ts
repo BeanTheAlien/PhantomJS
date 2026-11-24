@@ -1488,31 +1488,64 @@ interface PlanetGravCompOptions extends CompOptions {
     mass?: number;
     rad?: number;
     scene?: Scene;
+    strength?: number;
+    falloff?: number;
 }
 class PlanetGravComp extends Comp {
     static readonly Grav = 6.67 * (10 ** -11);
     mass: number;
     radius: number;
     scene: Scene;
+    strength: number;
+    /**
+     * The maximum distance before gravity will not be applied (albeit, at high distances
+     * gravity application will eventually reach practical 0).
+     * 
+     * This just prevents gravity from being applied (even tiny amounts) at a certain distance.
+     * 
+     * If the value is less than 0 (the default being -1), gravity will never stop being applied.
+     */
+    falloff: number;
     constructor(entity: Entity, opts: PlanetGravCompOptions) {
         super(entity);
         this.mass = opts.mass ?? 1;
         this.radius = opts.rad ?? 1;
         this.scene = opts.scene ?? shallow<Scene>();
+        this.strength = opts.strength ?? 1;
+        this.falloff = opts.falloff ?? -1;
     }
     dist(ent: Entity) {
         return this.radius + Vector.dist(this.ent.getPos(), ent.getPos());
     }
+    /**
+     * Calculates the gravitational force between this planetary object and
+     * a target entity, using the inverse-square formula:
+     * 
+     * ```
+     * Fg = G * M / r^2
+     * ```
+     * 
+     * The radius used is this own radius plus the distance
+     * between this and the target entity.
+     * 
+     * Note that the `grav` method does not scale the resulting
+     * gravitational force with the `strength` property;
+     * however, the resulting force IS scaled during update (`upd`).
+     * @param ent The target entity.
+     * @returns The resulting gravitational force.
+     */
     grav(ent: Entity) {
-        if(!ent.uses("planetgrav")) throw new NotUsingRequiredCompError("planetgrav");
-        return (PlanetGravComp.Grav * this.mass * ent.comp("planetgrav").mass) / (this.dist(ent) ** 2);
+        return (PlanetGravComp.Grav * this.mass) / (this.dist(ent) ** 2);
     }
     upd() {
         if(!this.scene) throw new NoSceneAvailableError();
-        this.scene.filter(x => x.uses("planetgrav", "enhancedphys")).forEach(x => {
+        this.scene.filter(x => x.uses("enhancedphys")).forEach(x => {
             const dist = this.radius + Vector.dist(this.ent.getPos(), x.getPos());
             const v = Vector.sub(this.ent.getPos(), x.getPos());
-            x.comp("enhancedphys").addForce((v.x / dist) * this.grav(x), (v.y / dist) * this.grav(x)); 
+            // prevent extreme forces
+            // or divide by zero
+            if(dist < 1 || (this.falloff >= 0 && dist >= this.falloff)) return;
+            x.comp("enhancedphys").addForce(((v.x / dist) * this.grav(x)) * this.strength, ((v.y / dist) * this.grav(x)) * this.strength); 
         });
     }
 }
@@ -4199,6 +4232,9 @@ class Scene {
     }
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
+    }
+    filterByComp(...comps: PhantomCompType[]) {
+        return this.filter(x => x.uses(...comps));
     }
     deepFilter(cb: PredicateEntity) {
         this.items = this.filter(cb);

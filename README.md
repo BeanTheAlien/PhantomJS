@@ -426,6 +426,11 @@ npx typescript "phantom2d.ts"
 - Add `sksize` to `Entity`.
 - Add `renderOne`, `renderShook` methods to `Scene`.
 - TODO: add stroke-with-size methods onto scene
+## v3.4.1
+- Add new `planetgrav` component for planetary gravity.
+## v3.4.2
+- Remove `planetgrav` comp requirement for gravity application (prevent attracted-to-eachother).
+- Add `strength`, `falloff` properties to `planetgrav` component.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
