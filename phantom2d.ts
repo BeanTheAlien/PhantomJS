@@ -4548,8 +4548,10 @@ class Scene {
     }
     __renderBake() {
         // bake lights
+        this.light.forEach(l => l.render());
     }
     render() {
+        this.__renderBake();
         this.__renderEnts();
         this.__renderUI();
         this.__renderMisc();
@@ -7527,11 +7529,20 @@ interface RadialLightGenOpts {
 class RadialLight extends Light<RadialLightGenOpts> {
     grad() {
         const g = this.scene.ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.genOpts.rad);
-        if(this.genOpts.stop.length != this.genOpts.stopAlpha.length) throw new MissingStopsError(Math.max(this.genOpts.stop.length, this.genOpts.stopAlpha.length));
+        const stop = this.genOpts.stop;
+        const astop = this.genOpts.stopAlpha;
+        if(stop.length != astop.length) throw new MissingStopsError(Math.max(this.genOpts.stop.length, this.genOpts.stopAlpha.length));
+        stop.forEach((x, i) => {
+            g.addColorStop(x, this.color.with("a", astop[i]).toRGBA());
+        });
         return g;
     }
     render() {
-        //
+        this.__validate();
+        this.scene.save();
+        this.scene.gco = "lighter";
+        this.scene.circ(this.x, this.y, this.genOpts.rad, this.ownGrad!);
+        this.scene.res();
     }
 }
 type OpeningMode = "_self" | "_blank" | "_parent" | "_top" | "_unfencedTop";
