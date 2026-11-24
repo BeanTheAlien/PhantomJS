@@ -367,6 +367,11 @@ class NotUsingRequiredCompError extends ErrRoot {
         super("NotUsingRequiredCompError", `Missing depedent component '${inName}'.`);
     }
 }
+class MissingStopsError extends ErrRoot {
+    constructor(max: number) {
+        super("MissingStopsError", `Missing stops in stops or alpha stops (max length received '${max}').`);
+    }
+}
 
 /**
  * A storage for items.
@@ -4046,6 +4051,7 @@ interface DragWrapHandle extends WrapHandle<MouseEvent> {
     diff: Vector;
 }
 type WrapHandler<E extends Event, T extends WrapHandle<E>> = (handler: T) => void;
+type GCO = CanvasRenderingContext2D["globalCompositeOperation"];
 /**
  * The root canvas to display content.
  * 
@@ -4113,6 +4119,7 @@ class Scene {
      */
     goff: Vector;
     scrnshk?: ScreenShake;
+    light: Light[];
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -4148,6 +4155,7 @@ class Scene {
         this.scaleX = 1;
         this.scaleY = 1;
         this.goff = new Vector();
+        this.light = [];
     }
     get width(): number {
         return this.canvas.width;
@@ -4191,10 +4199,19 @@ class Scene {
     addUIIfNotHas(...items: SceneUI[]) {
         this.addUIIf(u => !this.hasUI(u), ...items);
     }
+    addLight(...items: Light[]) {
+        ArrayUtil.add(this.light, ...items);
+    }
+    addLightIf(predicate: Predicate<Light>, ...items: Light[]) {
+        ArrayUtil.add(this.light, ...items.filter(predicate));
+    }
+    addLightIfNotHas(...items: Light[]) {
+        this.addLightIf(i => !this.hasLight(i), ...items);
+    }
     isClean(value: any): value is Clean {
         return "clean" in value && typeof value.clean == "function";
     }
-    __globalOnRemove<T extends Entity | SceneUI | Renderable>(init: T, then?: Callback<T>, index?: number, src?: T[]) {
+    __globalOnRemove<T extends Entity | SceneUI | Light | Renderable>(init: T, then?: Callback<T>, index?: number, src?: T[]) {
         if(this.isClean(init)) {
             init.clean();
         }
@@ -4218,17 +4235,31 @@ class Scene {
             this.__globalOnRemove(e, removed, i, a);
         }, ...items);
     }
+    rmLight(...items: Light[]) {
+        this.rmLightx(() => {}, ...items);
+    }
+    rmLightx(removed: Callback<Light>, ...items: Light[]) {
+        ArrayUtil.rmx(this.light, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
+    }
     has(...items: Entity[]): boolean {
         return ArrayUtil.has(this.items, ...items);
     }
     hasUI(...items: SceneUI[]): boolean {
         return ArrayUtil.has(this.ui, ...items);
     }
+    hasLight(...items: Light[]) {
+        return ArrayUtil.has(this.light, ...items);
+    }
     idxOf(item: Entity): number {
         return this.items.indexOf(item);
     }
     idxOfUI(item: SceneUI): number {
         return this.ui.indexOf(item);
+    }
+    idxOfLight(item: Light) {
+        return this.light.indexOf(item);
     }
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
@@ -4250,6 +4281,9 @@ class Scene {
     }
     deepFilterMisc(cb: Predicate<Renderable>) {
         this.misc = this.filterMisc(cb);
+    }
+    filterLight(cb: Predicate<Light>) {
+        return this.light.filter(cb);
     }
     on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
         this.evMng.on(name, handle as EventHandle);
@@ -4511,6 +4545,9 @@ class Scene {
     __renderMisc() {
         // render misc items
         this.misc.forEach(m => m.render());
+    }
+    __renderBake() {
+        // bake lights
     }
     render() {
         this.__renderEnts();
@@ -5519,6 +5556,12 @@ class Scene {
             wrap.event = e;
             handle(wrap as Required<typeof wrap>);
         });
+    }
+    get gco() {
+        return this.ctx.globalCompositeOperation;
+    }
+    set gco(operation: GCO) {
+        this.ctx.globalCompositeOperation = operation;
     }
 }
 interface ScreenShakeOptions {
@@ -7446,6 +7489,50 @@ class Params {
 interface Renderable {
     render: () => void;
     update: () => void;
+}
+interface LightOptions<T> {
+    grad?: CanvasGradient;
+    x: number;
+    y: number;
+    color: string | Color;
+    scene: Scene;
+    gen: T;
+}
+abstract class Light<T = never> {
+    ownGrad?: CanvasGradient;
+    x: number;
+    y: number;
+    color: Color;
+    scene: Scene;
+    genOpts: T;
+    constructor(opts: LightOptions<T>) {
+        this.ownGrad = opts.grad;
+        this.x = opts.x;
+        this.y = opts.y;
+        this.color = objIs(opts.color, Color) ? opts.color : Color.fromHex(opts.color);
+        this.scene = opts.scene;
+        this.genOpts = opts.gen;
+    }
+    abstract grad(): CanvasGradient;
+    abstract render(): void;
+    __validate() {
+        if(!this.ownGrad) this.ownGrad = this.grad();
+    }
+}
+interface RadialLightGenOpts {
+    rad: number;
+    stop: number[];
+    stopAlpha: number[];
+}
+class RadialLight extends Light<RadialLightGenOpts> {
+    grad() {
+        const g = this.scene.ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.genOpts.rad);
+        if(this.genOpts.stop.length != this.genOpts.stopAlpha.length) throw new MissingStopsError(Math.max(this.genOpts.stop.length, this.genOpts.stopAlpha.length));
+        return g;
+    }
+    render() {
+        //
+    }
 }
 type OpeningMode = "_self" | "_blank" | "_parent" | "_top" | "_unfencedTop";
 type OpeningModeShorthands = "self" | "blank" | "parent" | "top" | "unfencedTop";

@@ -431,6 +431,8 @@ npx typescript "phantom2d.ts"
 ## v3.4.2
 - Remove `planetgrav` comp requirement for gravity application (prevent attracted-to-eachother).
 - Add `strength`, `falloff` properties to `planetgrav` component.
+## v3.4.3
+- Start adding lights.
 
 # Phantom HTML v0.0.1
 ### 0.0.1
